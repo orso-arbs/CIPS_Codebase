@@ -160,6 +160,8 @@ df.to_excel(os.path.join(seg_location, excel_filename), index=False)
 # # Load DataFrame from Excel
 # df = pd.read_excel(os.path.join(seg_location, excel_filename))
 
+
+
 ### Plot
 print(f"\n Plotting \n")
 
@@ -167,10 +169,21 @@ print(f"\n Plotting \n")
 if not os.path.exists(plot_folder_location):
     os.makedirs(plot_folder_location)
 
+# auxillary function to plot the data
+
 # Number of rows in the DataFrame
 num_rows = len(df)
 
+# Find the maximum frequency for all histograms
+bin_size = 2
+max_frequency = 0
 for i in range(num_rows):
+    unique_diameters, counts_diameters = np.unique(df.loc[i, 'diameter_distribution'], return_counts=True)
+    bins = np.arange(0, max(unique_diameters) + bin_size, bin_size)
+    hist, _ = np.histogram(df.loc[i, 'diameter_distribution'], bins=bins)
+    max_frequency = max(max_frequency, hist.max())
+
+for i in range(num_rows): # Plot the data for each row
     # Create a new figure for each row
     fig, axes = plt.subplots(2, 3, figsize=(15, 10))
 
@@ -198,7 +211,6 @@ for i in range(num_rows):
     axes[0,2].axis('off')
 
     # Plot: Diameter distribution vs. diameter frequency (bin count histogram)
-    bin_size = 2
     unique_diameters, counts_diameters = np.unique(df.loc[i, 'diameter_distribution'], return_counts=True)
     bins = np.arange(0, max(unique_diameters) + bin_size, bin_size)
     axes[1, 0].hist(df.loc[i, 'diameter_distribution'], bins=bins)
@@ -206,15 +218,28 @@ for i in range(num_rows):
     axes[1, 0].set_xlabel("Diameter")
     axes[1, 0].set_ylabel("Frequency")
 
-    # Plot: Image number vs. median diameter, mean diameter, and amount of cells
+    mean_diameter = df.loc[i, 'diameter_mean']
+    median_diameter = df.loc[i, 'diameter_median']
+    axes[1, 0].axvline(mean_diameter, color='blue', linestyle='dashed', linewidth=1)
+    axes[1, 0].text(mean_diameter, axes[1, 0].get_ylim()[1] * 0.9, f'Mean: {mean_diameter:.2f}', color='blue')
+    axes[1, 0].axvline(median_diameter, color='green', linestyle='dashed', linewidth=1)
+    axes[1, 0].text(median_diameter, axes[1, 0].get_ylim()[1] * 0.8, f'Median: {median_diameter:.2f}', color='green')
+
+    axes[1, 0].set_xlim(0, df['diameter_distribution'].apply(lambda x: np.max(x)).max()*1.05) # df['diameter_distribution'].min()
+    axes[1, 0].set_ylim(0, max_frequency*1.05)
+
+    # Plot 1: Image number vs. median diameter, mean diameter, and amount of cells (up to current image)
     ax1 = axes[1, 1]
     ax2 = ax1.twinx()
-
     ax1.plot(range(num_rows), df['diameter_mean'], label='Mean Diameter', color='blue')
-
-    ax1.plot(range(num_rows), df['diameter_mean'], label='Median Diameter', color='green')
-
+    ax1.plot(range(num_rows), df['diameter_median'], label='Median Diameter', color='green')
     ax2.plot(range(num_rows), df['N_cells'], label='Number of Cells', color='red')
+    axes[1, 1].axvline(i, color='blue', label=f'shown image: {i:.2f}', linestyle='dashed', linewidth=3)
+    #axes[1, 1].text(i, axes[1, 1].get_ylim()[1] * 0.9, f'shown image: {i:.2f}', color='blue')
+
+    ax1.set_xlim(0, num_rows - 1)
+    ax1.set_ylim(min(df['diameter_mean'].min(), df['diameter_median'].min()), max(df['diameter_mean'].max(), df['diameter_median'].max())*1.05)
+    ax2.set_ylim(df['N_cells'].min(), df['N_cells'].max()*1.05)
 
     ax1.set_title("Diameter and Cell Count")
     ax1.set_xlabel("Image Number")
