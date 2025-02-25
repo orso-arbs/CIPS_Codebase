@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.backends.backend_pdf import PdfPages
 from cellpose import plot, utils, io
 from cellpose.io import imread
 from cellpose import plot
@@ -8,18 +9,17 @@ import os
 import datetime
 import time
 import glob
+import pandas as pd
 
 ### start inform
 start_time = time.time()
 current_date = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M")
 print(f"\n {os.path.basename(__file__)}: ", datetime.datetime.now(), "\n")
 
-
-
 ### Settings
 seg_location = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\Cellpose\Cellpose1\CP_Results_2025-02-24_21-27"
 img_location = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\Cellpose\Cellpose1\BW 134 ball flame - Crop small"
-
+plot_folder_location = os.path.join(seg_location, f'plots_{current_date}')
 
 
 ### I/O
@@ -37,7 +37,7 @@ for seg_file in seg_files:
     filename = os.path.basename(seg_file).replace('_seg.npy', '')
     seg_filenames.append(filename)
     #print(f"Adding file to all_segs: {seg_file}")  # Print the file being added
-print(f"Loaded {len(all_segs)} seg files \n")
+print(f"Loaded {len(all_segs)} seg files")
 
 # Find all image files
 img_files = glob.glob(os.path.join(img_location, '*.png'))
@@ -51,50 +51,21 @@ for img_file in img_files:
     #print(f"Adding file to all_images: {img_file}")  # Print the file being added
 print(f"Loaded {len(all_images)} images \n")
 
-if 1==0: # Print all keys from each seg dictionary and their properties
-    for i, seg in enumerate(all_segs):
-        print(f"\n\n Keys for seg {i+1} ({seg_filenames[i]}):")
-        print(f"filename key: {seg['filename']}")
-        for key, value in seg.items():
-            value_type = type(value)
-            value_size = value.size if hasattr(value, 'size') else 'N/A'
-            value_shape = value.shape if hasattr(value, 'shape') else 'N/A'
-            value_length = len(value) if hasattr(value, '__len__') else 'N/A'
-            example_value = value[0] if hasattr(value, '__getitem__') and hasattr(value, '__len__') and len(value) > 0 else value
-            print(f"  Key: {key}")
-            print(f"    Type: {value_type}")
-            print(f"    Size: {value_size}")
-            print(f"    Shape: {value_shape}")
-            print(f"    Length: {value_length}")
-            print(f"    Example value: {example_value}")
-
-            # If the value is a list, print properties of each element in the list
-            if isinstance(value, list):
-                for j, item in enumerate(value):
-                    item_type = type(item)
-                    item_size = item.size if hasattr(item, 'size') else 'N/A'
-                    item_shape = item.shape if hasattr(item, 'shape') else 'N/A'
-                    item_length = len(item) if hasattr(item, '__len__') else 'N/A'
-                    example_item_value = item[0] if hasattr(item, '__getitem__') and hasattr(item, '__len__') and len(item) > 0 else item
-                    print(f"    List item {j}:")
-                    print(f"      Type: {item_type}")
-                    print(f"      Size: {item_size}")
-                    print(f"      Shape: {item_shape}")
-                    print(f"      Length: {item_length}")
-                    print(f"      Example value: {example_item_value}")
-        print("\n")
 
 
+### Extract
 
-### Operate
+print(f"\n Extracting data \n")
 
-all_diameter_tuple = []
-all_diameter_distribution = []
-all_median_diameters = []
-all_mean_diameters = []
-all_N_cells = []
-all_relative_pixel_frequencies = []
-all_relative_diameter_frequencies = []
+# Initialize DataFrame
+df_columns = [
+    'image_file_name', 'image_file_path', 'image_Nx', 'image_Ny',
+    'seg_file_name', 'seg_file_path', 'ismanual', 'model', 'chan_choose',
+    'flows0', 'flows1', 'flows2', 'flows3', 'flows4',
+    'diameter0', 'diameter1', 'diameter2', 'diameter_estimate', 'diameter_training',
+    'diameter_mean', 'diameter_median', 'diameter_distribution', 'outlines', 'masks', 'N_cells'
+]
+df = pd.DataFrame(columns=df_columns)
 
 if len(all_images) != len(all_segs):
     raise ValueError("Number of images and segmentations do not match")
@@ -106,106 +77,168 @@ else:
         # read masks and number of cells
         masks_i = seg['masks']
         N_cells_i = np.max(masks_i)
-        all_N_cells.append(N_cells_i)
-        print(f"Image {i+1} has {N_cells_i} cells")
 
         # extract diameter tuple and from it mean and complete distribution
         diameters_tuple_i = cellpose.utils.diameters(masks_i)
-        all_diameter_tuple.append(diameters_tuple_i)
-
         median_diameter_i = diameters_tuple_i[0]
-        all_median_diameters.append(median_diameter_i)
-
         diameter_array_i = diameters_tuple_i[1]
-        all_diameter_distribution.append(diameter_array_i)
 
         # Calculate the mean diameter
         mean_diameter_i = np.mean(diameter_array_i)
-        all_mean_diameters.append(mean_diameter_i)
 
         # Calculate the relative frequency of each diameter in diameter_array_i
         unique_diameters, counts_diameters = np.unique(diameter_array_i, return_counts=True)
         total_diameters = diameter_array_i.size
         relative_diameter_frequencies = counts_diameters / total_diameters
-        all_relative_diameter_frequencies.append(relative_diameter_frequencies)
 
-        # Calculate the relative frequency of each cell number in masks_i
-        unique, counts = np.unique(masks_i, return_counts=True)
-        total_pixels = masks_i.size
-        relative_frequencies = counts / total_pixels
-        all_relative_pixel_frequencies.append(relative_frequencies)
+        # Extract other relevant data from seg
+        ismanual = seg.get('ismanual', None)
+        model = seg.get('model', None)
+        chan_choose = seg.get('chan_choose', None)
+        flows = seg.get('flows', [None]*5)
+        diameter = seg.get('diameter', [None]*3)
+        diameter_estimate = seg.get('diameter_estimate', None)
+        diameter_training = seg.get('diameter_training', None)
+        outlines = utils.outlines_list(masks_i)
 
+        # Create a new DataFrame row
+        new_row = pd.DataFrame([{
+            'image_file_name': os.path.splitext(os.path.basename(img_files[i]))[0],  # Remove file extension
+            'image_file_path': img_files[i],
+            'image_Nx': img.shape[0],
+            'image_Ny': img.shape[1],
+            'seg_file_name': seg_filenames[i],
+            'seg_file_path': seg_files[i],
+            'ismanual': ismanual,
+            'model': model,
+            'chan_choose': chan_choose,
+            'flows0': flows[0],
+            'flows1': flows[1],
+            'flows2': flows[2],
+            'flows3': flows[3],
+            'flows4': flows[4],
+            'diameter0': diameter[0],
+            'diameter1': diameter[1],
+            'diameter2': diameter[2],
+            'diameter_estimate': diameter_estimate,
+            'diameter_training': diameter_training,
+            'diameter_mean': median_diameter_i,
+            'diameter_median': mean_diameter_i,
+            'diameter_distribution': diameter_array_i,
+            'outlines': outlines,
+            'masks': masks_i,
+            'N_cells': len(diameter_array_i)
+        }])
 
-        if 1==0: # Plot the diameters
-            plt.figure()
-            plt.hist(diameters_i, bins=20, edgecolor='black')
-            plt.title(f'Diameters for Image {i+1}')
-            plt.xlabel('Diameter')
-            plt.ylabel('Frequency')
-            plt.show()
+        # Concatenate the new row to the DataFrame
+        df = pd.concat([df, new_row], ignore_index=True)
 
-        if 1==0: # plot the image and outlines
-            img_height, img_width = img.shape[:2]
-            print(f"Original image size: {img_width}x{img_height}")
-
-            fig = plt.figure(figsize=(10,10))
-            outlines = utils.outlines_list(seg['masks'])
-            plt.imshow(img, cmap='gray')
-            for o in outlines:
-                plt.plot(o[:,0], o[:,1], color='b')
-            plt.show()
-
-
-
-
-
-### Save/Print Results
-
-# Plot all diameter distributions with the image number on the curve and the mean as a horizontal line
-plt.figure(figsize=(10, 6))
-colors = plt.cm.get_cmap('tab10', len(all_diameter_distribution))
-
-if 1==0:   # Plot all diameter distributions with the image number on the curve and the mean as a horizontal line
-    for i, diameter_array in enumerate(all_diameter_distribution):
-        plt.plot(diameter_array, label=f'{seg_filenames[i]}', color=colors(i))
-        plt.axhline(y=all_median_diameters[i], color=colors(i), linestyle='--', label=f'Median {seg_filenames[i]}')
-        plt.axhline(y=all_mean_diameters[i], color=colors(i), linestyle='-', label=f'Mean {seg_filenames[i]}')
-        plt.hist(diameter_array, bins=20, alpha=0.5, label=f'{seg_filenames[i]}', color=colors(i))
-
-    plt.xlabel('Cell Index')
-    plt.ylabel('Diameter')
-    plt.title('Diameter Distributions for All Images')
-    plt.legend()
-    plt.show()
-
-if 1==0:    # Plot all relative diameter frequencies with the image number on the curve and the mean as a horizontal line
-    plt.figure(figsize=(10, 6))
-    colors = plt.cm.get_cmap('tab10', len(all_diameter_distribution))   
-
-    for i, (diameter_array, relative_diameter_frequencies) in enumerate(zip(all_diameter_distribution, all_relative_diameter_frequencies)):
-        unique_diameters, counts_diameters = np.unique(diameter_array, return_counts=True)
-        plt.plot(unique_diameters, relative_diameter_frequencies, label=f'{seg_filenames[i]}', color=colors(i))
-        plt.axhline(y=all_median_diameters[i], color=colors(i), linestyle='--', label=f'Median {seg_filenames[i]}')
-        plt.axhline(y=all_mean_diameters[i], color=colors(i), linestyle='-', label=f'Mean {seg_filenames[i]}')  
-
-    plt.xlabel('Diameter')
-    plt.ylabel('Frequency')
-    plt.title('Diameter Frequency Distributions for All Images')
-    plt.legend()
-    plt.show()
+# Print columns that have None values
+none_columns = df.columns[df.isnull().any()].tolist()
+print(f"NB: Columns with None values: {none_columns}")
 
 
+### Save
 
-if 1==0:    # Plot histograms for the diameter distributions
-    plt.figure(figsize=(10, 6))
-    for i, diameter_array in enumerate(all_diameter_distribution):
-        plt.hist(diameter_array, bins=20, alpha=0.5, label=f'{seg_filenames[i]}', color=colors(i))
-    # 
-    plt.xlabel('Diameter')
-    plt.ylabel('Frequency')
-    plt.title('Histogram of Diameter Distributions for All Images')
-    plt.legend()
-    plt.show()
+print(f"\n Saving data \n")
+
+### Save DataFrame to CSV
+csv_filename = f'segmentation_data_{current_date}.csv'
+df.to_csv(os.path.join(seg_location, csv_filename), sep='\t', index=False)
+
+# Save DataFrame to Pickle
+pickle_filename = f'segmentation_data_{current_date}.pkl'
+df.to_pickle(os.path.join(seg_location, pickle_filename))
+#
+# # Load DataFrame from Pickle
+# df = pd.read_pickle(os.path.join(seg_location, pickle_filename))
+
+# Save DataFrame to Excel
+excel_filename = f'segmentation_data_{current_date}.xlsx'
+df.to_excel(os.path.join(seg_location, excel_filename), index=False)
+#
+# # Load DataFrame from Excel
+# df = pd.read_excel(os.path.join(seg_location, excel_filename))
+
+### Plot
+print(f"\n Plotting \n")
+
+# Create a folder to save the plots
+if not os.path.exists(plot_folder_location):
+    os.makedirs(plot_folder_location)
+
+# Number of rows in the DataFrame
+num_rows = len(df)
+
+for i in range(num_rows):
+    # Create a new figure for each row
+    fig, axes = plt.subplots(2, 3, figsize=(15, 10))
+
+    # Get the image, outlines, and masks for the current row
+    img = io.imread(df.loc[i, 'image_file_path'])
+    outlines = df.loc[i, 'outlines']
+    masks = df.loc[i, 'masks']
+
+    # Plot: original image
+    axes[0,0].imshow(img, cmap='gray')
+    axes[0,0].set_title(f"Original Image {i+1}")
+    axes[0,0].axis('off')
+
+    # Plot: image with outlines
+    axes[0,1].imshow(img, cmap='gray')
+    for outline in outlines:
+        axes[0,1].plot(outline[:, 0], outline[:, 1], color='red')
+    axes[0,1].set_title(f"Image {i+1} with Outlines")
+    axes[0,1].axis('off')
+
+    # Plot: image with masks
+    axes[0,2].imshow(img, cmap='gray')
+    axes[0,2].imshow(plot.mask_overlay(img, masks), alpha=0.5, cmap='gist_rainbow')
+    axes[0,2].set_title(f"Image {i+1} with Masks")
+    axes[0,2].axis('off')
+
+    # Plot: Diameter distribution vs. diameter frequency (bin count histogram)
+    bin_size = 2
+    unique_diameters, counts_diameters = np.unique(df.loc[i, 'diameter_distribution'], return_counts=True)
+    bins = np.arange(0, max(unique_diameters) + bin_size, bin_size)
+    axes[1, 0].hist(df.loc[i, 'diameter_distribution'], bins=bins)
+    axes[1, 0].set_title("Diameter Distribution")
+    axes[1, 0].set_xlabel("Diameter")
+    axes[1, 0].set_ylabel("Frequency")
+
+    # Plot: Image number vs. median diameter, mean diameter, and amount of cells
+    ax1 = axes[1, 1]
+    ax2 = ax1.twinx()
+
+    ax1.plot(range(num_rows), df['diameter_mean'], label='Mean Diameter', color='blue')
+
+    ax1.plot(range(num_rows), df['diameter_mean'], label='Median Diameter', color='green')
+
+    ax2.plot(range(num_rows), df['N_cells'], label='Number of Cells', color='red')
+
+    ax1.set_title("Diameter and Cell Count")
+    ax1.set_xlabel("Image Number")
+    ax1.set_ylabel("Diameter")
+    ax2.set_ylabel("Number of Cells")
+    ax1.legend(loc='upper left')
+    ax2.legend(loc='upper right')
+
+    # Plot: Leave empty
+    axes[1, 2].axis('off')
+
+
+    # Adjust layout and save the figure as a PNG file
+    plt.tight_layout()
+    plot_filename = os.path.join(plot_folder_location, f'plot_{i+1}.png')
+    plt.savefig(plot_filename)
+    plt.close(fig)
+
+
+#ToDO
+
+# make colormap on masks be nice and add numbers
+
+
 
 
 

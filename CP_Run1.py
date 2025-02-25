@@ -80,11 +80,11 @@ print("\n Save/Plot Results \n")
 nimg = len(imgs)
 for idx in range(nimg):
     maski = masks[idx]
-    flowi = flows[idx][0]
+    flowi = flows[idx]
     input_filename = os.path.basename(files[idx])
 
     fig = plt.figure(figsize=(12,5))
-    plot.show_segmentation(fig, imgs[idx], maski, flowi, channels=channels)
+    plot.show_segmentation(fig, imgs[idx], maski, flowi[0], channels=channels)
     plt.tight_layout()
         
 
@@ -102,7 +102,7 @@ for idx in range(nimg):
     # Save the seg file
     output_seg_filename = os.path.splitext(input_filename)[0] + "_segmented"
     output_seg_path = os.path.join(output_dir, output_seg_filename)
-    io.masks_flows_to_seg(imgs, maski, flows[idx], output_seg_path, channels=channels, diams=diams)
+    io.masks_flows_to_seg(imgs, maski, flowi, output_seg_path, channels=channels, diams=diams)
 
 
 
