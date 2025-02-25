@@ -1,14 +1,23 @@
 import cv2
 import os
+import time
+import datetime
 import glob
 
+### start inform
+start_time = time.time()
+current_date = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M")
+print(f"\n {os.path.basename(__file__)}: ", datetime.datetime.now(), "\n")
+
+
 # Directory containing PNG images
-image_folder = "C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\Cellpose\Cellpose1\CP_Results_2025-02-24_21-27\plots_2025-02-25_21-41"  # Change this to your directory path
-output_video = f"FB_segmented_growth_statistics_{current_date}.mp4"
+plot_image_folder = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\Cellpose\Cellpose1\CP_Results_2025-02-25_21-43\plots_2025-02-25_21-44"
+output_video = os.path.join(plot_image_folder, f"FB_segmented_growth_statistics_{current_date}.mp4")
+
 fps = 1  # Frames per second
 
 # Get all PNG files in the directory and sort them by name
-images = sorted(glob.glob(os.path.join(image_folder, "*.png")))
+images = sorted(glob.glob(os.path.join(plot_image_folder, "*.png")))
 
 if not images:
     print("No PNG images found in the directory.")
@@ -30,3 +39,10 @@ for image in images:
 # Release the video writer
 video.release()
 print(f"Video saved as {output_video}")
+
+
+### end inform
+end_time = time.time()
+elapsed_time = end_time - start_time
+minutes, seconds = divmod(elapsed_time, 60)
+print(f"\n Code Completely Executed in {int(minutes)} min {seconds:.2f} sec \n")

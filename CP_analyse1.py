@@ -10,6 +10,7 @@ import datetime
 import time
 import glob
 import pandas as pd
+import sys
 
 ### start inform
 start_time = time.time()
@@ -185,11 +186,15 @@ bin_size = 2
 max_frequency = 0
 for i in range(num_rows):
     unique_diameters, counts_diameters = np.unique(df.loc[i, 'diameter_distribution'], return_counts=True)
-    bins = np.arange(0, max(unique_diameters) + bin_size, bin_size)
+    max_diameter = max(unique_diameters) if unique_diameters.size > 0 else 0
+    bins = np.arange(0, max_diameter + bin_size, bin_size)    
     hist, _ = np.histogram(df.loc[i, 'diameter_distribution'], bins=bins)
     max_frequency = max(max_frequency, hist.max())
 
 for i in range(num_rows): # Plot the data for each row
+    print("\r", end='', flush=True)  # Move cursor to beginning and erase previous content
+    print(f"Plotting data for image name: {os.path.basename(img_files[i])} \t {i+1}/{len(all_images)}", end='', flush=True)
+    
     # Create a new figure for each row
     fig, axes = plt.subplots(2, 3, figsize=(15, 10))
 
@@ -218,7 +223,9 @@ for i in range(num_rows): # Plot the data for each row
 
     # Plot: Diameter distribution vs. diameter frequency (bin count histogram)
     unique_diameters, counts_diameters = np.unique(df.loc[i, 'diameter_distribution'], return_counts=True)
-    bins = np.arange(0, max(unique_diameters) + bin_size, bin_size)
+    max_diameter = max(unique_diameters) if unique_diameters.size > 0 else 0
+    bins = np.arange(0, max_diameter + bin_size, bin_size)
+
     axes[1, 0].hist(df.loc[i, 'diameter_distribution'], bins=bins)
     axes[1, 0].set_title("Diameter Distribution")
     axes[1, 0].set_xlabel("Diameter")
