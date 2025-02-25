@@ -1,0 +1,29 @@
+-------------------------
+-- Cellpose Cheatsheet --
+-------------------------
+
+
+-- install --
+
+https://www.youtube.com/watch?v=5qANHWoubZU
+
+# create environment
+conda create --name cellpose_env_1
+
+
+# install cellpose w. GUI
+pip install "cellpose[gui]"
+
+
+-- run --
+
+# activate environment
+conda activate cellpose_env_1
+
+# run cellpose gui
+python -m cellpose
+
+
+-- output --
+
+# _seg.npy files
