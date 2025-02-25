@@ -17,8 +17,14 @@ current_date = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M")
 print(f"\n {os.path.basename(__file__)}: ", datetime.datetime.now(), "\n")
 
 ### Settings
-seg_location = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\Cellpose\Cellpose1\CP_Results_2025-02-24_21-27"
-img_location = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\Cellpose\Cellpose1\BW 134 ball flame - Crop small"
+
+#img_location = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\Cellpose\Cellpose1\BW 134 ball flame - Crop small"
+#seg_location = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\Cellpose\Cellpose1\CP_Results_2025-02-25_21-43"
+
+img_location = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\Cellpose\Cellpose1\BW 134 ball flame - Crop"
+seg_location = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\Cellpose\Cellpose1\CP_Results_2025-02-25_21-47"
+
+
 plot_folder_location = os.path.join(seg_location, f'plots_{current_date}')
 
 
