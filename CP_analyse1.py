@@ -25,6 +25,10 @@ print(f"\n {os.path.basename(__file__)}: ", datetime.datetime.now(), "\n")
 img_location = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\Cellpose\Cellpose1\BW 134 ball flame - Crop"
 seg_location = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\Cellpose\Cellpose1\CP_Results_2025-02-25_21-47"
 
+img_location = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\Cellpose\Cellpose1\BW 134 ball flame - Crop Small First few"
+seg_location = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\Cellpose\Cellpose1\CP_Results_2025-02-25_21-47"
+
+
 
 plot_folder_location = os.path.join(seg_location, f'plots_{current_date}')
 
@@ -189,11 +193,13 @@ for i in range(num_rows):
     max_diameter = max(unique_diameters) if unique_diameters.size > 0 else 0
     bins = np.arange(0, max_diameter + bin_size, bin_size)    
     hist, _ = np.histogram(df.loc[i, 'diameter_distribution'], bins=bins)
-    max_frequency = max(max_frequency, hist.max())
+    if hist.size > 0:
+        max_frequency = max(max_frequency, hist.max())
+    else:
+        max_frequency = 0
 
 for i in range(num_rows): # Plot the data for each row
-    print("\r", end='', flush=True)  # Move cursor to beginning and erase previous content
-    print(f"Plotting data for image name: {os.path.basename(img_files[i])} \t {i+1}/{len(all_images)}", end='', flush=True)
+    print(f"\rPlotting data for image name: {os.path.basename(img_files[i])} \t {i+1}/{len(all_images)}", end='', flush=True)
     
     # Create a new figure for each row
     fig, axes = plt.subplots(2, 3, figsize=(15, 10))
@@ -238,7 +244,7 @@ for i in range(num_rows): # Plot the data for each row
     axes[1, 0].axvline(median_diameter, color='green', linestyle='dashed', linewidth=1)
     axes[1, 0].text(median_diameter, axes[1, 0].get_ylim()[1] * 0.8, f'Median: {median_diameter:.2f}', color='green')
 
-    axes[1, 0].set_xlim(0, df['diameter_distribution'].apply(lambda x: np.max(x)).max()*1.05) # df['diameter_distribution'].min()
+    axes[1, 0].set_xlim(0, df['diameter_distribution'].apply(lambda x: np.max(x) if x.size > 0 else 0).max() * 1.05)
     axes[1, 0].set_ylim(0, max_frequency*1.05)
 
     # Plot 1: Image number vs. median diameter, mean diameter, and amount of cells (up to current image)
@@ -272,9 +278,10 @@ for i in range(num_rows): # Plot the data for each row
     plt.close(fig)
 
 
-#ToDO
 
-# make colormap on masks be nice and add numbers
+### ToDO
+
+# add numbers to masks or outlines
 
 
 

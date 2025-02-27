@@ -19,7 +19,8 @@ print("Current time:", datetime.datetime.now())  # Add this line to print curren
 
 main_dir = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\Cellpose\Cellpose1"
 #input_files_dir = main_dir + r"\BW 134 ball flame - Crop small"
-input_files_dir = main_dir + r"\BW 134 ball flame - Crop"
+#input_files_dir = main_dir + r"\BW 134 ball flame - Crop"
+input_files_dir = main_dir + r"\BW 134 ball flame - Crop Small First few"
 
 
 
