@@ -217,7 +217,7 @@ for i in range(num_rows): # Plot the data for each row
     # Plot: image with outlines
     axes[0,1].imshow(img, cmap='gray')
     for outline in outlines:
-        axes[0,1].plot(outline[:, 0], outline[:, 1], color='red')
+        axes[0,1].plot(outline[:, 0], outline[:, 1], color='gist_rainbow')
     axes[0,1].set_title(f"Image {i+1} with Outlines")
     axes[0,1].axis('off')
 

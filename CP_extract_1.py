@@ -125,8 +125,8 @@ def CP_extract_1(
 
         # Create a new DataFrame row
         new_row = pd.DataFrame([{
-            'image_file_name': 1, #image_files[0],
-            'image_file_path': image_input_dir,
+            'image_file_name': image_files[i], # specific image
+            'image_file_directory': image_input_dir, # all images
             'image_Nx': image_Nx,
             'image_Ny': image_Ny,
             'seg_file_name': seg_filenames[i],
@@ -176,7 +176,6 @@ def CP_extract_1(
     excel_filename = f'segmentation_DataFramee.xlsx'
     df.to_excel(os.path.join(output_dir, excel_filename), index=False)
     #
-
 
 
     ### return
