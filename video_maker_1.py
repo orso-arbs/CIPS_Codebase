@@ -4,6 +4,8 @@ import time
 import datetime
 import glob
 import re
+import subprocess
+import platform
 
 import sys
 import os
@@ -50,6 +52,16 @@ def create_video_from_images(plot_image_folder, video_output_dir, fps=5):
 
     # Release the video writer
     video.release()
-    print(f"Video saved as {output_video}")
 
+
+    print(f"Video saved")
+    #print(f"Video saved as {output_video}")
+    time.sleep(1)  
+    # Play the video after saving (platform dependent)
+
+    #absolute_output_video = os.path.abspath(output_video)  # Convert to absolute path
+    #print(f"start, {absolute_output_video}")
+    #if platform.system() == "Windows":
+    #    subprocess.Popen(['cmd', '/c', f'start "" "{absolute_output_video}"'])
+    
     return None

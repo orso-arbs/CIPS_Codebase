@@ -48,90 +48,89 @@ def CP_plotter_1(input_dir, # Format_1 requires input_dir
     
     print(f"\nPlotting data for image:")
     for i in range(N_images): # Plot the data for each row
-        print(f"{os.path.basename(df.loc[i, 'image_file_name'])} \t {i+1}/{N_images}", end='', flush=True)
-        
-        # Create a new figure for each row
-        fig, axes = plt.subplots(2, 3, figsize=(15, 10))
+        print(f"\r{os.path.basename(df.loc[i, 'image_file_name'])} \t {i+1}/{N_images}", end='', flush=True)
+
+
+        # Create the figure with a custom GridSpec layout
+        fig = plt.figure(figsize=(15, 10))
+        gs = gridspec.GridSpec(2, 3, figure=fig)
 
         # Get the image, outlines, and masks for the current row
-        image = io.imread(df.loc[i,'image_file_name'])
+        image = io.imread(df.loc[i, 'image_file_name'])
         outlines = df.loc[i, 'outlines']
         masks = df.loc[i, 'masks']
 
+        # plot panel
+        ax_0_0 = fig.add_subplot(gs[0, 0])
+        ax_0_1 = fig.add_subplot(gs[0, 1])
+        ax_0_2 = fig.add_subplot(gs[0, 2])
+        ax_1_0 = fig.add_subplot(gs[1, 0])
+        ax_1_12 = fig.add_subplot(gs[1, 1:3]) # spanning across two columns
+
         # Plot: original image
-        axes[0,0].imshow(image, cmap='gray')
-        axes[0,0].set_title(f"Original Image {i+1}")
-        axes[0,0].axis('off')
+        ax_0_0.imshow(image, cmap='gray')
+        ax_0_0.set_title(f"Original Image {i+1}")
+        ax_0_0.axis('off')
 
         # Plot: image with outlines
-        axes[0,1].imshow(image, cmap='gray', alpha = 1) #  interpolation='none'
-        axes[0,1].imshow(plot.mask_overlay(image, outlines), alpha=1, cmap='gist_rainbow')
-
-        #axes[0,1].contour(outlines, colors='red', levels=[1],linewidths=2)
-        axes[0,1].set_title(f"Image {i+1} with Outlines")
-        axes[0,1].axis('off')
+        ax_0_1.imshow(image, cmap='gray', alpha=1)  # First overlay of original image
+        ax_0_1.imshow(plot.mask_overlay(image, outlines), alpha=1, cmap='gist_rainbow')
+        ax_0_1.set_title(f"Image {i+1} with Outlines")
+        ax_0_1.axis('off')
 
         # Plot: image with masks
-        axes[0,2].imshow(image, cmap='gray')
-        axes[0,2].imshow(plot.mask_overlay(image, masks), alpha=0.5, cmap='gist_rainbow')
-        axes[0,2].set_title(f"Image {i+1} with Masks")
-        axes[0,2].axis('off')
+        ax_0_2.imshow(image, cmap='gray')
+        ax_0_2.imshow(plot.mask_overlay(image, masks), alpha=0.5, cmap='gist_rainbow')
+        ax_0_2.set_title(f"Image {i+1} with Masks")
+        ax_0_2.axis('off')
 
         # Plot: Diameter distribution vs. diameter frequency (bin count histogram)
         unique_diameters, counts_diameters = np.unique(df.loc[i, 'diameter_distribution'], return_counts=True)
         max_diameter = max(unique_diameters) if unique_diameters.size > 0 else 0
         bins = np.arange(0, max_diameter + bin_size, bin_size)
 
-        axes[1, 0].hist(df.loc[i, 'diameter_distribution'], bins=bins)
-        axes[1, 0].set_title("Diameter Distribution")
-        axes[1, 0].set_xlabel("Diameter")
-        axes[1, 0].set_ylabel("Frequency")
+        ax_1_0.hist(df.loc[i, 'diameter_distribution'], bins=bins)
+        ax_1_0.set_title("Diameter Distribution")
+        ax_1_0.set_xlabel("Diameter")
+        ax_1_0.set_ylabel("Frequency")
 
         mean_diameter = df.loc[i, 'diameter_mean']
         median_diameter = df.loc[i, 'diameter_median']
-        axes[1, 0].axvline(mean_diameter, color='blue', linestyle='dashed', linewidth=1)
-        axes[1, 0].text(mean_diameter, axes[1, 0].get_ylim()[1] * 0.9, f'Mean: {mean_diameter:.2f}', color='blue')
-        axes[1, 0].axvline(median_diameter, color='green', linestyle='dashed', linewidth=1)
-        axes[1, 0].text(median_diameter, axes[1, 0].get_ylim()[1] * 0.8, f'Median: {median_diameter:.2f}', color='green')
+        ax_1_0.axvline(mean_diameter, color='blue', linestyle='dashed', linewidth=1)
+        ax_1_0.text(mean_diameter, ax_1_0.get_ylim()[1] * 0.9, f'Mean: {mean_diameter:.2f}', color='blue')
+        ax_1_0.axvline(median_diameter, color='green', linestyle='dashed', linewidth=1)
+        ax_1_0.text(median_diameter, ax_1_0.get_ylim()[1] * 0.8, f'Median: {median_diameter:.2f}', color='green')
 
-        axes[1, 0].set_xlim(0, df['diameter_distribution'].apply(lambda x: np.max(x) if x.size > 0 else 0).max() * 1.05)
-        axes[1, 0].set_ylim(0, max_frequency*1.05)
+        ax_1_0.set_xlim(0, df['diameter_distribution'].apply(lambda x: np.max(x) if x.size > 0 else 0).max() * 1.05)
+        ax_1_0.set_ylim(0, max_frequency*1.05)
 
-        # Plot 1: Image number vs. median diameter, mean diameter, and amount of cells (up to current image)
-        ax1 = axes[1, 1]
-        ax2 = ax1.twinx()
-        ax1.plot(range(N_images), df['diameter_mean'], label='Mean Diameter', color='blue')
-        ax1.plot(range(N_images), df['diameter_median'], label='Median Diameter', color='green')
-        ax2.plot(range(N_images), df['N_cells'], label='Number of Cells', color='red')
-        axes[1, 1].axvline(i, color='blue', label=f'shown image: {i+1:.2f}', linestyle='dashed', linewidth=3)
-        #axes[1, 1].text(i, axes[1, 1].get_ylim()[1] * 0.9, f'shown image: {i:.2f}', color='blue')
+        # Plot: Image number vs. median diameter, mean diameter, and amount of cells (up to current image)
+        #ax_1_12 = ax_1_12_auxilliary
+        ax_1_12_R = ax_1_12.twinx()
+        ax_1_12.plot(range(N_images), df['diameter_mean'], label='Mean Diameter', color='blue')
+        ax_1_12.plot(range(N_images), df['diameter_median'], label='Median Diameter', color='green')
+        ax_1_12_R.plot(range(N_images), df['N_cells'], label='Number of Cells', color='red')
+        ax_1_12.axvline(i, color='blue', label=f'shown image: {i+1:.2f}', linestyle='dashed', linewidth=3)
 
-        ax1.set_xlim(0, N_images - 1)
-        ax1.set_ylim(min(df['diameter_mean'].min(), df['diameter_median'].min()), max(df['diameter_mean'].max(), df['diameter_median'].max())*1.05)
-        ax2.set_ylim(df['N_cells'].min(), df['N_cells'].max()*1.05)
+        ax_1_12.set_xlim(0, N_images - 1)
+        ax_1_12.set_ylim(min(df['diameter_mean'].min(), df['diameter_median'].min()), max(df['diameter_mean'].max(), df['diameter_median'].max())*1.05)
+        ax_1_12_R.set_ylim(df['N_cells'].min(), df['N_cells'].max()*1.05)
 
-        ax1.set_title("Diameter and Cell Count")
-        ax1.set_xlabel("Image Number")
-        ax1.set_ylabel("Diameter")
-        ax2.set_ylabel("Number of Cells")
-        ax1.legend(loc='upper left')
-        ax2.legend(loc='upper right')
-
-        # Plot: Leave empty
-        axes[1, 2].axis('off')
-
-
-
-
+        ax_1_12.set_title("Diameter and Cell Count")
+        ax_1_12.set_xlabel("Image Number")
+        ax_1_12.set_ylabel("Diameter")
+        ax_1_12_R.set_ylabel("Number of Cells")
+        ax_1_12.legend(loc='upper left')
+        ax_1_12_R.legend(loc='upper right')
 
 
         # Adjust layout and save the figure as a PNG file
         plt.tight_layout()
         plot_filename = os.path.join(output_dir, f'plot_{i+1:04d}.png')
         plt.savefig(plot_filename)
+        #plt.show()
         plt.close(fig)
-    print("") # new line
-
+    print("\n") # new line
 
     vm1.create_video_from_images(
         plot_image_folder = output_dir,
