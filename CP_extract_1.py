@@ -6,6 +6,7 @@ import glob
 import os
 import time
 import pandas as pd
+import math
 
 import sys
 import os
@@ -75,14 +76,16 @@ def CP_extract_1(
         'seg_file_name', 'seg_file_path', 'ismanual', 'CP_model_type', 'channels',
         'flows0', 'flows1', 'flows2', 'flows3', 'flows4',
         'diameter_estimate', 'diameter_training',
-        'diameter_mean', 'diameter_median', 'diameter_distribution', 'outlines', 'masks', 'N_cells'
+        'diameter_mean', 'diameter_median', 'diameter_distribution', 'outlines', 'masks', 'N_cells',
+        'A_image', 'A_empty', 'A_FB', 'Ar_FBperimage', 'D_FB',
+        'A_CP_mask', 'Ar_CP_maskperImage', 'Ar_CP_maskperFB',
     ]
     df = pd.DataFrame(columns=df_columns)
 
 
 
     for i in range(N_images):
-        imgage_i = all_images[i]
+        image_i = all_images[i]
         seg_i = all_segs[i]
 
         # read seg
@@ -94,12 +97,6 @@ def CP_extract_1(
         ismanual = seg_i['ismanual']
         seg_image_filename = seg_i["filename"] # gives seg filename though it shoud give images file name. weird...
 
-        # deduce
-        N_cells_i = np.max(masks_i)
-        image_Nx = imgage_i.shape[0],
-        image_Ny = imgage_i.shape[1],
-
-
         # training diameter
         if diameter_training is None and CP_model_type is not None:
             if CP_model_type in ['cyto3', "cyto", "cyto2", "cyto3"]:
@@ -109,7 +106,6 @@ def CP_extract_1(
         elif diameter_training is None and CP_model_type is None:
             diameter_training = None
             print("NB: diameter_training can't be deduced. supply it or a standard CP_model_type as argument to CP_extract_1")
-
 
         # extract diameter tuple and from it mean and complete distribution
         diameters_tuple_i = utils.diameters(masks_i)
@@ -121,6 +117,22 @@ def CP_extract_1(
         unique_diameters, counts_diameters = np.unique(diameter_array_i, return_counts=True)
         total_diameters = diameter_array_i.size
         relative_diameter_frequencies = counts_diameters / total_diameters
+
+        # CP effectiveness measures
+        N_cells_i = np.max(masks_i)
+        image_Nx = image_i.shape[0]
+        image_Ny = image_i.shape[1]
+        print(f"image_Nx {image_Nx}, image_Ny {image_Ny}")
+        A_image = image_Nx * image_Ny
+        A_empty = np.count_nonzero(image_i == 0)
+        A_FB = np.count_nonzero(image_i != 0)
+        Ar_FBperimage = A_FB / A_image
+        D_FB = math.sqrt(A_FB) * 4 / math.pi
+
+        A_CP_mask = np.count_nonzero(masks_i != 0)
+        Ar_CP_maskperImage = A_CP_mask / A_image
+        Ar_CP_maskperFB = A_CP_mask / A_FB
+
 
 
         # Create a new DataFrame row
@@ -139,14 +151,24 @@ def CP_extract_1(
             'flows2': flow_i[2],
             'flows3': flow_i[3],
             'flows4': flow_i[4],
+            'outlines': outlines_i,
+            'masks': masks_i,
+
             'diameter_training': diameter_training,
             'diameter_estimate': diameter_estimate_i,
             'diameter_mean': median_diameter_i,
             'diameter_median': mean_diameter_i,
             'diameter_distribution': diameter_array_i,
-            'outlines': outlines_i,
-            'masks': masks_i,
-            'N_cells': N_cells_i
+
+            'N_cells': N_cells_i,
+            'A_image': A_image,
+            'A_empty': A_empty,
+            'A_FB': A_FB,
+            'Ar_FBperimage': Ar_FBperimage,
+            'D_FB': D_FB,
+            'A_CP_mask': A_CP_mask,
+            'Ar_CP_maskperImage': Ar_CP_maskperImage,
+            'Ar_CP_maskperFB': Ar_CP_maskperFB
         }])
 
         # Concatenate the new row to the DataFrame

@@ -6,7 +6,9 @@ import glob
 import os
 import time
 import pandas as pd
-
+import matplotlib.gridspec as gridspec
+import numpy as np
+from skimage import io as skimage_io  # skimage io as an alias
 
 import sys
 import os
@@ -43,10 +45,10 @@ def CP_plotter_1(input_dir, # Format_1 requires input_dir
             max_frequency = max(max_frequency, hist.max())
         else:
             max_frequency = 0
-
+    
+    print(f"\nPlotting data for image:")
     for i in range(N_images): # Plot the data for each row
-        print(f"\rPlotting data for image name: {os.path.basename(df.loc[i, 'image_file_name'])} \t {i+1}/{N_images}", end='', flush=True)
-        print("\n")
+        print(f"{os.path.basename(df.loc[i, 'image_file_name'])} \t {i+1}/{N_images}", end='', flush=True)
         
         # Create a new figure for each row
         fig, axes = plt.subplots(2, 3, figsize=(15, 10))
@@ -128,6 +130,7 @@ def CP_plotter_1(input_dir, # Format_1 requires input_dir
         plot_filename = os.path.join(output_dir, f'plot_{i+1:04d}.png')
         plt.savefig(plot_filename)
         plt.close(fig)
+    print("") # new line
 
 
     vm1.create_video_from_images(

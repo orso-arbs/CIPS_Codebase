@@ -35,7 +35,7 @@ if 1==1:
         )
 
 
-if 1==1:
+if 1==0:
     #CPe1_output_dir = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\FB images\Visit_projections_initial_test\BW 134 ball flame - Crop Small First few\CP_segment_1_2025-03-08_12-46-24\CP_extract_1_2025-03-08_12-46-36\CP_plotter_1_2025-03-08_12-46-44"
 
     CPp1_output_dir = CPp1.CP_plotter_1(
