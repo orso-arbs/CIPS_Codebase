@@ -101,7 +101,7 @@ def CP_plotter_1(input_dir, # Format_1 requires input_dir
         ax1.plot(range(N_images), df['diameter_mean'], label='Mean Diameter', color='blue')
         ax1.plot(range(N_images), df['diameter_median'], label='Median Diameter', color='green')
         ax2.plot(range(N_images), df['N_cells'], label='Number of Cells', color='red')
-        axes[1, 1].axvline(i, color='blue', label=f'shown image: {i:.2f}', linestyle='dashed', linewidth=3)
+        axes[1, 1].axvline(i, color='blue', label=f'shown image: {i+1:.2f}', linestyle='dashed', linewidth=3)
         #axes[1, 1].text(i, axes[1, 1].get_ylim()[1] * 0.9, f'shown image: {i:.2f}', color='blue')
 
         ax1.set_xlim(0, N_images - 1)
@@ -119,15 +119,22 @@ def CP_plotter_1(input_dir, # Format_1 requires input_dir
         axes[1, 2].axis('off')
 
 
+
+
+
+
         # Adjust layout and save the figure as a PNG file
         plt.tight_layout()
-        plot_filename = os.path.join(output_dir, f'plot_{i+1}.png')
+        plot_filename = os.path.join(output_dir, f'plot_{i+1:04d}.png')
         plt.savefig(plot_filename)
         plt.close(fig)
 
-    print(df.loc[0, 'image_file_name'])
-    
-    vm1.create_video_from_images(os.path.basename(df.loc[0, 'image_file_name']), output_dir, fps=5)
+
+    vm1.create_video_from_images(
+        plot_image_folder = output_dir,
+        video_output_dir = output_dir, 
+        fps=5,
+        )
 
 
     ### ToDO

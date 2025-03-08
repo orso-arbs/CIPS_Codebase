@@ -15,7 +15,7 @@ import Format_1 as F_1
 
 def create_video_from_images(plot_image_folder, video_output_dir, fps=5):
 
-    output_video = os.path.join(video_output_dir, f"FB_segmented_growth_statistics_{current_date}.mp4")
+    output_video = os.path.join(video_output_dir, f"FB_segmented_growth_statistics.mp4")
 
     # Get all PNG files in the directory
     images = glob.glob(os.path.join(plot_image_folder, "*.png"))
@@ -24,16 +24,6 @@ def create_video_from_images(plot_image_folder, video_output_dir, fps=5):
         print("No PNG images found in the directory.")
         return
 
-    # Rename images to have 6 digits in the filename
-    for image in images:
-        dirname, basename = os.path.split(image)
-        name, ext = os.path.splitext(basename)
-        match = re.search(r'(\d+)', name)
-        if match:
-            number = int(match.group(1))
-            new_name = f"{name[:match.start()]}{number:06d}{ext}"
-            new_image_path = os.path.join(dirname, new_name)
-            os.rename(image, new_image_path)
 
     # Get all renamed PNG files in the directory
     images = glob.glob(os.path.join(plot_image_folder, "*.png"))
@@ -61,3 +51,5 @@ def create_video_from_images(plot_image_folder, video_output_dir, fps=5):
     # Release the video writer
     video.release()
     print(f"Video saved as {output_video}")
+
+    return None
