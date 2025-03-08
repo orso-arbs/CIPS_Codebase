@@ -7,6 +7,8 @@ import os
 import time
 import pandas as pd
 import math
+from skimage import io as sk_io, color
+
 
 import sys
 import os
@@ -55,10 +57,17 @@ def CP_extract_1(
     image_input_dir = os.path.dirname(input_dir) # one folder above
     image_files = glob.glob(os.path.join(image_input_dir, '*.png'))
     all_images = []
+    all_grayscale_images = []
     for image_file in image_files:
-        image = io.imread(image_file)
-        all_images.append(image)
-        #print(f"Adding file to all_images: {image_file}")  # Print the file being added
+        # Load the image (RGBA)
+        rgba_image = sk_io.imread(image_file)
+        
+        # Convert to grayscale by ignoring the alpha channel
+        grayscale_image = color.rgb2gray(rgba_image[..., :3])
+        
+        # Append both RGBA and grayscale images as a tuple
+        all_images.append(rgba_image)
+        all_grayscale_images.append(grayscale_image)
     N_images = len(all_images)
     print(f"Loaded {N_images} images \n") if CP_extract_log_level == 1 else None
 
@@ -86,6 +95,7 @@ def CP_extract_1(
 
     for i in range(N_images):
         image_i = all_images[i]
+        grayscale_image_i = all_grayscale_images[i]
         seg_i = all_segs[i]
 
         # read seg
@@ -122,18 +132,15 @@ def CP_extract_1(
         N_cells_i = np.max(masks_i)
         image_Nx = image_i.shape[0]
         image_Ny = image_i.shape[1]
-        print(f"image_Nx {image_Nx}, image_Ny {image_Ny}")
         A_image = image_Nx * image_Ny
-        A_empty = np.count_nonzero(image_i == 0)
-        A_FB = np.count_nonzero(image_i != 0)
+        A_empty = np.sum(grayscale_image_i == 1)
+        A_FB = A_image - A_empty
         Ar_FBperimage = A_FB / A_image
         D_FB = math.sqrt(A_FB) * 4 / math.pi
 
         A_CP_mask = np.count_nonzero(masks_i != 0)
         Ar_CP_maskperImage = A_CP_mask / A_image
         Ar_CP_maskperFB = A_CP_mask / A_FB
-
-
 
         # Create a new DataFrame row
         new_row = pd.DataFrame([{

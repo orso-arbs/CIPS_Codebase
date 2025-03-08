@@ -178,4 +178,4 @@ def CP_segment_1(input_dir, # Format_1 requires input_dir
             except TypeError:
                 print(" (size not available)")
 
-    return output_dir, masks, flows, styles, diameter_estimate # Format_1 requires outpu_dir as first return
+    return output_dir, masks, flows, styles, diameter_estimate, CP_model_type # Format_1 requires outpu_dir as first return
