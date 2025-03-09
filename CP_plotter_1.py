@@ -126,7 +126,7 @@ def CP_plotter_1(input_dir, # Format_1 requires input_dir
         # Create a third y-axis for the dotted line plots
         ax_1_12_RR = ax_1_12.twinx()  # Second twin axis
         ax_1_12_RR.spines["right"].set_position(("outward", 60))  # Move third axis further right
-        ax_1_12_RR.set_ylabel("Ar Values")  # Label for third y-axis
+        ax_1_12_RR.set_ylabel("A/A Values")  # Label for third y-axis
         ax_1_12_RR.set_ylim(0, 1)  # Set limits for third y-axis
         ax_1_12_RR.plot(range(N_images), df['Ar_FBperimage'], label=f"{df.iloc[i]['Ar_FBperimage']:05.2f}" + ' = $A_{Flame Ball}/A_{Image}$', color='gray', linestyle='dotted')
         ax_1_12_RR.plot(range(N_images), df['Ar_CP_maskperImage'], label=f"{df.iloc[i]['Ar_CP_maskperImage']:05.2f}" + " = $A_{Cell masks}/A_{Image}$", color='gray', linestyle='dashed')
