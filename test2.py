@@ -1,45 +1,35 @@
-import glob
-import os
-import matplotlib.pyplot as plt
-from skimage import io, color
-import numpy as np
+import pandas as pd
 
-# Define the directory where images are stored
-visit_images_dir = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\FB images\Visit_projections_initial_test\BW 134 ball flame - Crop Small First few"
+# List of file paths
+file_paths = [
+    r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\Data\A11_SF_K_mean_as_mean_stretch_rate_vs_time_manual_extraction.txt",
+    r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\Data\A11_SF_N_c_as_number_of_cells_vs_time_manual_extraction.txt",
+    r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\Data\A11_SF_R_mean_as_average_radius_of_the_wrinkled_flame_fron_vs_time_manual_extraction.txt",
+    r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\Data\A11_SF_R_mean_dot_as_first_time_derivative_of_the_average_radius_of_the_wrinkled_flame_front_vs_time_manual_extraction.txt",
+    r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\Data\A11_SF_s_a_as_average_normal_component_of_the_absolute_propagation_velocity_vs_time_manual_extraction.txt",
+    r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\Data\A11_SF_s_d_as_average_density_weighted_displacement_speed_vs_time_manual_extraction.txt",
+    r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\Data\A11_SF_A_as_flame_surface_area_of_the_wrinkled_spherical_front_vs_time_manual_extraction.txt",
+    r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\Data\A11_SF_a_t_as_average_total_aerodynamic_strain_vs_time_manual_extraction.txt",
+    r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\Data\A11_SF_iHRR_as_integral_heat_release_rate_vs_time_manual_extraction.txt",
+    r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\Data\A11_SF_K_geom_as_geometric_stretch_rate_vs_time_manual_extraction.txt"
+]
 
-# Get all PNG image files in the directory (you can also use '*.jpg' or other formats if needed)
-image_files = glob.glob(os.path.join(visit_images_dir, "*.png"))
+# Variable to track the maximum 'time' value
+max_time = float('-inf')
 
-# Create a figure to plot the images and histograms
-fig, axes = plt.subplots(2, len(image_files), figsize=(15, 10))  # 2 rows: one for images and one for histograms
-
-# Iterate through the image files and plot them
-for i, image_file in enumerate(image_files):
-    image = io.imread(image_file)
+# Load all files and find the maximum 'time'
+for file_path in file_paths:
+    # Extract file name without path and extension
+    file_name = file_path.split('\\')[-1].replace('.txt', '')
     
-    # Convert to grayscale by ignoring the alpha channel
-    grayscale_image = color.rgb2gray(image[..., :3])  # Use only the RGB channels
+    # Simplify the variable name by removing 'A11_SF_' and '_as' parts
+    variable_name = file_name.split('_as')[0]
     
-    # Print the min and max values of the grayscale image
-    min_val = np.min(grayscale_image)
-    max_val = np.max(grayscale_image)
-    print(f"Image {i+1} - Min value: {min_val}, Max value: {max_val}")
+    # Load the CSV file into a DataFrame
+    df = pd.read_csv(file_path)
     
-    # Plot the grayscale image
-    axes[0, i].imshow(grayscale_image, cmap='gray')
-    axes[0, i].set_title(f"Grayscale Image {i+1}")
-    axes[0, i].axis('off')  # Hide the axis
+    # Assuming the 'time' column exists in each CSV, find the max time in this file
+    if 'time' in df.columns:
+        max_time = max(max_time, df['time'].max())
 
-    # Calculate the histogram of pixel values
-    hist, bins = np.histogram(grayscale_image, bins=256, range=(0, 1))
-    
-    # Plot the histogram
-    axes[1, i].plot(bins[:-1], hist, color='black')  # Plot the histogram (excluding last bin)
-    axes[1, i].set_title(f"Histogram {i+1}")
-    axes[1, i].set_xlim(0, 1)
-    axes[1, i].set_xlabel('Pixel Intensity')
-    axes[1, i].set_ylabel('Frequency')
-
-# Show the plot
-plt.tight_layout()
-plt.show()
+print(f"The maximum 'time' across all files is: {max_time}")

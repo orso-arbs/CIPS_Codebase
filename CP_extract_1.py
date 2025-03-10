@@ -27,7 +27,7 @@ warnings.simplefilter(action='ignore', category=FutureWarning)
 def CP_extract_1(
         input_dir,
         masks = None, flows = None, styles = None, diameter_estimate = None, # can be implemented as input
-        CP_model_type = None, diameter_training = None,
+        CP_model_type = None, diameter_training_px = None,
         CP_extract_log_level = 0,
         ):
     
@@ -60,13 +60,13 @@ def CP_extract_1(
     all_grayscale_images = []
     for image_file in image_files:
         # Load the image (RGBA)
-        rgba_image = sk_io.imread(image_file)
+        rgbA_image_px2 = sk_io.imread(image_file)
         
         # Convert to grayscale by ignoring the alpha channel
-        grayscale_image = color.rgb2gray(rgba_image[..., :3])
+        grayscale_image = color.rgb2gray(rgbA_image_px2[..., :3])
         
         # Append both RGBA and grayscale images as a tuple
-        all_images.append(rgba_image)
+        all_images.append(rgbA_image_px2)
         all_grayscale_images.append(grayscale_image)
     N_images = len(all_images)
     print(f"Loaded {N_images} images \n") if CP_extract_log_level == 1 else None
@@ -81,15 +81,35 @@ def CP_extract_1(
 
     # Initialize DataFrame
     df_columns = [
-        'image_file_name', 'image_file_path', 'image_Nx', 'image_Ny',
+        'image_file_name', 'image_file_path', 'image_Nx_px', 'image_Ny_px',
         'seg_file_name', 'seg_file_path', 'ismanual', 'CP_model_type', 'channels',
         'flows0', 'flows1', 'flows2', 'flows3', 'flows4',
-        'diameter_estimate', 'diameter_training',
-        'diameter_mean', 'diameter_median', 'diameter_distribution', 'outlines', 'masks', 'N_cells',
-        'A_image', 'A_empty', 'A_FB', 'Ar_FBperimage', 'D_FB',
-        'A_CP_mask', 'Ar_CP_maskperImage', 'Ar_CP_maskperFB',
+        'diameter_estimate', 'diameter_training_px',
+        'diameter_mean_px', 'diameter_median_px', 'diameter_distribution_px', 'outlines', 'masks', 'N_cells',
+        'A_image_px2', 'A_empty_px2', 'A_FB_px2', 'Ar_px2_FBperimage', 'D_FB_px',
+        'A_CP_mask_px', 'Ar_px2_CP_maskperImage', 'Ar_px2_CP_maskperFB',
+        'time',
     ]
     df = pd.DataFrame(columns=df_columns)
+
+    
+    ''' A11 p.36
+    reference values from detailed description of chemistry is based on the mech-
+    anism of Li et al. [2004], consisting of 9 species and 19 non-duplicate
+    elementary reactions. The planar premixed flame structure calculated us-
+    ing PREMIX [Rupley et al., 1995]'
+    '''
+    d_T = 7.516 * 1e-3 # flame thickness
+    S_L = 51.44 # laminar flame speed
+    T_b = 1843.5 # burned gas temperature
+
+    t_ref = d_T/S_L # flame time scale
+    
+    t_max = 6.81 # max time estimated from plots
+    t = np.linspace(0, t_max, 134)
+    R0 = 10 * d_T # initial Spherical flame radius
+
+    time_values = np.linspace(0, t_max, N_images)  # Generate time values
 
 
 
@@ -102,52 +122,52 @@ def CP_extract_1(
         masks_i = seg_i['masks']
         outlines_i = seg_i['outlines']
         flow_i = seg_i['flows']
-        diameter_estimate_i = seg_i["diameter"]
+        diameter_estimate_px_i = seg_i["diameter"]
         channels = seg_i["chan_choose"]
         ismanual = seg_i['ismanual']
         seg_image_filename = seg_i["filename"] # gives seg filename though it shoud give images file name. weird...
 
         # training diameter
-        if diameter_training is None and CP_model_type is not None:
+        if diameter_training_px is None and CP_model_type is not None:
             if CP_model_type in ['cyto3', "cyto", "cyto2", "cyto3"]:
-                diameter_training = 30
+                diameter_training_px = 30
             if CP_model_type == "nuclei":
-                diameter_training = 17
-        elif diameter_training is None and CP_model_type is None:
-            diameter_training = None
-            print("NB: diameter_training can't be deduced. supply it or a standard CP_model_type as argument to CP_extract_1")
+                diameter_training_px = 17
+        elif diameter_training_px is None and CP_model_type is None:
+            diameter_training_px = None
+            print("NB: diameter_training_px can't be deduced. supply it or a standard CP_model_type as argument to CP_extract_1")
 
         # extract diameter tuple and from it mean and complete distribution
         diameters_tuple_i = utils.diameters(masks_i)
-        median_diameter_i = diameters_tuple_i[0]
-        diameter_array_i = diameters_tuple_i[1]
-        mean_diameter_i = np.mean(diameter_array_i)
+        median_diameter_px_i = diameters_tuple_i[0]
+        diameter_array_px_i = diameters_tuple_i[1]
+        mean_diameter_px_i = np.mean(diameter_array_px_i)
 
-        # Calculate the relative frequency of each diameter in diameter_array_i
-        unique_diameters, counts_diameters = np.unique(diameter_array_i, return_counts=True)
-        total_diameters = diameter_array_i.size
+        # Calculate the relative frequency of each diameter in diameter_array_px_i
+        unique_diameters, counts_diameters = np.unique(diameter_array_px_i, return_counts=True)
+        total_diameters = diameter_array_px_i.size
         relative_diameter_frequencies = counts_diameters / total_diameters
 
         # CP effectiveness measures
         N_cells_i = np.max(masks_i)
-        image_Nx = image_i.shape[0]
-        image_Ny = image_i.shape[1]
-        A_image = image_Nx * image_Ny
-        A_empty = np.sum(grayscale_image_i == 1)
-        A_FB = A_image - A_empty
-        Ar_FBperimage = A_FB / A_image
-        D_FB = math.sqrt(A_FB) * 4 / math.pi
+        image_Nx_px = image_i.shape[0]
+        image_Ny_px = image_i.shape[1]
+        A_image_px2 = image_Nx_px * image_Ny_px
+        A_empty_px2 = np.sum(grayscale_image_i == 1)
+        A_FB_px2 = A_image_px2 - A_empty_px2
+        Ar_px2_FBperimage = A_FB_px2 / A_image_px2
+        D_FB_px = math.sqrt(A_FB_px2) * 4 / math.pi
 
-        A_CP_mask = np.count_nonzero(masks_i != 0)
-        Ar_CP_maskperImage = A_CP_mask / A_image
-        Ar_CP_maskperFB = A_CP_mask / A_FB
+        A_CP_mask_px = np.count_nonzero(masks_i != 0)
+        Ar_px2_CP_maskperImage = A_CP_mask_px / A_image_px2
+        Ar_px2_CP_maskperFB = A_CP_mask_px / A_FB_px2
 
         # Create a new DataFrame row
         new_row = pd.DataFrame([{
             'image_file_name': image_files[i], # specific image
             'image_file_directory': image_input_dir, # all images
-            'image_Nx': image_Nx,
-            'image_Ny': image_Ny,
+            'image_Nx_px': image_Nx_px,
+            'image_Ny_px': image_Ny_px,
             'seg_file_name': seg_filenames[i],
             'seg_file_path': seg_files[i],
             'ismanual': ismanual,
@@ -161,21 +181,22 @@ def CP_extract_1(
             'outlines': outlines_i,
             'masks': masks_i,
 
-            'diameter_training': diameter_training,
-            'diameter_estimate': diameter_estimate_i,
-            'diameter_mean': median_diameter_i,
-            'diameter_median': mean_diameter_i,
-            'diameter_distribution': diameter_array_i,
+            'diameter_training_px': diameter_training_px,
+            'diameter_estimate_px': diameter_estimate_px_i,
+            'diameter_mean_px': median_diameter_px_i,
+            'diameter_median_px': mean_diameter_px_i,
+            'diameter_distribution_px': diameter_array_px_i,
 
             'N_cells': N_cells_i,
-            'A_image': A_image,
-            'A_empty': A_empty,
-            'A_FB': A_FB,
-            'Ar_FBperimage': Ar_FBperimage,
-            'D_FB': D_FB,
-            'A_CP_mask': A_CP_mask,
-            'Ar_CP_maskperImage': Ar_CP_maskperImage,
-            'Ar_CP_maskperFB': Ar_CP_maskperFB
+            'A_image_px2': A_image_px2,
+            'A_empty_px2': A_empty_px2,
+            'A_FB_px2': A_FB_px2,
+            'Ar_px2_FBperimage': Ar_px2_FBperimage,
+            'D_FB_px': D_FB_px,
+            'A_CP_mask_px': A_CP_mask_px,
+            'Ar_px2_CP_maskperImage': Ar_px2_CP_maskperImage,
+            'Ar_px2_CP_maskperFB': Ar_px2_CP_maskperFB,
+            'time': time_values[i]  # Assign time based on index
         }])
 
         # Concatenate the new row to the DataFrame
@@ -184,6 +205,21 @@ def CP_extract_1(
     # Print columns that have None values
     none_columns = df.columns[df.isnull().any()].tolist()
     print(f"NB: Columns with None values: {none_columns}")
+
+
+    ################# Dimentionalise
+
+    
+
+
+
+
+
+
+
+
+
+
 
 
     ### Save
