@@ -6,6 +6,7 @@ import Format_1 as F_1
 import CP_segment_1 as CPs1
 import CP_extract_1 as CPe1
 import CP_plotter_1 as CPp1
+import CP_plotter_2_CPvsA11 as CPp2
 
 
 start_time, current_date = F_1.start_inform(__file__)
@@ -32,11 +33,11 @@ if 1==1:
     CPe1_output_dir, CP_extract_df = CPe1.CP_extract_1(
         input_dir = CPs1_output_dir,
         #masks = masks, flows = flows, styles = styles, diameter_estimate = diameter_estimate, CP_model_type = CP_model_type,
-        CP_extract_log_level = 1,
+        CP_extract_log_level = 0,
         )
 
 
-if 1==1:
+if 1==0:
     #CPe1_output_dir = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\FB images\Visit_projections_initial_test\BW 134 ball flame - Crop Small First few\CP_segment_1_2025-03-10_15-13-26\CP_extract_1_2025-03-10_15-21-44"
     #CP_extract_df = None
 
@@ -48,6 +49,16 @@ if 1==1:
         )
 
 
+if 1==1:
+    #CPe1_output_dir = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\FB images\Visit_projections_initial_test\BW 134 ball flame - Crop Small First few\CP_segment_1_2025-03-10_15-13-26\CP_extract_1_2025-03-10_15-21-44"
+    #CP_extract_df = None
+
+    CPp2_output_dir = CPp2.CP_plotter_2_CPvsA11(
+        input_dir = CPe1_output_dir,
+        #CP_extract_df = CP_extract_df,
+        output_dir_manual = "", output_dir_comment = "",
+        video = 1
+        )
 
 
 

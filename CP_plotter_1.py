@@ -49,47 +49,8 @@ def CP_plotter_1(input_dir, # Format_1 requires input_dir
         # No action needed since CP_extract_df is already passed
     else:
         raise ValueError("Loading CP_extract data disambiguation failed. Check CP_extract_df and CP_extract_df_pkl")
-
-
-
-    # Load A11 data
-    # Define the file paths
-    file_paths = [
-        r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\Data\A11_SF_K_mean_as_mean_stretch_rate_vs_time_manual_extraction.txt",
-        r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\Data\A11_SF_N_c_as_number_of_cells_vs_time_manual_extraction.txt",
-        r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\Data\A11_SF_R_mean_as_average_radius_of_the_wrinkled_flame_fron_vs_time_manual_extraction.txt",
-        r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\Data\A11_SF_R_mean_dot_as_first_time_derivative_of_the_average_radius_of_the_wrinkled_flame_front_vs_time_manual_extraction.txt",
-        r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\Data\A11_SF_s_a_as_average_normal_component_of_the_absolute_propagation_velocity_vs_time_manual_extraction.txt",
-        r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\Data\A11_SF_s_d_as_average_density_weighted_displacement_speed_vs_time_manual_extraction.txt",
-        r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\Data\A11_SF_A_as_flame_surface_area_of_the_wrinkled_spherical_front_vs_time_manual_extraction.txt",
-        r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\Data\A11_SF_a_t_as_average_total_aerodynamic_strain_vs_time_manual_extraction.txt",
-        r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\Data\A11_SF_iHRR_as_integral_heat_release_rate_vs_time_manual_extraction.txt",
-        r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\Data\A11_SF_K_geom_as_geometric_stretch_rate_vs_time_manual_extraction.txt"
-    ]
-
-    # Load all files into a dictionary of DataFrames and create variables dynamically
-    for file_path in file_paths:
-        # Extract file name without path and extension
-        file_name = file_path.split('\\')[-1].replace('.txt', '')
-        
-        # Simplify the variable name by removing 'A11_SF_' and '_as' parts
-        variable_name = file_name.split('_as')[0]
-        
-        # Load the CSV file into a DataFrame and assign it dynamically
-        globals()[variable_name] = pd.read_csv(file_path)
-    ''' A11 dataframes:
-    A11_SF_K_mean
-    A11_SF_N_c
-    A11_SF_R_mean
-    A11_SF_R_mean_dot
-    A11_SF_s_a
-    A11_SF_s_d
-    A11_SF_A
-    A11_SF_a_t
-    A11_SF_iHRR
-    A11_SF_K_geom
-    '''
-
+    
+    
 
     # auxillary function to plot the data
 
