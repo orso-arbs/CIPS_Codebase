@@ -28,7 +28,7 @@ if 1==0:
         )
 
 
-if 1==1:
+if 1==0:
     # BW 134 ball flame - Crop
     CPs1_output_dir = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\FB images\Visit_projections_initial_test\BW 134 ball flame - Crop\CP_segment_1_2025-03-08_18-25-49"
     # BW 134 ball flame - Crop Small First few
@@ -57,7 +57,7 @@ if 1==0:
 
 
 if 1==1: # video comparing CP A11
-    #CPe1_output_dir = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\FB images\Visit_projections_initial_test\BW 134 ball flame - Crop\CP_segment_1_2025-03-08_18-25-49\CP_extract_1_2025-03-11_23-59-13"
+    CPe1_output_dir = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\FB images\Visit_projections_initial_test\BW 134 ball flame - Crop\CP_segment_1_2025-03-08_18-25-49\CP_extract_1_2025-03-12_11-38-36"
     #CP_extract_df = None
 
     CPp2_output_dir = CPp2.CP_plotter_2_CPvsA11(

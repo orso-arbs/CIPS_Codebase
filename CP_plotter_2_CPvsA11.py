@@ -99,8 +99,10 @@ def CP_plotter_2_CPvsA11(input_dir, # Format_1 requires input_dir
     # Number of rows in the DataFrame
     N_images = len(CP_extract_df)
 
+
     # Find the maximum frequency for all histograms
-    max_diameter = max([diameter for sublist in CP_extract_df['diameter_distribution_nonDim'] for diameter in sublist])
+    max_diameter_row = CP_extract_df['diameter_distribution_nonDim'].apply(lambda x: np.max(x) if len(x) > 0 else None)
+    max_diameter = max_diameter_row.max()
     bin_size = max_diameter/15
     max_frequency = 0
     for i in range(N_images):
@@ -134,6 +136,9 @@ def CP_plotter_2_CPvsA11(input_dir, # Format_1 requires input_dir
         ax_1_0 = fig.add_subplot(gs[1, 0])
         ax_1_12 = fig.add_subplot(gs[1, 1:3]) # spanning across two columns
 
+
+
+
         # Plot: original image
         ax_0_0.imshow(image, cmap='gray')
         ax_0_0.set_title(f"Original Image {i+1}")
@@ -152,6 +157,9 @@ def CP_plotter_2_CPvsA11(input_dir, # Format_1 requires input_dir
         ax_0_2.imshow(plot.mask_overlay(image, masks), alpha=0.5, cmap='gist_rainbow')
         ax_0_2.set_title(f"Image {i+1} with Masks")
         ax_0_2.axis('off')
+
+
+
 
         # Plot: Diameter distribution vs. diameter frequency (bin count histogram)
         unique_diameters, counts_diameters = np.unique(CP_extract_df.loc[i, 'diameter_distribution_nonDim'], return_counts=True)
@@ -179,12 +187,9 @@ def CP_plotter_2_CPvsA11(input_dir, # Format_1 requires input_dir
 
         # Plot: Image number vs. median diameter, mean diameter, and amount of cells (up to current image)
         #ax_1_12 = ax_1_12_auxilliary
-        ax_1_12.plot(CP_extract_df['time'], CP_extract_df['diameter_mean_nonDim'], label=f"{CP_extract_df.iloc[i]['diameter_mean_nonDim']:05.2f} = Cell Mean Diameter", color='green')
+        ax_1_12.plot(CP_extract_df['time'], CP_extract_df['diameter_mean_nonDim'], label=f"{CP_extract_df.iloc[i]['diameter_mean_nonDim']:05.2f}" +" = Cell Mean Diameter $D_{c,mean}$", color='green')
         ax_1_12.plot(CP_extract_df['time'], CP_extract_df['diameter_training_nonDim'], label=f"{CP_extract_df.iloc[i]['diameter_training_nonDim'] if pd.notna(CP_extract_df.iloc[i]['diameter_training_nonDim']) else 0.00:05.2f} = Cellpose Training Diameter", color='aquamarine')
-        
-        #S = max(CP_extract_df['diameter_mean_nonDim'].max(), CP_extract_df['diameter_median_nonDim'].max()) / CP_extract_df['D_FB_nonDim'].max()
-        #ax_1_12.plot(range(N_images), CP_extract_df['D_FB_nonDim'] * S, label=f"{(CP_extract_df.iloc[i]['D_FB_nonDim']*S):.2f} = Spherical Flame Diameter * {S:.3f}", color='orange')
-            
+                    
         cp_time = CP_extract_df.iloc[i]['time']
         closest_index_R_mean = (np.abs(A11_SF_R_mean['time'] - cp_time)).argmin()
         closest_index_iHRR = (np.abs(A11_SF_iHRR['time'] - cp_time)).argmin()
@@ -224,19 +229,17 @@ def CP_plotter_2_CPvsA11(input_dir, # Format_1 requires input_dir
         ax_1_12_R.set_ylim(CP_extract_df['N_cells'].min(), CP_extract_df['N_cells'].max()*1.05)
         ax_1_12_RR.set_ylim(0, 1)
 
-
-        solid_line = mlines.Line2D([], [], color='black', linestyle='-', label="Cellpose (Solid)")
-        dashed_line = mlines.Line2D([], [], color='black', linestyle='--', label="A11 (Dashed)")
-        ax_1_12.set_title("Diameter and Cell Count")
-        ax_1_12.legend(handles=[solid_line, dashed_line], loc='upper center', fontsize=10, frameon=False)
-        
         ax_1_12.set_xlabel("time")
         ax_1_12.set_ylabel("Diameter", color='green')
         ax_1_12_L.set_ylabel("Heat Release Rate", color='orange')
         ax_1_12_R.set_ylabel("Number of Cells", color='red')
         ax_1_12_RR.set_ylabel("$A_{Cell masks}/A_{Spherical Flame}$", color='gray')
 
-        ax_1_12.legend(loc='upper left')
+        solid_line = mlines.Line2D([], [], color='black', linestyle='-', label="Cellpose (Solid)")
+        dashed_line = mlines.Line2D([], [], color='black', linestyle='--', label="A11 (Dashed)")
+        ax_1_12.set_title("Diameter and Cell Count")
+        ax_1_12.legend(handles=[solid_line, dashed_line], loc='upper center', fontsize=10, frameon=False)
+
         ax_1_12_L.legend(loc='lower left')
         ax_1_12_R.legend(loc='upper right')
         ax_1_12_RR.legend(loc='lower right')

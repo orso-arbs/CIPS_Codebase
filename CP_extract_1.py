@@ -202,6 +202,12 @@ def CP_extract_1(
         CP_extract_df.at[i, 'Ar_px2_CP_maskperImage'] = Ar_px2_CP_maskperImage
         CP_extract_df.at[i, 'Ar_px2_CP_maskperFB'] = Ar_px2_CP_maskperFB
 
+        # clean diameter_distribution_px
+        CP_extract_df['diameter_distribution_px'] = CP_extract_df['diameter_distribution_px'].apply(
+            lambda x: np.array([x]) if isinstance(x, np.ndarray) and x.ndim == 0 else x
+        )
+
+
     # Print columns that have None values
     none_columns = CP_extract_df.columns[CP_extract_df.isnull().any()].tolist()
     print(f"NB: Columns with None values: {none_columns}") if CP_extract_log_level == 1 else None
@@ -334,6 +340,10 @@ def CP_extract_1(
         CP_extract_df.at[i, 'R_FB_nonDim'] = R_FB_nonDim
         CP_extract_df.at[i, 'A_CP_mask_nonDim'] = A_CP_mask_nonDim
 
+        # clean diameter_distribution_nonDim
+        CP_extract_df['diameter_distribution_nonDim'] = CP_extract_df['diameter_distribution_nonDim'].apply(
+            lambda x: np.array([x]) if isinstance(x, np.ndarray) and x.ndim == 0 else x
+        )
 
 
 
