@@ -187,9 +187,13 @@ def CP_plotter_2_CPvsA11(input_dir, # Format_1 requires input_dir
 
         # Plot: Image number vs. median diameter, mean diameter, and amount of cells (up to current image)
         #ax_1_12 = ax_1_12_auxilliary
-        ax_1_12.plot(CP_extract_df['time'], CP_extract_df['diameter_mean_nonDim'], label=f"{CP_extract_df.iloc[i]['diameter_mean_nonDim']:05.2f}" +" = Cell Mean Diameter $D_{c,mean}$", color='green')
-        ax_1_12.plot(CP_extract_df['time'], CP_extract_df['diameter_training_nonDim'], label=f"{CP_extract_df.iloc[i]['diameter_training_nonDim'] if pd.notna(CP_extract_df.iloc[i]['diameter_training_nonDim']) else 0.00:05.2f} = Cellpose Training Diameter", color='aquamarine')
-                    
+
+
+        line_1_12_1, = ax_1_12.plot(CP_extract_df['time'], CP_extract_df['diameter_mean_nonDim'], label=f"{CP_extract_df.iloc[i]['diameter_mean_nonDim']:05.2f}" +" = Cell Mean Diameter $D_{c,mean}$", color='green')
+        line_1_12_2, = ax_1_12.plot(CP_extract_df['time'], CP_extract_df['diameter_training_nonDim'], label=f"{CP_extract_df.iloc[i]['diameter_training_nonDim'] if pd.notna(CP_extract_df.iloc[i]['diameter_training_nonDim']) else 0.00:05.2f} = Cellpose Training Diameter", color='aquamarine')
+
+
+
         cp_time = CP_extract_df.iloc[i]['time']
         closest_index_R_mean = (np.abs(A11_SF_R_mean['time'] - cp_time)).argmin()
         closest_index_iHRR = (np.abs(A11_SF_iHRR['time'] - cp_time)).argmin()
@@ -204,21 +208,21 @@ def CP_plotter_2_CPvsA11(input_dir, # Format_1 requires input_dir
         
         S2 = 1e-1
         #ax_1_12.plot(CP_extract_df['time'], CP_extract_df['R_FB_nonDim'] * S2, label=f"{(CP_extract_df.iloc[i]['R_FB_nonDim']*S2):05.2f} = Image deduced Spherical Flame Radius * {S2:.3f}", color='olive')
-        ax_1_12.plot(A11_SF_R_mean['time'], A11_SF_R_mean['R_mean'] * S2, label=f"{(closest_A11_r_mean*S2):05.2f} = A11 Spherical Flame Radius * {S2:.3f}", color='olive', linestyle='dashed')
-        
+        line_1_12_3, = ax_1_12.plot(A11_SF_R_mean['time'], A11_SF_R_mean['R_mean'] * S2, label=f"{(closest_A11_r_mean*S2):05.2f} = A11 Spherical Flame Radius * {S2:.3f}", color='olive', linestyle='dashed')
+
         S3 = 1
         ax_1_12_L = ax_1_12.twinx() 
-        ax_1_12_L.plot(A11_SF_iHRR['time'], A11_SF_iHRR['iHRR'] * S3, label=f"{(closest_A11_iHRR*S2):05.2f} = A11 integral heat release rate * {S2:.3f}", color='orange', linestyle='dashed')
+        line_1_12_L, = ax_1_12_L.plot(A11_SF_iHRR['time'], A11_SF_iHRR['iHRR'] * S3, label=f"{(closest_A11_iHRR*S2):05.2f} = A11 integral heat release rate * {S2:.3f}", color='orange', linestyle='dashed')
 
         ax_1_12_R = ax_1_12.twinx()
-        ax_1_12_R.plot(CP_extract_df['time'], CP_extract_df['N_cells'], label=f"{CP_extract_df.iloc[i]['N_cells']:05.2f} = Number of cells", color='red')
-        
-        ax_1_12.axvline(CP_extract_df.iloc[i]['time'], color='black', label=f"{CP_extract_df.iloc[i]['image_number']:.2f} = shown image", linestyle='dashed', linewidth=3)
+        line_1_12_R, = ax_1_12_R.plot(CP_extract_df['time'], CP_extract_df['N_cells'], label=f"{CP_extract_df.iloc[i]['N_cells']:05.2f} = Number of cells", color='red')
+
+        line_1_12_4 = ax_1_12.axvline(CP_extract_df.iloc[i]['time'], color='black', label=f"{CP_extract_df.iloc[i]['image_number']:.2f} = shown image", linestyle='dashed', linewidth=3)
+
 
         # Create a third y-axis for the dotted line plots
         ax_1_12_RR = ax_1_12.twinx()  # Second twin axis
-        ax_1_12_RR.plot(CP_extract_df['time'], CP_extract_df['Ar_px2_CP_maskperFB'], label=f"{CP_extract_df.iloc[i]['Ar_px2_CP_maskperFB']:05.2f}" + " = $A_{Cell masks}/A_{Spherical Flame}$", color='gray')
-
+        line_1_12_RR, = ax_1_12_RR.plot(CP_extract_df['time'], CP_extract_df['Ar_px2_CP_maskperFB'], label=f"{CP_extract_df.iloc[i]['Ar_px2_CP_maskperFB']:05.2f}" + " = $A_{Cell masks}/A_{Spherical Flame}$", color='gray')
 
 
         # Set the limits and labels for the axes
@@ -230,19 +234,42 @@ def CP_plotter_2_CPvsA11(input_dir, # Format_1 requires input_dir
         ax_1_12_RR.set_ylim(0, 1)
 
         ax_1_12.set_xlabel("time")
-        ax_1_12.set_ylabel("Diameter", color='green')
+        ax_1_12.set_ylabel("Length", color='green')
         ax_1_12_L.set_ylabel("Heat Release Rate", color='orange')
         ax_1_12_R.set_ylabel("Number of Cells", color='red')
-        ax_1_12_RR.set_ylabel("$A_{Cell masks}/A_{Spherical Flame}$", color='gray')
+        ax_1_12_RR.set_ylabel("CP efficiency $\mu_{CP} = A_{CP}/A_{SF}$", color='gray')
 
-        solid_line = mlines.Line2D([], [], color='black', linestyle='-', label="Cellpose (Solid)")
-        dashed_line = mlines.Line2D([], [], color='black', linestyle='--', label="A11 (Dashed)")
-        ax_1_12.set_title("Diameter and Cell Count")
-        ax_1_12.legend(handles=[solid_line, dashed_line], loc='upper center', fontsize=10, frameon=False)
+        # order legend
+        handles = [
+            line_1_12_4, # Image number
+            #line_1_12_RR, # Area ratio
+            #line_1_12_R, # Number of cells
+            line_1_12_1, # mean diameter
+            line_1_12_2, # training diameter
+            line_1_12_3, # A11 R_mean
+            #line_1_12_L, # A11 iHRR
+        ]
+        labels = [
+            line_1_12_4.get_label(), # Image number
+            #line_1_12_RR.get_label(), # Area ratio
+            #line_1_12_R.get_label(), # Number of cells
+            line_1_12_1.get_label(), # mean diameter
+            line_1_12_2.get_label(), # training diameter
+            line_1_12_3.get_label(), # A11 R_mean
+            #line_1_12_L.get_label(), # A11 iHRR
+        ]
+        ax_1_12.legend(handles, labels, loc='upper left', fontsize=10, frameon=False)
+        
+        solid_line = mlines.Line2D([], [], color='black', linestyle='-', label="Cellpose")
+        dashed_line = mlines.Line2D([], [], color='black', linestyle='--', label="Altantzis 2011")
+        handles_title = [dashed_line, solid_line]
+        labels_title = [dashed_line.get_label(), solid_line.get_label()]
 
-        ax_1_12_L.legend(loc='lower left')
-        ax_1_12_R.legend(loc='upper right')
-        ax_1_12_RR.legend(loc='lower right')
+        fig_legend = ax_1_12.get_figure()
+        fig_legend.legend(handles_title, labels_title, loc='upper center', fontsize=10, frameon=False, ncol=2, bbox_to_anchor=(0.5, 1.05))
+
+
+
 
         ax_1_12_L.spines["right"].set_position(("outward", 0))  # Slightly to the right
         ax_1_12_L.yaxis.set_label_position("right")

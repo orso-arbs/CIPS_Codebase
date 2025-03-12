@@ -473,8 +473,8 @@ def CP_plotter_3_CPvsA11_Panel(input_dir, # Format_1 requires input_dir
 
             ax_R3 = ax.twinx()
             ax_R3.plot(CP_extract_df['time'], CP_extract_df['Ar_px2_CP_maskperFB'],
-                        label="$\mu_{CP} = A_{CP}/A_{SF}$", color='gray')
-            ax_R3.set_ylabel("$\mu_{CP} = A_{CP}/A_{SF}$", color='gray')
+                        label="CP efficiency $\mu_{CP} = A_{CP}/A_{SF}$", color='gray')
+            ax_R3.set_ylabel("CP efficiency $\mu_{CP} = A_{CP}/A_{SF}$", color='gray')
 
             # Set Limits
             ax_R1.set_ylim(0, max_diameter * 1.05)
