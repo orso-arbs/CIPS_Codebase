@@ -137,7 +137,7 @@ def CP_extract_1(
                 diameter_training_px = 17
         elif diameter_training_px is None and CP_model_type is None:
             diameter_training_px = None
-            print("NB: diameter_training_px can't be deduced. supply it or a standard CP_model_type as argument to CP_extract_1")
+            print("NB: diameter_training_px can't be deduced. supply it or a standard CP_model_type as argument to CP_extract_1") if CP_extract_log_level == 1 else None
 
         # extract diameter tuple and from it mean and complete distribution
         diameters_tuple_i = utils.diameters(masks_i)
@@ -158,7 +158,8 @@ def CP_extract_1(
         A_empty_px2 = np.sum(grayscale_image_i == 1)
         A_FB_px2 = A_image_px2 - A_empty_px2
         Ar_px2_FBperimage = A_FB_px2 / A_image_px2
-        D_FB_px = math.sqrt(A_FB_px2) * 4 / math.pi
+        D_FB_px = math.sqrt(A_FB_px2 * 4 / math.pi)
+        R_FB_px = D_FB_px / 2
 
         A_CP_mask_px = np.count_nonzero(masks_i != 0)
         Ar_px2_CP_maskperImage = A_CP_mask_px / A_image_px2
@@ -187,8 +188,8 @@ def CP_extract_1(
         CP_extract_df.at[i, 'masks'] = masks_i
         CP_extract_df.at[i, 'diameter_training_px'] = diameter_training_px
         CP_extract_df.at[i, 'diameter_estimate_px'] = diameter_estimate_px_i
-        CP_extract_df.at[i, 'diameter_mean_px'] = median_diameter_px_i
-        CP_extract_df.at[i, 'diameter_median_px'] = mean_diameter_px_i
+        CP_extract_df.at[i, 'diameter_mean_px'] = mean_diameter_px_i
+        CP_extract_df.at[i, 'diameter_median_px'] = median_diameter_px_i
         CP_extract_df.at[i, 'diameter_distribution_px'] = diameter_array_px_i
         CP_extract_df.at[i, 'N_cells'] = N_cells_i
         CP_extract_df.at[i, 'A_image_px2'] = A_image_px2
@@ -196,13 +197,14 @@ def CP_extract_1(
         CP_extract_df.at[i, 'A_FB_px2'] = A_FB_px2
         CP_extract_df.at[i, 'Ar_px2_FBperimage'] = Ar_px2_FBperimage
         CP_extract_df.at[i, 'D_FB_px'] = D_FB_px
+        CP_extract_df.at[i, 'R_FB_px'] = R_FB_px
         CP_extract_df.at[i, 'A_CP_mask_px'] = A_CP_mask_px
         CP_extract_df.at[i, 'Ar_px2_CP_maskperImage'] = Ar_px2_CP_maskperImage
         CP_extract_df.at[i, 'Ar_px2_CP_maskperFB'] = Ar_px2_CP_maskperFB
 
     # Print columns that have None values
     none_columns = CP_extract_df.columns[CP_extract_df.isnull().any()].tolist()
-    print(f"NB: Columns with None values: {none_columns}")
+    print(f"NB: Columns with None values: {none_columns}") if CP_extract_log_level == 1 else None
 
 
 
@@ -219,43 +221,16 @@ def CP_extract_1(
     print("\n Non Dimentionalissing and matching CP and A11 data \n")  if CP_extract_log_level == 1 else None
 
     # Load A11 data
-    # Define the file paths
-    file_paths = [
-        r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\Data\A11_SF_K_mean_as_mean_stretch_rate_vs_time_manual_extraction.txt",
-        r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\Data\A11_SF_N_c_as_number_of_cells_vs_time_manual_extraction.txt",
-        r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\Data\A11_SF_R_mean_as_average_radius_of_the_wrinkled_flame_fron_vs_time_manual_extraction.txt",
-        r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\Data\A11_SF_R_mean_dot_as_first_time_derivative_of_the_average_radius_of_the_wrinkled_flame_front_vs_time_manual_extraction.txt",
-        r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\Data\A11_SF_s_a_as_average_normal_component_of_the_absolute_propagation_velocity_vs_time_manual_extraction.txt",
-        r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\Data\A11_SF_s_d_as_average_density_weighted_displacement_speed_vs_time_manual_extraction.txt",
-        r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\Data\A11_SF_A_as_flame_surface_area_of_the_wrinkled_spherical_front_vs_time_manual_extraction.txt",
-        r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\Data\A11_SF_a_t_as_average_total_aerodynamic_strain_vs_time_manual_extraction.txt",
-        r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\Data\A11_SF_iHRR_as_integral_heat_release_rate_vs_time_manual_extraction.txt",
-        r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\Data\A11_SF_K_geom_as_geometric_stretch_rate_vs_time_manual_extraction.txt"
-    ]
-
-    # Load all files into a dictionary of DataFrames and create variables dynamically
-    for file_path in file_paths:
-        # Extract file name without path and extension
-        file_name = file_path.split('\\')[-1].replace('.txt', '')
-        
-        # Simplify the variable name by removing 'A11_SF_' and '_as' parts
-        variable_name = file_name.split('_as')[0]
-        
-        # Load the CSV file into a DataFrame and assign it dynamically
-        globals()[variable_name] = pd.read_csv(file_path)
-        
-        ''' A11 dataframes:
-        A11_SF_K_mean
-        A11_SF_N_c
-        A11_SF_R_mean
-        A11_SF_R_mean_dot
-        A11_SF_s_a
-        A11_SF_s_d
-        A11_SF_A
-        A11_SF_a_t
-        A11_SF_iHRR
-        A11_SF_K_geom
-        '''
+    A11_SF_K_mean = pd.read_csv(r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\Data\A11_SF_K_mean_as_mean_stretch_rate_vs_time_manual_extraction.txt")
+    A11_SF_N_c = pd.read_csv(r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\Data\A11_SF_N_c_as_number_of_cells_vs_time_manual_extraction.txt")
+    A11_SF_R_mean = pd.read_csv(r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\Data\A11_SF_R_mean_as_average_radius_of_the_wrinkled_flame_fron_vs_time_manual_extraction.txt")
+    A11_SF_R_mean_dot = pd.read_csv(r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\Data\A11_SF_R_mean_dot_as_first_time_derivative_of_the_average_radius_of_the_wrinkled_flame_front_vs_time_manual_extraction.txt")
+    A11_SF_s_a = pd.read_csv(r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\Data\A11_SF_s_a_as_average_normal_component_of_the_absolute_propagation_velocity_vs_time_manual_extraction.txt")
+    A11_SF_s_d = pd.read_csv(r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\Data\A11_SF_s_d_as_average_density_weighted_displacement_speed_vs_time_manual_extraction.txt")
+    A11_SF_A = pd.read_csv(r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\Data\A11_SF_A_as_flame_surface_area_of_the_wrinkled_spherical_front_vs_time_manual_extraction.txt")
+    A11_SF_a_t = pd.read_csv(r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\Data\A11_SF_a_t_as_average_total_aerodynamic_strain_vs_time_manual_extraction.txt")
+    A11_SF_iHRR = pd.read_csv(r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\Data\A11_SF_iHRR_as_integral_heat_release_rate_vs_time_manual_extraction.txt")
+    A11_SF_K_geom = pd.read_csv(r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\Data\A11_SF_K_geom_as_geometric_stretch_rate_vs_time_manual_extraction.txt")
 
     # reference vales
     ''' A11 p.36
@@ -288,7 +263,7 @@ def CP_extract_1(
 
     # Add non-dimensional columns to the DataFrame
     nonDim_columns = [
-        'image_Nx_nonDim', 'image_Ny_nonDim', 'diameter_training_nonDim', 'diameter_estimate_nonDim',
+        'd_T_per_px', 'image_Nx_nonDim', 'image_Ny_nonDim', 'diameter_training_nonDim', 'diameter_estimate_nonDim',
         'diameter_mean_nonDim', 'diameter_median_nonDim', 'diameter_distribution_nonDim',
         'A_image_nonDim2', 'A_empty_nonDim2', 'A_FB_nonDim2', 'D_FB_nonDim', 'R_FB_nonDim', 'A_CP_mask_nonDim',
     ]
@@ -306,45 +281,52 @@ def CP_extract_1(
     # extract pixel to nonDimentionalised length scaling.
     for i in range(N_images):
         print("i = ", i) if CP_extract_log_level == 1 else None
-        
+
+
         # find d_T_per_px
-        current_time = CP_extract_df.loc[i, "time"]
-        time_min, time_max = A11_SF_R_mean["time"].min(), A11_SF_R_mean["time"].max()
-        if time_min <= current_time <= time_max: # Interpolate normally
-            R_mean_interpolated_i = np.interp(current_time, A11_SF_R_mean["time"], A11_SF_R_mean["R_mean"])
-        else: # Use closest time if out of range
-            closest_idx = np.argmin(np.abs(A11_SF_R_mean["time"] - current_time))
-            R_mean_interpolated_i = A11_SF_R_mean["R_mean"].iloc[closest_idx]
-            print(f"Warning: Time out of range for {current_time}. Using closest time: {A11_SF_R_mean['time'].iloc[closest_idx]}")
-        d_T_per_px = R_mean_interpolated_i / D_FB_px / 2
-        print("d_T_per_px", d_T_per_px)
+        A11_SF_R_mean = A11_SF_R_mean.sort_values(by='time')
+        CP_extract_df = CP_extract_df.sort_values(by='time')
+        CP_extract_df['R_mean_interpolated'] = np.interp(CP_extract_df['time'], A11_SF_R_mean['time'], A11_SF_R_mean['R_mean']) # Interpolate 'R_mean' at the 'time' values in CP_extract_df
+        CP_extract_df['d_T_per_px'] = CP_extract_df['R_mean_interpolated'] / CP_extract_df['R_FB_px']
 
         # Calculate non-dimensionalised values
-        image_Nx_nonDim = CP_extract_df.loc[i, "image_Nx_px"] * d_T_per_px
-        image_Ny_nonDim = CP_extract_df.loc[i, "image_Ny_px"] * d_T_per_px
+        d_T_per_px_i = CP_extract_df.loc[i, 'd_T_per_px']
 
-        diameter_training_nonDim = diameter_training_px * d_T_per_px if diameter_training_px is not None and d_T_per_px is not None else None
-        diameter_estimate_nonDim_i = diameter_estimate_px_i * d_T_per_px if diameter_estimate_px_i is not None and d_T_per_px is not None else None
-        median_diameter_nonDim_i = median_diameter_px_i * d_T_per_px if median_diameter_px_i is not None and d_T_per_px is not None else None
-        mean_diameter_nonDim_i = mean_diameter_px_i * d_T_per_px
-        diameter_array_nonDim_i = diameter_array_px_i * d_T_per_px
+        image_Nx_nonDim = CP_extract_df.loc[i, "image_Nx_px"] * d_T_per_px_i
+        image_Ny_nonDim = CP_extract_df.loc[i, "image_Ny_px"] * d_T_per_px_i
 
-        A_image_nonDim = A_image_px2 * d_T_per_px**2
-        A_empty_nonDim = A_empty_px2 * d_T_per_px**2
-        A_FB_nonDim = A_FB_px2 * d_T_per_px**2
-        D_FB_nonDim = D_FB_px * d_T_per_px
-        R_FB_nonDim = D_FB_nonDim / 2
-        A_CP_mask_nonDim = A_CP_mask_px * d_T_per_px**2
+        diameter_training_px_i = CP_extract_df.loc[i, 'diameter_training_px']
+        diameter_estimate_px_i = CP_extract_df.loc[i, 'diameter_estimate_px']
+        diameter_median_px_i = CP_extract_df.loc[i, 'diameter_median_px']
+        diameter_mean_px_i = CP_extract_df.loc[i, 'diameter_mean_px']
+
+        masks_i = CP_extract_df.loc[i, 'masks']
+        diameters_tuple_i_placeholder = utils.diameters(masks_i)
+        diameter_array_px_i_placeholder = diameters_tuple_i_placeholder[1]
+        diameter_distribution_px_i = diameter_array_px_i_placeholder
+
+        diameter_training_nonDim = diameter_training_px_i * d_T_per_px_i if diameter_training_px_i is not None and d_T_per_px_i is not None else None
+        diameter_estimate_nonDim_i = diameter_estimate_px_i * d_T_per_px_i if diameter_estimate_px_i is not None and d_T_per_px_i is not None else None
+        diameter_median_nonDim_i = diameter_median_px_i * d_T_per_px_i if diameter_median_px_i is not None and d_T_per_px_i is not None else None
+        diameter_mean_nonDim_i = diameter_mean_px_i * d_T_per_px_i
+        diameter_distribution_nonDim_i = diameter_distribution_px_i * d_T_per_px_i
+
+        A_image_nonDim = CP_extract_df.loc[i, "A_image_px2"] * d_T_per_px_i**2
+        A_empty_nonDim = CP_extract_df.loc[i, "A_empty_px2"] * d_T_per_px_i**2
+        A_FB_nonDim = CP_extract_df.loc[i, "A_FB_px2"] * d_T_per_px_i**2
+        D_FB_nonDim = CP_extract_df.loc[i, "D_FB_px"] * d_T_per_px_i
+        R_FB_nonDim = CP_extract_df.loc[i, "R_FB_px"] * d_T_per_px_i
+        A_CP_mask_nonDim = CP_extract_df.loc[i, "A_CP_mask_px"] * d_T_per_px_i**2
 
 
-
+        CP_extract_df.at[i, 'd_T_per_px_i'] = d_T_per_px_i
         CP_extract_df.at[i, 'image_Nx_nonDim'] = image_Nx_nonDim
         CP_extract_df.at[i, 'image_Ny_nonDim'] = image_Ny_nonDim
         CP_extract_df.at[i, 'diameter_training_nonDim'] = diameter_training_nonDim
         CP_extract_df.at[i, 'diameter_estimate_nonDim'] = diameter_estimate_nonDim_i
-        CP_extract_df.at[i, 'diameter_mean_nonDim'] = mean_diameter_nonDim_i
-        CP_extract_df.at[i, 'diameter_median_nonDim'] = median_diameter_nonDim_i
-        CP_extract_df.at[i, 'diameter_distribution_nonDim'] = diameter_array_nonDim_i
+        CP_extract_df.at[i, 'diameter_mean_nonDim'] = diameter_mean_nonDim_i
+        CP_extract_df.at[i, 'diameter_median_nonDim'] = diameter_median_nonDim_i
+        CP_extract_df.at[i, 'diameter_distribution_nonDim'] = diameter_distribution_nonDim_i
         CP_extract_df.at[i, 'A_image_nonDim2'] = A_image_nonDim
         CP_extract_df.at[i, 'A_empty_nonDim2'] = A_empty_nonDim
         CP_extract_df.at[i, 'A_FB_nonDim2'] = A_FB_nonDim

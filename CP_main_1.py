@@ -7,6 +7,7 @@ import CP_segment_1 as CPs1
 import CP_extract_1 as CPe1
 import CP_plotter_1 as CPp1
 import CP_plotter_2_CPvsA11 as CPp2
+import CP_plotter_3_CPvsA11_Panel as CPp3_panel
 
 
 start_time, current_date = F_1.start_inform(__file__)
@@ -28,7 +29,10 @@ if 1==0:
 
 
 if 1==1:
-    CPs1_output_dir = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\FB images\Visit_projections_initial_test\BW 134 ball flame - Crop Small First few\CP_segment_1_2025-03-10_15-13-26"
+    # BW 134 ball flame - Crop
+    CPs1_output_dir = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\FB images\Visit_projections_initial_test\BW 134 ball flame - Crop\CP_segment_1_2025-03-08_18-25-49"
+    # BW 134 ball flame - Crop Small First few
+    #CPs1_output_dir = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\FB images\Visit_projections_initial_test\BW 134 ball flame - Crop Small First few\CP_segment_1_2025-03-10_15-13-26"
 
     CPe1_output_dir, CP_extract_df = CPe1.CP_extract_1(
         input_dir = CPs1_output_dir,
@@ -36,6 +40,9 @@ if 1==1:
         CP_extract_log_level = 0,
         )
 
+
+
+##### plotting
 
 if 1==0:
     #CPe1_output_dir = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\FB images\Visit_projections_initial_test\BW 134 ball flame - Crop Small First few\CP_segment_1_2025-03-10_15-13-26\CP_extract_1_2025-03-10_15-21-44"
@@ -49,8 +56,8 @@ if 1==0:
         )
 
 
-if 1==1:
-    #CPe1_output_dir = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\FB images\Visit_projections_initial_test\BW 134 ball flame - Crop Small First few\CP_segment_1_2025-03-10_15-13-26\CP_extract_1_2025-03-10_15-21-44"
+if 1==1: # video comparing CP A11
+    #CPe1_output_dir = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\FB images\Visit_projections_initial_test\BW 134 ball flame - Crop\CP_segment_1_2025-03-08_18-25-49\CP_extract_1_2025-03-11_23-59-13"
     #CP_extract_df = None
 
     CPp2_output_dir = CPp2.CP_plotter_2_CPvsA11(
@@ -60,6 +67,25 @@ if 1==1:
         video = 1
         )
 
+
+if 1==0:
+    # \BW 134 ball flame - Crop
+    CPe1_output_dir = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\FB images\Visit_projections_initial_test\BW 134 ball flame - Crop\CP_segment_1_2025-03-08_18-25-49\CP_extract_1_2025-03-11_23-59-13"
+
+    # BW 134 ball flame - Crop Small First few
+    #CPe1_output_dir = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\FB images\Visit_projections_initial_test\BW 134 ball flame - Crop Small First few\CP_segment_1_2025-03-10_15-13-26\CP_extract_1_2025-03-11_12-30-00"
+    #CP_extract_df = None
+
+    CPp2_output_dir = CPp3_panel.CP_plotter_3_CPvsA11_Panel(
+        input_dir = CPe1_output_dir,
+        #CP_extract_df = CP_extract_df,
+        output_dir_manual = "", output_dir_comment = "",
+        video = 0, show_plot = 1,
+        Panel_1 = 0, # 
+        Panel_2 = 0, # check non Dimentionalisation
+        Panel_3 = 0, # 
+        Panel_4 = 1, # panel comparing CP A11
+        )
 
 
 

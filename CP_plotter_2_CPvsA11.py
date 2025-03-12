@@ -7,6 +7,8 @@ import os
 import time
 import pandas as pd
 import matplotlib.gridspec as gridspec
+import matplotlib.ticker as mticker
+import matplotlib.lines as mlines
 import numpy as np
 from skimage import io as sk_io, color, measure
 
@@ -156,22 +158,23 @@ def CP_plotter_2_CPvsA11(input_dir, # Format_1 requires input_dir
         max_diameter_i = max(unique_diameters) if unique_diameters.size > 0 else 0
         bins = np.arange(0, max_diameter_i + bin_size, bin_size)
 
-        ax_1_0.hist(CP_extract_df.loc[i, 'diameter_distribution_nonDim'], bins=bins, orientation='horizontal', edgecolor='turquoise', color='white')
+        ax_1_0.hist(CP_extract_df.loc[i, 'diameter_distribution_nonDim'], bins=bins, orientation='horizontal', edgecolor='turquoise', color='white', linewidth=2)
+#        ax_1_0.invert_xaxis()
         ax_1_0.set_title("Diameter Distribution")
         ax_1_0.set_xlabel("Frequency")
         ax_1_0.set_ylabel("Diameter")
+        ax_1_0.set_xlim(0, max_frequency*1.05)
+        ax_1_0.set_ylim(0, CP_extract_df['diameter_distribution_nonDim'].apply(lambda x: np.max(x) if x.size > 0 else 0).max() * 1.05)
 
         mean_diameter = CP_extract_df.loc[i, 'diameter_mean_nonDim']
         median_diameter = CP_extract_df.loc[i, 'diameter_median_nonDim']
         diameter_training_nonDim = CP_extract_df.iloc[i]['diameter_training_nonDim']
-        ax_1_0.axvline(mean_diameter, color='blue', linewidth=1)
-        ax_1_0.text(mean_diameter, ax_1_0.get_ylim()[1] * 0.9, f'Mean: {mean_diameter:05.2f}', color='green')
+        ax_1_0.axhline(mean_diameter, color='green', linewidth=2)
+        ax_1_0.text(ax_1_0.get_xlim()[1] * 0.5, mean_diameter + max_diameter*0.01, f'Mean: {mean_diameter:05.2f}', color='green')
         if pd.notna(diameter_training_nonDim): # make sure diameter training is available
-            ax_1_0.axvline(diameter_training_nonDim, color='aquamarine', linewidth=1)
-            ax_1_0.text(diameter_training_nonDim, ax_1_0.get_ylim()[1] * 0.7, f"Training: {diameter_training_nonDim:05.2f}", color='violet')
+            ax_1_0.axhline(diameter_training_nonDim, color='aquamarine', linewidth=1)
+            ax_1_0.text(ax_1_0.get_xlim()[1] * 0.6, diameter_training_nonDim + max_diameter*0.01, f"Training: {diameter_training_nonDim:05.2f}", color='violet')
         
-        ax_1_0.set_xlim(0, max_frequency*1.05)
-        ax_1_0.set_ylim(0, CP_extract_df['diameter_distribution_nonDim'].apply(lambda x: np.max(x) if x.size > 0 else 0).max() * 1.05)
 
 
         # Plot: Image number vs. median diameter, mean diameter, and amount of cells (up to current image)
@@ -195,45 +198,71 @@ def CP_plotter_2_CPvsA11(input_dir, # Format_1 requires input_dir
             closest_A11_iHRR = A11_SF_iHRR['iHRR'].iloc[closest_index_iHRR]
         
         S2 = 1e-1
-        ax_1_12.plot(CP_extract_df['time'], CP_extract_df['R_FB_nonDim'] * S2, label=f"{(CP_extract_df.iloc[i]['R_FB_nonDim']*S2):05.2f} = Image deduced Spherical Flame Radius * {S2:.3f}", color='olive')
+        #ax_1_12.plot(CP_extract_df['time'], CP_extract_df['R_FB_nonDim'] * S2, label=f"{(CP_extract_df.iloc[i]['R_FB_nonDim']*S2):05.2f} = Image deduced Spherical Flame Radius * {S2:.3f}", color='olive')
         ax_1_12.plot(A11_SF_R_mean['time'], A11_SF_R_mean['R_mean'] * S2, label=f"{(closest_A11_r_mean*S2):05.2f} = A11 Spherical Flame Radius * {S2:.3f}", color='olive', linestyle='dashed')
         
         S3 = 1
         ax_1_12_L = ax_1_12.twinx() 
-        ax_1_12_L.spines["left"].set_position(("outward", 2)) 
         ax_1_12_L.plot(A11_SF_iHRR['time'], A11_SF_iHRR['iHRR'] * S3, label=f"{(closest_A11_iHRR*S2):05.2f} = A11 integral heat release rate * {S2:.3f}", color='orange', linestyle='dashed')
 
         ax_1_12_R = ax_1_12.twinx()
         ax_1_12_R.plot(CP_extract_df['time'], CP_extract_df['N_cells'], label=f"{CP_extract_df.iloc[i]['N_cells']:05.2f} = Number of cells", color='red')
         
-        ax_1_12.axvline(CP_extract_df.iloc[i]['time'], color='black', label=f'{i+1:.2f} = shown image', linestyle='dashed', linewidth=3)
+        ax_1_12.axvline(CP_extract_df.iloc[i]['time'], color='black', label=f"{CP_extract_df.iloc[i]['image_number']:.2f} = shown image", linestyle='dashed', linewidth=3)
 
         # Create a third y-axis for the dotted line plots
         ax_1_12_RR = ax_1_12.twinx()  # Second twin axis
-        ax_1_12_RR.spines["right"].set_position(("outward", 60))  # Move third axis further right
-        ax_1_12_RR.set_ylabel("A_CP/A_SF")  # Label for third y-axis
-        ax_1_12_RR.set_ylim(0, 1)  # Set limits for third y-axis
         ax_1_12_RR.plot(CP_extract_df['time'], CP_extract_df['Ar_px2_CP_maskperFB'], label=f"{CP_extract_df.iloc[i]['Ar_px2_CP_maskperFB']:05.2f}" + " = $A_{Cell masks}/A_{Spherical Flame}$", color='gray')
+
+
+
+        # Set the limits and labels for the axes
 
         ax_1_12.set_xlim(0, 7)
         ax_1_12.set_ylim(0, max_diameter*1.05)
         ax_1_12_L.set_ylim(0, A11_SF_iHRR['iHRR'].max()*1.05)
         ax_1_12_R.set_ylim(CP_extract_df['N_cells'].min(), CP_extract_df['N_cells'].max()*1.05)
+        ax_1_12_RR.set_ylim(0, 1)
 
+
+        solid_line = mlines.Line2D([], [], color='black', linestyle='-', label="Cellpose (Solid)")
+        dashed_line = mlines.Line2D([], [], color='black', linestyle='--', label="A11 (Dashed)")
         ax_1_12.set_title("Diameter and Cell Count")
+        ax_1_12.legend(handles=[solid_line, dashed_line], loc='upper center', fontsize=10, frameon=False)
+        
         ax_1_12.set_xlabel("time")
         ax_1_12.set_ylabel("Diameter", color='green')
         ax_1_12_L.set_ylabel("Heat Release Rate", color='orange')
         ax_1_12_R.set_ylabel("Number of Cells", color='red')
+        ax_1_12_RR.set_ylabel("$A_{Cell masks}/A_{Spherical Flame}$", color='gray')
 
         ax_1_12.legend(loc='upper left')
         ax_1_12_L.legend(loc='lower left')
         ax_1_12_R.legend(loc='upper right')
         ax_1_12_RR.legend(loc='lower right')
 
-        ax_1_12_L.tick_params(axis='y', labelcolor='orange')
-        ax_1_12_R.tick_params(axis='y', labelcolor='red')
+        ax_1_12_L.spines["right"].set_position(("outward", 0))  # Slightly to the right
+        ax_1_12_L.yaxis.set_label_position("right")
+        ax_1_12_L.yaxis.set_ticks_position("right")
 
+        ax_1_12_R.tick_params(axis='y', labelcolor='red')
+        ax_1_12_R.spines["right"].set_color('red')
+        ax_1_12_R.spines["right"].set_position(("outward", 45))  # Move further right
+        ax_1_12_R.yaxis.set_label_position("right")
+        ax_1_12_R.yaxis.set_ticks_position("right")
+
+        ax_1_12_RR.tick_params(axis='y', labelcolor='gray')
+        ax_1_12_RR.spines["right"].set_color('gray')
+        ax_1_12_RR.spines["right"].set_position(("outward", 90))  # Move even further right
+        ax_1_12_RR.yaxis.set_label_position("right")
+        ax_1_12_RR.yaxis.set_ticks_position("right")
+
+        ax_1_12_L.tick_params(axis='y', labelcolor='orange')
+        ax_1_12_L.spines["right"].set_color('orange')
+        ax_1_12_L.yaxis.set_major_formatter(mticker.ScalarFormatter(useMathText=True))
+        ax_1_12_L.ticklabel_format(style='sci', axis='y', scilimits=(0, 0))
+        offset_text = ax_1_12_L.yaxis.get_offset_text()
+        offset_text.set_position((1.05, 1))  # Move to the right and above the axis
 
         # Adjust layout and save the figure as a PNG file
         plt.tight_layout()
@@ -250,10 +279,6 @@ def CP_plotter_2_CPvsA11(input_dir, # Format_1 requires input_dir
             fps=5,
             )
 
-
-    ### ToDO
-
-    # add numbers to masks or outlines
 
 
 
