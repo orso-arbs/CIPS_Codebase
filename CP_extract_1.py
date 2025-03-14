@@ -9,6 +9,8 @@ import pandas as pd
 import math
 from skimage import io as sk_io, color
 import re
+import csv
+import pickle
 
 
 import sys
@@ -84,9 +86,20 @@ def CP_extract_1(
     if N_images != N_seg:
         raise ValueError("Number of images and segmentations do not match")
 
+    # import Cellpose model settings
+    CP_settings_file = f"{input_dir}/CP_settings.pkl"
+    with open(CP_settings_file, "rb") as file:
+        params = pickle.load(file)
+        gpu = params["gpu"]
+        diameter_estimate_manual = params["diameter_estimate_manual"]
+        CP_segment_output_dir_comment = params["CP_segment_output_dir_comment"]
+        flow_threshold = params["flow_threshold"]
+        cellprob_threshold = params["cellprob_threshold"]
+        resample = params["resample"]
+        niter = params["niter"]
+        CP_model_type = params["CP_model_type"]
 
-
-    ### Load data
+    ### Tabularize data
     print(f"\n Extracting data \n")
 
     # Initialize DataFrame
@@ -176,9 +189,18 @@ def CP_extract_1(
         CP_extract_df.at[i, 'image_Ny_px'] = image_Ny_px
         CP_extract_df.at[i, 'seg_file_name'] = seg_filenames[i]
         CP_extract_df.at[i, 'seg_file_path'] = seg_files[i]
-        CP_extract_df.at[i, 'ismanual'] = ismanual
-        CP_extract_df.at[i, 'CP_model_type'] = CP_model_type
+        
+        CP_extract_df.at[i, 'CP_model_type'] = params['CP_model_type']
         CP_extract_df.at[i, 'channels'] = channels
+        CP_extract_df.at[i, 'gpu'] = params['gpu']
+        CP_extract_df.at[i, 'diameter_estimate_manual'] = params['diameter_estimate_manual']
+        CP_extract_df.at[i, 'CP_segment_output_dir_comment'] = params['CP_segment_output_dir_comment']
+        CP_extract_df.at[i, 'flow_threshold'] = params['flow_threshold']
+        CP_extract_df.at[i, 'cellprob_threshold'] = params['cellprob_threshold']
+        CP_extract_df.at[i, 'resample'] = params['resample']
+        CP_extract_df.at[i, 'niter'] = params['niter']
+
+        CP_extract_df.at[i, 'ismanual'] = ismanual
         CP_extract_df.at[i, 'flows0'] = flow_i[0]
         CP_extract_df.at[i, 'flows1'] = flow_i[1]
         CP_extract_df.at[i, 'flows2'] = flow_i[2]
@@ -186,6 +208,7 @@ def CP_extract_1(
         CP_extract_df.at[i, 'flows4'] = flow_i[4]
         CP_extract_df.at[i, 'outlines'] = outlines_i
         CP_extract_df.at[i, 'masks'] = masks_i
+
         CP_extract_df.at[i, 'diameter_training_px'] = diameter_training_px
         CP_extract_df.at[i, 'diameter_estimate_px'] = diameter_estimate_px_i
         CP_extract_df.at[i, 'diameter_mean_px'] = mean_diameter_px_i
@@ -201,6 +224,7 @@ def CP_extract_1(
         CP_extract_df.at[i, 'A_CP_mask_px'] = A_CP_mask_px
         CP_extract_df.at[i, 'Ar_px2_CP_maskperImage'] = Ar_px2_CP_maskperImage
         CP_extract_df.at[i, 'Ar_px2_CP_maskperFB'] = Ar_px2_CP_maskperFB
+
 
         # clean diameter_distribution_px
         CP_extract_df['diameter_distribution_px'] = CP_extract_df['diameter_distribution_px'].apply(

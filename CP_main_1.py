@@ -19,6 +19,7 @@ if 1==1:
     #visit_images_dir = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\FB images\Visit_projections_initial_test\BW 134 ball flame - Crop small"
     #visit_images_dir = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\FB images\Visit_projections_initial_test\BW 134 ball flame - Crop small two only"
     #visit_images_dir = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\FB images\Visit_projections_initial_test\BW 134 ball flame - Crop Small First few"
+    #visit_images_dir = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\FB images\A11 FB poster selection"
 
     CPs1_output_dir, masks, flows, styles, diameter_estimate, CP_model_type = CPs1.CP_segment_1(
         input_dir = visit_images_dir,
@@ -35,6 +36,9 @@ if 1==1:
     # BW 134 ball flame - Crop Small First few
     #CPs1_output_dir = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\FB images\Visit_projections_initial_test\BW 134 ball flame - Crop Small First few\CP_segment_1_2025-03-10_15-13-26"
 
+    # A11 FB poster selection
+    #CPs1_output_dir = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\FB images\A11 FB poster selection\CP_segment_1_2025-03-13_17-49-00"
+
     CPe1_output_dir, CP_extract_df = CPe1.CP_extract_1(
         input_dir = CPs1_output_dir,
         #masks = masks, flows = flows, styles = styles, diameter_estimate = diameter_estimate, CP_model_type = CP_model_type,
@@ -45,13 +49,15 @@ if 1==1:
 
 ##### plotting
 
-if 1==0:
+if 1==1: # video to evaluate CP segmentation settings and extracted results
     # \BW 134 ball flame - Crop
     #CPe1_output_dir = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\FB images\Visit_projections_initial_test\BW 134 ball flame - Crop\CP_segment_1_2025-03-12_13-42-11\CP_extract_1_2025-03-12_13-48-48"
     
     #CPe1_output_dir = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\FB images\Visit_projections_initial_test\BW 134 ball flame - Crop Small First few\CP_segment_1_2025-03-10_15-13-26\CP_extract_1_2025-03-10_15-21-44"
     #CP_extract_df = None
 
+    # A11 FB poster selection
+    #CPe1_output_dir = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\FB images\A11 FB poster selection\CP_segment_1_2025-03-13_15-47-30\CP_extract_1_2025-03-13_15-48-12"
 
 
     CPp1_output_dir = CPp1.CP_plotter_1(
@@ -62,7 +68,7 @@ if 1==0:
         )
 
 
-if 1==1: # video comparing CP A11
+if 1==0: # video comparing CP A11
     #CPe1_output_dir = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\FB images\Visit_projections_initial_test\BW 134 ball flame - Crop\CP_segment_1_2025-03-12_13-42-11\CP_extract_1_2025-03-12_13-48-48"
     #CP_extract_df = None
 
@@ -76,7 +82,7 @@ if 1==1: # video comparing CP A11
 
 if 1==0:
     # \BW 134 ball flame - Crop
-    CPe1_output_dir = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\FB images\Visit_projections_initial_test\BW 134 ball flame - Crop\CP_segment_1_2025-03-12_13-42-11\CP_extract_1_2025-03-12_13-48-48"
+    #CPe1_output_dir = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\FB images\Visit_projections_initial_test\BW 134 ball flame - Crop\CP_segment_1_2025-03-12_13-42-11\CP_extract_1_2025-03-12_13-48-48"
 
     # BW 134 ball flame - Crop Small First few
     #CPe1_output_dir = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\FB images\Visit_projections_initial_test\BW 134 ball flame - Crop Small First few\CP_segment_1_2025-03-10_15-13-26\CP_extract_1_2025-03-11_12-30-00"

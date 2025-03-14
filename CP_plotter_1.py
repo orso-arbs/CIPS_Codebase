@@ -9,6 +9,7 @@ import pandas as pd
 import matplotlib.gridspec as gridspec
 import numpy as np
 from skimage import io as sk_io, color, measure
+import re
 
 import sys
 import os
@@ -16,6 +17,7 @@ sys.path.append(os.path.abspath(r"C:/Users/obs/OneDrive/ETH/ETH_MSc/Masters Thes
 import Format_1 as F_1
 
 import video_maker_1 as vm1
+import Add_whitespace_text_to_png as AWTTP
 
 
 @F_1.ParameterLog(max_size = 1024 * 10) # 10KB 
@@ -79,6 +81,9 @@ def CP_plotter_1(input_dir, # Format_1 requires input_dir
         fig = plt.figure(figsize=(15, 10))
         gs = gridspec.GridSpec(2, 3, figure=fig)
 
+
+
+
         # Get the image, outlines, and masks for the current row
         image = color.rgb2gray(sk_io.imread(CP_extract_df.loc[i, 'image_file_name'])[..., :3]) # grayscale
         outlines = CP_extract_df.loc[i, 'outlines']
@@ -123,6 +128,7 @@ def CP_plotter_1(input_dir, # Format_1 requires input_dir
         mean_diameter = CP_extract_df.loc[i, 'diameter_mean_px']
         median_diameter = CP_extract_df.loc[i, 'diameter_median_px']
         diameter_training_px = CP_extract_df.iloc[i]['diameter_training_px']
+        diameter_estimate_px = CP_extract_df.iloc[i]['diameter_estimate_px']
         ax_1_0.axvline(mean_diameter, color='blue', linewidth=1)
         ax_1_0.text(mean_diameter, ax_1_0.get_ylim()[1] * 0.9, f'Mean: {mean_diameter:05.2f}', color='blue')
         ax_1_0.axvline(median_diameter, color='green', linewidth=1)
@@ -130,22 +136,26 @@ def CP_plotter_1(input_dir, # Format_1 requires input_dir
         if pd.notna(diameter_training_px): # make sure diameter training is available
             ax_1_0.axvline(diameter_training_px, color='violet', linewidth=1)
             ax_1_0.text(diameter_training_px, ax_1_0.get_ylim()[1] * 0.7, f"Training: {diameter_training_px:05.2f}", color='violet')
-        
+        ax_1_0.axvline(diameter_estimate_px, color='purple', linewidth=1)
+        ax_1_0.text(diameter_estimate_px, ax_1_0.get_ylim()[1] * 0.6, f'Estimate: {diameter_estimate_px:05.2f}', color='purple')
+
         ax_1_0.set_xlim(0, CP_extract_df['diameter_distribution_px'].apply(lambda x: np.max(x) if x.size > 0 else 0).max() * 1.05)
         ax_1_0.set_ylim(0, max_frequency*1.05)
 
         # Plot: Image number vs. median diameter, mean diameter, and amount of cells (up to current image)
+        x_array = range(N_images)
         #ax_1_12 = ax_1_12_auxilliary
         ax_1_12_R = ax_1_12.twinx()
         ax_1_12.plot(range(N_images), CP_extract_df['diameter_mean_px'], label=f"{CP_extract_df.iloc[i]['diameter_mean_px']:05.2f} = Cell Mean Diameter", color='blue')
         ax_1_12.plot(range(N_images), CP_extract_df['diameter_median_px'], label=f"{CP_extract_df.iloc[i]['diameter_median_px']:05.2f} = Cell Median Diameter", color='green')
-        ax_1_12.plot(range(N_images), CP_extract_df['diameter_training_px'], label=f"{CP_extract_df.iloc[i]['diameter_training_px'] if pd.notna(CP_extract_df.iloc[i]['diameter_training_px']) else 0.00:05.2f} = Cellpose Training Diameter", color='violet')
+        ax_1_12.plot(range(N_images), CP_extract_df['diameter_training_px'], label=f"{CP_extract_df.iloc[i]['diameter_training_px'] if pd.notna(CP_extract_df.iloc[i]['diameter_training_px']) else 'N/A' :05.2f} = Cellpose Training Diameter", color='violet')
+        ax_1_12.plot(range(N_images), CP_extract_df['diameter_estimate_px'], label=f"{CP_extract_df.iloc[i]['diameter_estimate_px'] if pd.notna(CP_extract_df.iloc[i]['diameter_estimate_px']) else 'N/A' :05.2f} = Cellpose Estimate Diameter", color='purple')
         #S = max(CP_extract_df['diameter_mean_px'].max(), CP_extract_df['diameter_median_px'].max()) / CP_extract_df['D_FB_px'].max()
         #ax_1_12.plot(range(N_images), CP_extract_df['D_FB_px'] * S, label=f"{(CP_extract_df.iloc[i]['D_FB_px']*S):.2f} = Flame Ball Diameter * {S:.3f}", color='orange')
         S2 = 1e-1
         ax_1_12.plot(range(N_images), CP_extract_df['D_FB_px'] * S2, label=f"{(CP_extract_df.iloc[i]['D_FB_px']*S2):05.2f} = Flame Ball Diameter * {S2:.3f}", color='orange')
         ax_1_12_R.plot(range(N_images), CP_extract_df['N_cells'], label=f"{CP_extract_df.iloc[i]['N_cells']:05.2f} = Number of cells", color='red')
-        ax_1_12.axvline(i, color='blue', label=f'{i+1:.2f} = shown image', linestyle='dashed', linewidth=3)
+        ax_1_12.axvline(i, color='blue', label=f'{i+1:.2f} = shown image. {CP_extract_df.iloc[i]["image_Nx_px"]:.0f}px_x x {CP_extract_df.iloc[i]["image_Ny_px"]:.0f}px_y', linestyle='dashed', linewidth=3)
 
         # Create a third y-axis for the dotted line plots
         ax_1_12_RR = ax_1_12.twinx()  # Second twin axis
@@ -157,8 +167,12 @@ def CP_plotter_1(input_dir, # Format_1 requires input_dir
         ax_1_12_RR.plot(range(N_images), CP_extract_df['Ar_px2_CP_maskperFB'], label=f"{CP_extract_df.iloc[i]['Ar_px2_CP_maskperFB']:05.2f}" + " = $A_{Cell masks}/A_{Flame Ball}$", color='gray')
 
         ax_1_12.set_xlim(0, N_images - 1)
-        ax_1_12.set_ylim(min(CP_extract_df['diameter_mean_px'].min(), CP_extract_df['diameter_median_px'].min(), CP_extract_df['D_FB_px'].max()*S2), max(CP_extract_df['diameter_mean_px'].max(), CP_extract_df['diameter_median_px'].max(), CP_extract_df['D_FB_px'].max() * S2)*1.05)
+        #ax_1_12.set_ylim(min(CP_extract_df['diameter_mean_px'].min(), CP_extract_df['diameter_median_px'].min(), CP_extract_df['D_FB_px'].max()*S2), max(CP_extract_df['diameter_mean_px'].max(), CP_extract_df['diameter_median_px'].max(), CP_extract_df['D_FB_px'].max() * S2)*1.05)
+        ax_1_12.set_ylim(0, max(CP_extract_df['diameter_mean_px'].max(), CP_extract_df['diameter_median_px'].max(), CP_extract_df['D_FB_px'].max() * S2)*1.05)
         ax_1_12_R.set_ylim(CP_extract_df['N_cells'].min(), CP_extract_df['N_cells'].max()*1.05)
+
+        ax_1_12.set_xticks(range(N_images))  # Keep original ticks
+        ax_1_12.set_xticklabels(range(1, N_images + 1))  # Display shifted labels
 
         ax_1_12.set_title("Diameter and Cell Count")
         ax_1_12.set_xlabel("Image Number")
@@ -168,13 +182,48 @@ def CP_plotter_1(input_dir, # Format_1 requires input_dir
         ax_1_12_R.legend(loc='upper right')
         ax_1_12_RR.legend(loc='lower right')
 
-
+        #fig.suptitle("Your Figure Title", fontsize=16, fontweight='bold')
         # Adjust layout and save the figure as a PNG file
         plt.tight_layout()
         plot_filename = os.path.join(output_dir, f'plot_{i+1:04d}.png')
         plt.savefig(plot_filename)
         #plt.show()
         plt.close(fig)
+
+
+
+
+
+
+
+        # text to add to top and bottom of the plot:
+        DateAndTime = re.search(r'(\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2})$', output_dir)
+        input_image_path = plot_filename
+        output_image_path = plot_filename
+
+        top_text = "" \
+        "Cellpose Settings:\n" \
+        f"model_type =          {CP_extract_df.iloc[i]['CP_model_type']}\n" \
+        f"resample =            {CP_extract_df.iloc[i]['resample']}\n" \
+        f"niter =               {CP_extract_df.iloc[i]['niter']}\n" \
+        f"flow_threshold =      {CP_extract_df.iloc[i]['flow_threshold']}\n" \
+        f"cellprob_threshold =  {CP_extract_df.iloc[i]['cellprob_threshold']}\n" \
+        f"CP_segment_output_dir_comment =  {CP_extract_df.iloc[i]['CP_segment_output_dir_comment']}\n" \
+        f"channels =            {CP_extract_df.iloc[i]['channels']}\n" \
+        f"Image set =           {os.path.basename(CP_extract_df.iloc[i]['image_file_path'])}\n" \
+        
+        bottom_text = "" \
+        "Orso Birelli Schmid\n" \
+        "Masters Thesis ETH Zurich\n" \
+        f"{DateAndTime.group(1)}" \
+        
+
+        AWTTP.add_white_space_with_banners(input_image_path, output_image_path, top_text, bottom_text, font_size = 18)
+
+
+
+
+
     print("\n") # new line
 
     if video == 1:

@@ -6,6 +6,8 @@ import glob
 import os
 import time
 import pandas as pd
+import csv
+import pickle
 
 import sys
 import os
@@ -94,10 +96,8 @@ Other Output:
 
 @F_1.ParameterLog(max_size = 1024 * 10, log_level = 0) # 0.1KB per smallest unit in return (8 bits per ASCII character)
 def CP_segment_1(input_dir, # Format_1 requires input_dir
-    CP_model_type = 'cyto3',   
-    gpu = False,
-    channels = [0,0],
-    diameter_estimate_manual = None,
+    CP_model_type = 'cyto3', gpu = False, # model = models.Cellpose() arguments
+    diameter_estimate_manual = None, channels = [0,0], flow_threshold = 0.4, cellprob_threshold = 0.0, resample = False, niter = 1000, # model.eval() arguments
     CP_default_plot_onoff = 0, CP_default_image_onoff = 0, CP_default_seg_file_onoff = 1,
     output_dir_manual = "", output_dir_comment = "",
     CP_segment_log_level = 0,
@@ -123,14 +123,34 @@ def CP_segment_1(input_dir, # Format_1 requires input_dir
 
     print("\n CellPose Segmenting")
     model = models.Cellpose(model_type = CP_model_type, gpu = gpu)
-    masks, flows, styles, diameter_estimate = model.eval(all_images, diameter=diameter_estimate_manual, channels=channels)
+
+    masks, flows, styles, diameter_estimate = model.eval(all_images, diameter=diameter_estimate_manual, channels=channels,
+                                                        flow_threshold = flow_threshold, cellprob_threshold = cellprob_threshold,
+                                                        resample = resample, niter = niter
+                                                        )
+    
 
 
     ### Save/Print Results
 
     print("\n Save Initial Results \n")
 
-    #diameter_estimate = [float(x) for x in diameter_estimate] # convert list of np.floats to list of floats (json compatible)
+
+    # Write the parameters to the CSV file
+    output_file = f"{output_dir}/CP_settings.pkl"
+    params = {
+        "gpu": gpu,
+        "diameter_estimate_manual": diameter_estimate_manual,
+        "CP_segment_output_dir_comment": output_dir_comment,
+        "flow_threshold": flow_threshold,
+        "cellprob_threshold": cellprob_threshold,
+        "resample": resample,
+        "niter": niter,
+        "CP_model_type": CP_model_type
+    }
+    with open(output_file, "wb") as file:
+        pickle.dump(params, file)
+        
 
     for idx in range(N_images):
         maski = masks[idx]
@@ -164,7 +184,8 @@ def CP_segment_1(input_dir, # Format_1 requires input_dir
             "masks": masks,
             "flows": flows,
             "styles": styles,
-            "diameter_estimate": diameter_estimate
+            "diameter_estimate": diameter_estimate,
+            "CP_model_type": CP_model_type,
         }
 
         # Print type and size
