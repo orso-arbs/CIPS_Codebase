@@ -1,40 +1,63 @@
-import numpy as np
-import matplotlib.pyplot as plt
 from cellpose import models, plot, utils, io
-import datetime
-import glob
-import os
-import time
+
+import visit
+visit.Launch()
+
+import numpy as np
 import pandas as pd
 
-import sys
-import os
-sys.path.append(os.path.abspath(r"C:/Users/obs/OneDrive/ETH/ETH_MSc/Masters Thesis/Python Code/Python_Orso_Utility_Scripts_MscThesis")) # dir containing Format_1 
-import Format_1 as F_1
+print(visit.__file__)
 
 
-input_dir
+data = {
+    'Name': ['Alice', 'Bob', 'Charlie'],
+    'Age': [25, 30, 35],
+    'City': ['New York', 'Los Angeles', 'Chicago']
+}
 
-value = F_1.get_json_value(input_dir, json_data, *path_keys)
-
-
-
-
-
-
-
+df = pd.DataFrame(data)
+print(df)
 
 
+import numpy as np
+import time, os, sys
+from urllib.parse import urlparse
+import matplotlib.pyplot as plt
+import matplotlib as mpl
+mpl.rcParams['figure.dpi'] = 100
+from cellpose import utils, io
 
 
+io.logger_setup()
+
+file = r"C:\Users\obs\Desktop\img02.png"
+
+img = io.imread(file)
+plt.figure(figsize=(2,2))
+plt.imshow(img)
+plt.axis('off')
+#plt.show()
+
+from cellpose import models, io
+
+model = models.Cellpose(gpu=True, model_type='cyto3')
+
+channel = [[2,3]]
 
 
+img = io.imread(file)
+masks, flows, styles, diams = model.eval(img, diameter=None, channels=channel)
+file = str(file)
+print(f"file: {file}")
 
-# Example usages
-input_dir_value = get_json_value(data, "CP_segment_1", "arguments", 0, "value")
-script_name_value = get_json_value(data, "CP_segment_1", "script_name")
-returned_value2_value = get_json_value(data, "CP_segment_1", "returned_values", 1, "value")
 
-print(f"Input Directory: {input_dir_value}")
-print(f"Script Name: {script_name_value}")
-print(f"Returned Value 2: {returned_value2_value}")
+# save results as png
+io.save_to_png(img, masks, flows, file)
+
+
+from cellpose import plot
+
+fig = plt.figure(figsize=(8,5))
+plot.show_segmentation(fig, img, masks, flows[0], channels=channel)
+plt.tight_layout()
+plt.show()
