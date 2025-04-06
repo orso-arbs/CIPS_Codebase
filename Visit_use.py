@@ -1,3 +1,5 @@
+import sys
+sys.path.append(r"C:\Users\obs\LLNL\VisIt3.4.2\lib\site-packages")
 import visit as vi
 vi.Launch() # loads rest of visit functions
 import visit as vi # loads rest of visit functions

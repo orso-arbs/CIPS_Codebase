@@ -96,15 +96,15 @@ Other Output:
 
 @F_1.ParameterLog(max_size = 1024 * 10, log_level = 0) # 0.1KB per smallest unit in return (8 bits per ASCII character)
 def CP_segment_1(input_dir, # Format_1 requires input_dir
-    CP_model_type = 'cyto3', gpu = False, # model = models.Cellpose() arguments
-    diameter_estimate_manual = None, channels = [0,0], flow_threshold = 0.4, cellprob_threshold = 0.0, resample = False, niter = 1000, # model.eval() arguments
+    CP_model_type = 'cyto3', gpu = True, # model = models.Cellpose() arguments
+    diameter_estimate_manual = None, channels = [0,0], flow_threshold = 0.4, cellprob_threshold = 0.0, resample = True, niter = 0, # model.eval() arguments
     CP_default_plot_onoff = 0, CP_default_image_onoff = 0, CP_default_seg_file_onoff = 1,
     output_dir_manual = "", output_dir_comment = "",
     CP_segment_log_level = 0,
     ):
 
     ### output 
-    output_dir = F_1.F_out_dir(input_dir, __file__, output_dir_comment = "") # Format_1 required definition of output directory
+    output_dir = F_1.F_out_dir(input_dir, __file__, output_dir_comment = output_dir_comment) # Format_1 required definition of output directory
 
     ### I/O 
 

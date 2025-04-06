@@ -15,9 +15,9 @@ import Format_1 as F_1
 
 
 
-def create_video_from_images(plot_image_folder, video_output_dir, fps=5):
+def create_video_from_images(plot_image_folder, video_output_dir, fps=5, output_dir_comment=""):
 
-    output_video = os.path.join(video_output_dir, f"FB_segmented_growth_statistics.mp4")
+    output_video = os.path.join(video_output_dir, f"FB_segmented_growth_statistics_{output_dir_comment}.mp4")
 
     # Get all PNG files in the directory
     images = glob.glob(os.path.join(plot_image_folder, "*.png"))

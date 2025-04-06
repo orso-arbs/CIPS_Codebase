@@ -32,10 +32,11 @@ def CP_extract_1(
         masks = None, flows = None, styles = None, diameter_estimate = None, # can be implemented as input
         CP_model_type = None, diameter_training_px = None,
         CP_extract_log_level = 0,
+        output_dir_manual = "", output_dir_comment = "",
         ):
     
     ### output 
-    output_dir = F_1.F_out_dir(input_dir, __file__, output_dir_comment = "") # Format_1 required definition of output directory
+    output_dir = F_1.F_out_dir(input_dir, __file__, output_dir_comment = output_dir_comment) # Format_1 required definition of output directory
 
 
 

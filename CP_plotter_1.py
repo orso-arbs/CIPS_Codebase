@@ -28,7 +28,9 @@ def CP_plotter_1(input_dir, # Format_1 requires input_dir
     ):
 
     ### output 
-    output_dir = F_1.F_out_dir(input_dir, __file__, output_dir_comment = "") # Format_1 required definition of output directory
+    output_dir = F_1.F_out_dir(input_dir, __file__, output_dir_comment = output_dir_comment) # Format_1 required definition of output directory
+    print(f"Output directory: {output_dir}")
+    print(f"type Output directory: {type(output_dir)}")
 
     pkl_files = glob.glob(os.path.join(input_dir, "*.pkl"))
 
@@ -125,10 +127,10 @@ def CP_plotter_1(input_dir, # Format_1 requires input_dir
         ax_1_0.set_xlabel("Diameter")
         ax_1_0.set_ylabel("Frequency")
 
-        mean_diameter = CP_extract_df.loc[i, 'diameter_mean_px']
-        median_diameter = CP_extract_df.loc[i, 'diameter_median_px']
-        diameter_training_px = CP_extract_df.iloc[i]['diameter_training_px']
-        diameter_estimate_px = CP_extract_df.iloc[i]['diameter_estimate_px']
+        mean_diameter = CP_extract_df.loc[i, 'diameter_mean_px'] if np.isfinite(CP_extract_df.loc[i, 'diameter_mean_px']) else 0
+        median_diameter = CP_extract_df.loc[i, 'diameter_median_px'] if np.isfinite(CP_extract_df.loc[i, 'diameter_median_px']) else 0
+        diameter_training_px = CP_extract_df.iloc[i]['diameter_training_px'] if np.isfinite(CP_extract_df.iloc[i]['diameter_training_px']) else 0
+        diameter_estimate_px = CP_extract_df.iloc[i]['diameter_estimate_px'] if np.isfinite(CP_extract_df.iloc[i]['diameter_estimate_px']) else 0
         ax_1_0.axvline(mean_diameter, color='blue', linewidth=1)
         ax_1_0.text(mean_diameter, ax_1_0.get_ylim()[1] * 0.9, f'Mean: {mean_diameter:05.2f}', color='blue')
         ax_1_0.axvline(median_diameter, color='green', linewidth=1)
@@ -185,7 +187,7 @@ def CP_plotter_1(input_dir, # Format_1 requires input_dir
         #fig.suptitle("Your Figure Title", fontsize=16, fontweight='bold')
         # Adjust layout and save the figure as a PNG file
         plt.tight_layout()
-        plot_filename = os.path.join(output_dir, f'plot_{i+1:04d}.png')
+        plot_filename = os.path.join(output_dir, f'plot_{i+1:04d}_{output_dir_comment}.png')
         plt.savefig(plot_filename)
         #plt.show()
         plt.close(fig)
@@ -197,7 +199,8 @@ def CP_plotter_1(input_dir, # Format_1 requires input_dir
 
 
         # text to add to top and bottom of the plot:
-        DateAndTime = re.search(r'(\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2})$', output_dir)
+        matches = re.findall(r'\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}', output_dir)
+        DateAndTime = matches[-1] if matches else None
         input_image_path = plot_filename
         output_image_path = plot_filename
 
@@ -215,7 +218,7 @@ def CP_plotter_1(input_dir, # Format_1 requires input_dir
         bottom_text = "" \
         "Orso Birelli Schmid\n" \
         "Masters Thesis ETH Zurich\n" \
-        f"{DateAndTime.group(1)}" \
+        f"{DateAndTime}" \
         
 
         AWTTP.add_white_space_with_banners(input_image_path, output_image_path, top_text, bottom_text, font_size = 18)
@@ -231,6 +234,7 @@ def CP_plotter_1(input_dir, # Format_1 requires input_dir
             plot_image_folder = output_dir,
             video_output_dir = output_dir, 
             fps=5,
+            output_dir_comment = output_dir_comment,
             )
 
 

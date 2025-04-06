@@ -28,7 +28,7 @@ def CP_plotter_2_CPvsA11(input_dir, # Format_1 requires input_dir
     ):
 
     ### output 
-    output_dir = F_1.F_out_dir(input_dir, __file__, output_dir_comment = "") # Format_1 required definition of output directory
+    output_dir = F_1.F_out_dir(input_dir, __file__, output_dir_comment = output_dir_comment) # Format_1 required definition of output directory
 
     pkl_files = glob.glob(os.path.join(input_dir, "*.pkl"))
 

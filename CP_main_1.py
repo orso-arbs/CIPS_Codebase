@@ -69,7 +69,7 @@ if 1==1: # video to evaluate CP segmentation settings and extracted results
         )
 
 
-if 1==0: # video comparing CP A11
+if 1==1: # video comparing CP A11
     #CPe1_output_dir = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\FB images\Visit_projections_initial_test\BW 134 ball flame - Crop\CP_segment_1_2025-03-12_13-42-11\CP_extract_1_2025-03-12_13-48-48"
     #CP_extract_df = None
 
@@ -81,7 +81,7 @@ if 1==0: # video comparing CP A11
         )
 
 
-if 1==0:
+if 1==1: # panel comparing CP A11
     # \BW 134 ball flame - Crop
     #CPe1_output_dir = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\FB images\Visit_projections_initial_test\BW 134 ball flame - Crop\CP_segment_1_2025-03-12_13-42-11\CP_extract_1_2025-03-12_13-48-48"
 
