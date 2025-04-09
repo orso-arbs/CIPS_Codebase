@@ -222,7 +222,7 @@ def CP_plotter_2_CPvsA11(input_dir, # Format_1 requires input_dir
 
         # Create a third y-axis for the dotted line plots
         ax_1_12_RR = ax_1_12.twinx()  # Second twin axis
-        line_1_12_RR, = ax_1_12_RR.plot(CP_extract_df['time'], CP_extract_df['Ar_px2_CP_maskperFB'], label=f"{CP_extract_df.iloc[i]['Ar_px2_CP_maskperFB']:05.2f}" + " = $A_{Cell masks}/A_{Spherical Flame}$", color='gray')
+        line_1_12_RR, = ax_1_12_RR.plot(CP_extract_df['time'], CP_extract_df['Ar_px2_CP_maskperFB'], label=f"{CP_extract_df.iloc[i]['Ar_px2_CP_maskperFB']:05.2f}" + " = $CP efficiency $\mu_{CP} = A_{CP}/A_{SF}$", color='gray')
 
 
         # Set the limits and labels for the axes

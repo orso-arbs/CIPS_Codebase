@@ -124,13 +124,13 @@ def CP_plotter_1(input_dir, # Format_1 requires input_dir
 
         ax_1_0.hist(CP_extract_df.loc[i, 'diameter_distribution_px'], bins=bins)
         ax_1_0.set_title("Diameter Distribution")
-        ax_1_0.set_xlabel("Diameter")
+        ax_1_0.set_xlabel("Diameter [px]")
         ax_1_0.set_ylabel("Frequency")
 
         mean_diameter = CP_extract_df.loc[i, 'diameter_mean_px'] if np.isfinite(CP_extract_df.loc[i, 'diameter_mean_px']) else 0
         median_diameter = CP_extract_df.loc[i, 'diameter_median_px'] if np.isfinite(CP_extract_df.loc[i, 'diameter_median_px']) else 0
         diameter_training_px = CP_extract_df.iloc[i]['diameter_training_px'] if np.isfinite(CP_extract_df.iloc[i]['diameter_training_px']) else 0
-        diameter_estimate_px = CP_extract_df.iloc[i]['diameter_estimate_px'] if np.isfinite(CP_extract_df.iloc[i]['diameter_estimate_px']) else 0
+        diameter_estimate_used_px = CP_extract_df.iloc[i]['diameter_estimate_used_px'] if np.isfinite(CP_extract_df.iloc[i]['diameter_estimate_used_px']) else 0
         ax_1_0.axvline(mean_diameter, color='blue', linewidth=1)
         ax_1_0.text(mean_diameter, ax_1_0.get_ylim()[1] * 0.9, f'Mean: {mean_diameter:05.2f}', color='blue')
         ax_1_0.axvline(median_diameter, color='green', linewidth=1)
@@ -138,8 +138,8 @@ def CP_plotter_1(input_dir, # Format_1 requires input_dir
         if pd.notna(diameter_training_px): # make sure diameter training is available
             ax_1_0.axvline(diameter_training_px, color='violet', linewidth=1)
             ax_1_0.text(diameter_training_px, ax_1_0.get_ylim()[1] * 0.7, f"Training: {diameter_training_px:05.2f}", color='violet')
-        ax_1_0.axvline(diameter_estimate_px, color='purple', linewidth=1)
-        ax_1_0.text(diameter_estimate_px, ax_1_0.get_ylim()[1] * 0.6, f'Estimate: {diameter_estimate_px:05.2f}', color='purple')
+        ax_1_0.axvline(diameter_estimate_used_px, color='purple', linewidth=1)
+        ax_1_0.text(diameter_estimate_used_px, ax_1_0.get_ylim()[1] * 0.6, f'Estimate: {diameter_estimate_used_px:05.2f}', color='purple')
 
         ax_1_0.set_xlim(0, CP_extract_df['diameter_distribution_px'].apply(lambda x: np.max(x) if x.size > 0 else 0).max() * 1.05)
         ax_1_0.set_ylim(0, max_frequency*1.05)
@@ -148,25 +148,25 @@ def CP_plotter_1(input_dir, # Format_1 requires input_dir
         x_array = range(N_images)
         #ax_1_12 = ax_1_12_auxilliary
         ax_1_12_R = ax_1_12.twinx()
-        ax_1_12.plot(range(N_images), CP_extract_df['diameter_mean_px'], label=f"{CP_extract_df.iloc[i]['diameter_mean_px']:05.2f} = Cell Mean Diameter", color='blue')
-        ax_1_12.plot(range(N_images), CP_extract_df['diameter_median_px'], label=f"{CP_extract_df.iloc[i]['diameter_median_px']:05.2f} = Cell Median Diameter", color='green')
-        ax_1_12.plot(range(N_images), CP_extract_df['diameter_training_px'], label=f"{CP_extract_df.iloc[i]['diameter_training_px'] if pd.notna(CP_extract_df.iloc[i]['diameter_training_px']) else 'N/A' :05.2f} = Cellpose Training Diameter", color='violet')
-        ax_1_12.plot(range(N_images), CP_extract_df['diameter_estimate_px'], label=f"{CP_extract_df.iloc[i]['diameter_estimate_px'] if pd.notna(CP_extract_df.iloc[i]['diameter_estimate_px']) else 'N/A' :05.2f} = Cellpose Estimate Diameter", color='purple')
+        ax_1_12.plot(range(N_images), CP_extract_df['diameter_mean_px'], label=f"{CP_extract_df.iloc[i]['diameter_mean_px']:05.2f} = Cell Mean Diameter [px]", color='blue')
+        ax_1_12.plot(range(N_images), CP_extract_df['diameter_median_px'], label=f"{CP_extract_df.iloc[i]['diameter_median_px']:05.2f} = Cell Median Diameter [px]", color='green')
+        ax_1_12.plot(range(N_images), CP_extract_df['diameter_training_px'], label=f"{CP_extract_df.iloc[i]['diameter_training_px'] if pd.notna(CP_extract_df.iloc[i]['diameter_training_px']) else 'N/A' :05.2f} = Cellpose Training Diameter [px]", color='violet')
+        ax_1_12.plot(range(N_images), CP_extract_df['diameter_estimate_used_px'], label=f"{CP_extract_df.iloc[i]['diameter_estimate_used_px'] if pd.notna(CP_extract_df.iloc[i]['diameter_estimate_used_px']) else 'N/A' :05.2f} = Cellpose Estimate Diameter [px]", color='purple')
         #S = max(CP_extract_df['diameter_mean_px'].max(), CP_extract_df['diameter_median_px'].max()) / CP_extract_df['D_FB_px'].max()
         #ax_1_12.plot(range(N_images), CP_extract_df['D_FB_px'] * S, label=f"{(CP_extract_df.iloc[i]['D_FB_px']*S):.2f} = Flame Ball Diameter * {S:.3f}", color='orange')
         S2 = 1e-1
-        ax_1_12.plot(range(N_images), CP_extract_df['D_FB_px'] * S2, label=f"{(CP_extract_df.iloc[i]['D_FB_px']*S2):05.2f} = Flame Ball Diameter * {S2:.3f}", color='orange')
+        ax_1_12.plot(range(N_images), CP_extract_df['D_FB_px'] * S2, label=f"{(CP_extract_df.iloc[i]['D_FB_px']*S2):05.2f} = Flame Ball Diameter [px] * {S2:.3f}", color='orange')
         ax_1_12_R.plot(range(N_images), CP_extract_df['N_cells'], label=f"{CP_extract_df.iloc[i]['N_cells']:05.2f} = Number of cells", color='red')
         ax_1_12.axvline(i, color='blue', label=f'{i+1:.2f} = shown image. {CP_extract_df.iloc[i]["image_Nx_px"]:.0f}px_x x {CP_extract_df.iloc[i]["image_Ny_px"]:.0f}px_y', linestyle='dashed', linewidth=3)
 
         # Create a third y-axis for the dotted line plots
         ax_1_12_RR = ax_1_12.twinx()  # Second twin axis
         ax_1_12_RR.spines["right"].set_position(("outward", 60))  # Move third axis further right
-        ax_1_12_RR.set_ylabel("A/A Values")  # Label for third y-axis
+        ax_1_12_RR.set_ylabel("CP efficiency $\mu_{CP} = A_{CP}/A_{SF}$")  # Label for third y-axis
         ax_1_12_RR.set_ylim(0, 1)  # Set limits for third y-axis
         #ax_1_12_RR.plot(range(N_images), CP_extract_df['Ar_px2_FBperimage'], label=f"{CP_extract_df.iloc[i]['Ar_px2_FBperimage']:05.2f}" + ' = $A_{Flame Ball}/A_{Image}$', color='gray', linestyle='dotted')
         #ax_1_12_RR.plot(range(N_images), CP_extract_df['Ar_px2_CP_maskperImage'], label=f"{CP_extract_df.iloc[i]['Ar_px2_CP_maskperImage']:05.2f}" + " = $A_{Cell masks}/A_{Image}$", color='gray', linestyle='dashed')
-        ax_1_12_RR.plot(range(N_images), CP_extract_df['Ar_px2_CP_maskperFB'], label=f"{CP_extract_df.iloc[i]['Ar_px2_CP_maskperFB']:05.2f}" + " = $A_{Cell masks}/A_{Flame Ball}$", color='gray')
+        ax_1_12_RR.plot(range(N_images), CP_extract_df['Ar_px2_CP_maskperFB'], label=f"{CP_extract_df.iloc[i]['Ar_px2_CP_maskperFB']:05.2f}" + " = CP efficiency $\mu_{CP} = A_{CP}/A_{SF}$", color='gray')
 
         ax_1_12.set_xlim(0, N_images - 1)
         #ax_1_12.set_ylim(min(CP_extract_df['diameter_mean_px'].min(), CP_extract_df['diameter_median_px'].min(), CP_extract_df['D_FB_px'].max()*S2), max(CP_extract_df['diameter_mean_px'].max(), CP_extract_df['diameter_median_px'].max(), CP_extract_df['D_FB_px'].max() * S2)*1.05)
@@ -178,7 +178,7 @@ def CP_plotter_1(input_dir, # Format_1 requires input_dir
 
         ax_1_12.set_title("Diameter and Cell Count")
         ax_1_12.set_xlabel("Image Number")
-        ax_1_12.set_ylabel("Diameter")
+        ax_1_12.set_ylabel("Diameter [px]")
         ax_1_12_R.set_ylabel("Number of Cells")
         ax_1_12.legend(loc='upper left')
         ax_1_12_R.legend(loc='upper right')

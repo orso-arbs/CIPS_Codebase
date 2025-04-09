@@ -46,7 +46,7 @@ Arguments:
                                     - channels = [0,0] # IF YOU HAVE GRAYSCALE
                                     - channels = [2,3] # IF YOU HAVE G=cytoplasm and B=nucleus
                                     - channels = [2,1] # IF YOU HAVE G=cytoplasm and R=nucleus
-    diameter_estimate_manual = None - Int > 0
+    diameter_estimate_guess = None - Int > 0
                                     - diameter estimate to resize images such that model trained diameter is similar to diameters in images.
                                     - if diameter is set to None, the size of the cells is estimated on a per image basis
                                     - you can set the average cell `diameter` in pixels yourself (recommended)
@@ -83,8 +83,9 @@ Return:
                                         )
     styles                          - list (N_images) of arrays of length 256 or single 1D array
                                     - Style vector summarizing each image, also used to estimate size of objects in image.
-    diameter_estimate               - list (N_images) or float
-                                    - estimated diameters
+    diameter_estimate_used               - list (N_images) or float
+                                    - estimated diameter used to resize image to run model on
+
 
 
 Other Output:
@@ -97,7 +98,7 @@ Other Output:
 @F_1.ParameterLog(max_size = 1024 * 10, log_level = 0) # 0.1KB per smallest unit in return (8 bits per ASCII character)
 def CP_segment_1(input_dir, # Format_1 requires input_dir
     CP_model_type = 'cyto3', gpu = True, # model = models.Cellpose() arguments
-    diameter_estimate_manual = None, channels = [0,0], flow_threshold = 0.4, cellprob_threshold = 0.0, resample = True, niter = 0, # model.eval() arguments
+    diameter_estimate_guess = None, channels = [0,0], flow_threshold = 0.4, cellprob_threshold = 0.0, resample = True, niter = 0, # model.eval() arguments
     CP_default_plot_onoff = 0, CP_default_image_onoff = 0, CP_default_seg_file_onoff = 1,
     output_dir_manual = "", output_dir_comment = "",
     CP_segment_log_level = 0,
@@ -122,12 +123,22 @@ def CP_segment_1(input_dir, # Format_1 requires input_dir
     io.logger_setup() if CP_segment_log_level >= 1 else None
 
     print("\n CellPose Segmenting")
-    model = models.Cellpose(model_type = CP_model_type, gpu = gpu)
-
-    masks, flows, styles, diameter_estimate = model.eval(all_images, diameter=diameter_estimate_manual, channels=channels,
+    if CP_model_type in ['cyto', 'nuclei', 'cyto2', 'cyto3']: # if its a cellpose pretraines base model
+        model = models.Cellpose(model_type = CP_model_type, gpu = gpu)
+        masks, flows, styles, diameter_estimate_used = model.eval(all_images, diameter=diameter_estimate_guess, channels=channels,
                                                         flow_threshold = flow_threshold, cellprob_threshold = cellprob_threshold,
                                                         resample = resample, niter = niter
                                                         )
+    else: # if its a custom model
+        model = models.CellposeModel(pretrained_model = CP_model_type, gpu = gpu) # CP_model_type here has to be fiull path of model file
+        masks, flows, styles = model.eval(all_images, diameter=diameter_estimate_guess, channels=channels,
+                                                            flow_threshold = flow_threshold, cellprob_threshold = cellprob_threshold,
+                                                            resample = resample, niter = niter
+                                                            )
+    
+    if isinstance(diameter_estimate_used, int):
+        diameter_estimate_used = np.full(N_images, diameter_estimate_used)
+
     
 
 
@@ -140,7 +151,7 @@ def CP_segment_1(input_dir, # Format_1 requires input_dir
     output_file = f"{output_dir}/CP_settings.pkl"
     params = {
         "gpu": gpu,
-        "diameter_estimate_manual": diameter_estimate_manual,
+        "diameter_estimate_guess": diameter_estimate_guess,
         "CP_segment_output_dir_comment": output_dir_comment,
         "flow_threshold": flow_threshold,
         "cellprob_threshold": cellprob_threshold,
@@ -160,7 +171,7 @@ def CP_segment_1(input_dir, # Format_1 requires input_dir
         if CP_default_seg_file_onoff == 1: # Save the seg file
             output_seg_filename = os.path.splitext(input_filename)[0] + "_CP_default_seg_file"
             output_seg_path = os.path.join(output_dir, output_seg_filename)
-            io.masks_flows_to_seg(all_images, maski, flowi, output_seg_path, channels=channels, diams=diameter_estimate[idx])
+            io.masks_flows_to_seg(all_images, maski, flowi, output_seg_path, channels=channels, diams=diameter_estimate_used[idx])
 
         if CP_default_plot_onoff ==1: # Save the CP default plot
             fig_CP_default_plot = plt.figure(figsize=(12,5))
@@ -184,7 +195,7 @@ def CP_segment_1(input_dir, # Format_1 requires input_dir
             "masks": masks,
             "flows": flows,
             "styles": styles,
-            "diameter_estimate": diameter_estimate,
+            "diameter_estimate_used": diameter_estimate_used,
             "CP_model_type": CP_model_type,
         }
 
@@ -199,4 +210,4 @@ def CP_segment_1(input_dir, # Format_1 requires input_dir
             except TypeError:
                 print(" (size not available)")
 
-    return output_dir, masks, flows, styles, diameter_estimate, CP_model_type # Format_1 requires outpu_dir as first return
+    return output_dir, masks, flows, styles, diameter_estimate_used, CP_model_type # Format_1 requires outpu_dir as first return

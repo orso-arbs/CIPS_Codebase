@@ -17,6 +17,19 @@ start_time, current_date = F_1.start_inform(__file__)
 find good cellpose parameters to optimise segmentation
 
 
+    resample = True (default)
+
+Whether to run dynamics on original image with resampled interpolated flows (True) or on the rescaled image (False) 
+
+True -> Smoother large ROIs, slower
+False -> More small ROIs, faster
+
+
+findings with resample = False
+CP efficiency:  minor differences in N_c
+Segmentation:   no change. 
+
+
     flow_threshold = 0.4 (default)
 
 Permitted error between flows from true ROI and network predicted flows.
@@ -39,12 +52,56 @@ Segmentation:   more.
 D_mean:         bit lower
 
 
+findings with flow_threshold = 0.8                              ---> promising
+CP efficiency:  higher, especially in breakup transition
+N_c:            bit more
+Segmentation:   more esp in perifery
+D_mean:         bit lower
+
+
+findings with flow_threshold = 1.0dd
+CP efficiency:  bit less
+N_c:            bit less
+Segmentation:   bit less
+D_mean:         bit lower
+
+
+
     cellprob_threshold = 0.0 (default)
 
 Minimum probability that cell is in 
 
-Increase  less #ROIs, especially dim areas
-Decrease  more #ROIs
+Increase -> less #ROIs, especially dim areas
+Decrease -> more #ROIs
+
+
+findings with cellprob_threshold = 1.0
+CP efficiency:  lower
+N_c:            little lower
+Segmentation:   minor differences, no clear difference characteristic
+D_mean:         bit lower
+
+
+findings with cellprob_threshold = 0.8
+CP efficiency:  bit lower
+N_c:            similar, bit lower
+Segmentation:   
+D_mean:         similar, bit lower
+
+
+findings with cellprob_threshold = 0.5
+CP efficiency:  similar, slightly lower
+N_c:            similar, slightly lower
+Segmentation:   similar
+D_mean:         similar, slightly lower
+
+
+findings with cellprob_threshold = 0.1
+CP efficiency:  similar
+N_c:            similar, slightly higher
+Segmentation:   similar
+D_mean:         similar
+
 
 
     niter = None (default)
@@ -56,20 +113,25 @@ Bigger (i.e. 2000)  use for strongly elongated non-circular cells
 
 Pixels converging to same points are same ROI
 
+findings with niter = 100
+CP efficiency:  same
+N_c:            same
+Segmentation:   same
+D_mean:         same
 
 
-
-    resample = True (default)
-
-Whether to run dynamics on original image with resampled interpolated flows (True) or on the rescaled image (False) 
-
-True  Smoother large ROIs, slower
-False  More small ROIs, faster
+findings with niter = 1000
+CP efficiency:  same
+N_c:            same
+Segmentation:   same
+D_mean:         same
 
 
-findings with resample = False
-CP efficiency:  minor differences in N_c
-Segmentation:   no change. 
+findings with niter = 5000
+CP efficiency:  same
+N_c:            same
+Segmentation:   same
+D_mean:         same
 
 
 
@@ -81,8 +143,8 @@ Used to resize images such that model trained diameter is similar to diameters i
 = 0 or None makes automatic estimate
 = D user estimate
 
-Too big  over-merge cells
-Too small  over-split cells
+Too big -> over-merge cells
+Too small -> over-split cells
 
 
 
@@ -102,13 +164,13 @@ def CP_main(
         visit_images_dir,
         input_dir,
         CP_model_type = 'cyto3', gpu = True, # model = models.Cellpose() arguments
-        diameter_estimate_manual = None, channels = [0,0], flow_threshold = 0.4, cellprob_threshold = 0.0, resample = True, niter = 0, # model.eval() arguments
+        diameter_estimate_guess = None, channels = [0,0], flow_threshold = 0.4, cellprob_threshold = 0.0, resample = True, niter = 0, # model.eval() arguments
         CP_segment_output_dir_manual = "", CP_segment_output_dir_comment = "",
         CP_segment_log_level = 1,
 
         # CP_extract_1 arguments
         #input_dir = CPs1_output_dir,
-        #masks = masks, flows = flows, styles = styles, diameter_estimate = diameter_estimate, CP_model_type = CP_model_type,
+        #masks = masks, flows = flows, styles = styles, diameter_estimate_used = diameter_estimate_used, CP_model_type = CP_model_type,
         CP_extract_log_level = 0,
 
         # CPp1.CP_plotter_1 arguments
@@ -123,10 +185,10 @@ def CP_main(
     # CP_segment_1
     if 1==1:
 
-        CPs1_output_dir, masks, flows, styles, diameter_estimate, CP_model_type = CPs1.CP_segment_1(
+        CPs1_output_dir, masks, flows, styles, diameter_estimate_used, CP_model_type = CPs1.CP_segment_1(
             input_dir = visit_images_dir,
             CP_model_type = CP_model_type, gpu = gpu, # model = models.Cellpose() arguments
-            diameter_estimate_manual = diameter_estimate_manual, channels = channels, flow_threshold = flow_threshold, cellprob_threshold = cellprob_threshold, resample = resample, niter = niter, # model.eval() arguments
+            diameter_estimate_guess = diameter_estimate_guess, channels = channels, flow_threshold = flow_threshold, cellprob_threshold = cellprob_threshold, resample = resample, niter = niter, # model.eval() arguments
             output_dir_manual = CP_segment_output_dir_manual, output_dir_comment = CP_segment_output_dir_comment,
             CP_segment_log_level = CP_segment_log_level,
             )
@@ -145,7 +207,7 @@ def CP_main(
 
         CPe1_output_dir, CP_extract_df = CPe1.CP_extract_1(
             input_dir = CPs1_output_dir,
-            #masks = masks, flows = flows, styles = styles, diameter_estimate = diameter_estimate, CP_model_type = CP_model_type,
+            #masks = masks, flows = flows, styles = styles, diameter_estimate_used = diameter_estimate_used, CP_model_type = CP_model_type,
             CP_extract_log_level = 0,
             )
 
@@ -237,7 +299,7 @@ def run_variants():
         "input_dir": visit_images_dir,  # Same as visit_images_dir
         "CP_model_type": 'cyto3',
         "gpu": True,
-        "diameter_estimate_manual": None,
+        "diameter_estimate_guess": None,
         "channels": [0, 0],
         "flow_threshold": 0.4,
         "cellprob_threshold": 0.0,
@@ -254,59 +316,26 @@ def run_variants():
 
     # Variants with specific modifications
     variants = [
-        # Case A: Default comments
         ("A", {
-            "CP_segment_output_dir_comment": "default",
-            "CP_plotter_1_output_dir_comment": "default"
+            "CP_segment_output_dir_comment": "flow_threshold_0p8",
+            "CP_plotter_1_output_dir_comment": "flow_threshold_0p8",
+            "flow_threshold": 0.8
         }),
-        # Case B: resample set to False
         ("B", {
-            "CP_segment_output_dir_comment": "resample_False",
-            "CP_plotter_1_output_dir_comment": "resample_False",
-            "resample": False
+            "CP_segment_output_dir_comment": "flow_threshold_1p0",
+            "CP_plotter_1_output_dir_comment": "flow_threshold_1p0",
+            "flow_threshold": 1.0
         }),
-        # Case C: flow_threshold set to 0.2
         ("C", {
-            "CP_segment_output_dir_comment": "flow_threshold_0p2",
-            "CP_plotter_1_output_dir_comment": "flow_threshold_0p2",
-            "flow_threshold": 0.2
+            "CP_segment_output_dir_comment": "cellprob_threshold_0p1",
+            "CP_plotter_1_output_dir_comment": "cellprob_threshold_0p1",
+            "cellprob_threshold": 0.1
         }),
-        # Case D: flow_threshold set to 0.6
         ("D", {
-            "CP_segment_output_dir_comment": "flow_threshold_0p6",
-            "CP_plotter_1_output_dir_comment": "flow_threshold_0p6",
-            "flow_threshold": 0.6
+            "CP_segment_output_dir_comment": "niter_100",
+            "CP_plotter_1_output_dir_comment": "niter_100",
+            "niter": 100
         }),
-        # Case E: cellprob_threshold set to 0.5
-        ("E", {
-            "CP_segment_output_dir_comment": "cellprob_threshold_0p5",
-            "CP_plotter_1_output_dir_comment": "cellprob_threshold_0p5",
-            "cellprob_threshold": 0.5
-        }),
-        # Case F: cellprob_threshold set to 0.8
-        ("F", {
-            "CP_segment_output_dir_comment": "cellprob_threshold_0p8",
-            "CP_plotter_1_output_dir_comment": "cellprob_threshold_0p8",
-            "cellprob_threshold": 0.8
-        }),
-        # Case G: cellprob_threshold set to 1.0
-        ("G", {
-            "CP_segment_output_dir_comment": "cellprob_threshold_1p0",
-            "CP_plotter_1_output_dir_comment": "cellprob_threshold_1p0",
-            "cellprob_threshold": 1.0
-        }),
-        # Case H: niter set to 1000 (same as base but still testing)
-        ("H", {
-            "CP_segment_output_dir_comment": "niter_1000",
-            "CP_plotter_1_output_dir_comment": "niter_1000",
-            "niter": 1000
-        }),
-        # Case I: niter set to 5000
-        ("I", {
-            "CP_segment_output_dir_comment": "niter_5000",
-            "CP_plotter_1_output_dir_comment": "niter_5000",
-            "niter": 5000
-        })
     ]
 
     # Loop over each variant and call CP_main with updated arguments
@@ -315,7 +344,7 @@ def run_variants():
         args = base_args.copy()
         args.update(modifications)
 
-        print(f"\n\nRunning variant {label} with the following arguments:")
+        print(f"\n\n{label}   {label}   {label}   {label}   {label}   {label}   {label}   {label}\nRunning variant {label} with the following arguments:\n")
         for key, value in args.items():
             print(f"  {key}: {value}")
         print("\n\n")

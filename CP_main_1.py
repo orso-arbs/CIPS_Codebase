@@ -22,10 +22,15 @@ if 1==1:
     visit_images_dir = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\FB images\Visit_projections_initial_test\BW 134 ball flame - Crop Small First few"
     #visit_images_dir = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\FB images\A11 FB poster selection"
 
-    CPs1_output_dir, masks, flows, styles, diameter_estimate, CP_model_type = CPs1.CP_segment_1(
+    CP_model_type = "cyto3"
+    #CP_model_type = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\Python Code\msc python cellpose\CP Models\ZGX model_UoB"
+
+    CPs1_output_dir, masks, flows, styles, diameter_estimate_used, CP_model_type = CPs1.CP_segment_1(
         input_dir = visit_images_dir,
-        CP_model_type = "cyto3",
+        CP_model_type = CP_model_type,
         gpu = True,
+        diameter_estimate_guess = 5, # define for custom model. otherwise set to 0 or None
+        output_dir_comment = "Zhang_Model_diameter_estimate_guess_100",
         CP_segment_log_level = 1,
         )
 
@@ -42,8 +47,9 @@ if 1==1:
 
     CPe1_output_dir, CP_extract_df = CPe1.CP_extract_1(
         input_dir = CPs1_output_dir,
-        #masks = masks, flows = flows, styles = styles, diameter_estimate = diameter_estimate, CP_model_type = CP_model_type,
+        #masks = masks, flows = flows, styles = styles, diameter_estimate_used = diameter_estimate_used, CP_model_type = CP_model_type,
         CP_extract_log_level = 0,
+        diameter_training_px = 30, # define for custom model
         )
 
 
@@ -93,7 +99,7 @@ if 1==1: # panel comparing CP A11
         input_dir = CPe1_output_dir,
         #CP_extract_df = CP_extract_df,
         output_dir_manual = "", output_dir_comment = "",
-        video = 0, show_plot = 1,
+        video = 0, show_plot = 0,
         Panel_1 = 0, # 
         Panel_2 = 0, # check non Dimentionalisation
         Panel_3 = 0, # 

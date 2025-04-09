@@ -29,7 +29,7 @@ warnings.simplefilter(action='ignore', category=FutureWarning)
 @F_1.ParameterLog(max_size = 1024 * 10, log_level = 0) # 0.1KB per smallest unit in return (8 bits per ASCII character)
 def CP_extract_1(
         input_dir,
-        masks = None, flows = None, styles = None, diameter_estimate = None, # can be implemented as input
+        masks = None, flows = None, styles = None, diameter_estimate_used = None, # can be implemented as input but usually read from seg files
         CP_model_type = None, diameter_training_px = None,
         CP_extract_log_level = 0,
         output_dir_manual = "", output_dir_comment = "",
@@ -92,7 +92,7 @@ def CP_extract_1(
     with open(CP_settings_file, "rb") as file:
         params = pickle.load(file)
         gpu = params["gpu"]
-        diameter_estimate_manual = params["diameter_estimate_manual"]
+        diameter_estimate_guess = params["diameter_estimate_guess"]
         CP_segment_output_dir_comment = params["CP_segment_output_dir_comment"]
         flow_threshold = params["flow_threshold"]
         cellprob_threshold = params["cellprob_threshold"]
@@ -108,7 +108,7 @@ def CP_extract_1(
         'image_file_name', 'image_file_path', 'image_number', 'image_Nx_px', 'image_Ny_px',
         'seg_file_name', 'seg_file_path', 'ismanual', 'CP_model_type', 'channels',
         'flows0', 'flows1', 'flows2', 'flows3', 'flows4',
-        'diameter_estimate', 'diameter_training_px',
+        'diameter_estimate_used', 'diameter_training_px',
         'diameter_mean_px', 'diameter_median_px', 'diameter_distribution_px', 'outlines', 'masks', 'N_cells',
         'A_image_px2', 'A_empty_px2', 'A_FB_px2', 'Ar_px2_FBperimage', 'D_FB_px',
         'A_CP_mask_px', 'Ar_px2_CP_maskperImage', 'Ar_px2_CP_maskperFB',
@@ -138,12 +138,12 @@ def CP_extract_1(
         masks_i = seg_i['masks']
         outlines_i = seg_i['outlines']
         flow_i = seg_i['flows']
-        diameter_estimate_px_i = seg_i["diameter"]
+        diameter_estimate_used_px_i = seg_i["diameter"]
         channels = seg_i["chan_choose"]
         ismanual = seg_i['ismanual']
         seg_image_filename = seg_i["filename"] # gives seg filename though it shoud give images file name. weird...
 
-        # training diameter
+        # training diameter. Thats the diameter of cells used for training the Cellpose U-net. 
         if diameter_training_px is None and CP_model_type is not None:
             if CP_model_type in ['cyto3', "cyto", "cyto2", "cyto3"]:
                 diameter_training_px = 30
@@ -151,18 +151,18 @@ def CP_extract_1(
                 diameter_training_px = 17
         elif diameter_training_px is None and CP_model_type is None:
             diameter_training_px = None
-            print("NB: diameter_training_px can't be deduced. supply it or a standard CP_model_type as argument to CP_extract_1") if CP_extract_log_level == 1 else None
+            print("NB: diameter_training_px can't be deduced. supply it or a standard CP_model_type (one of 'cyto3', 'cyto', 'cyto2', 'cyto3', 'nuclei') as argument to CP_extract_1") if CP_extract_log_level >= 1 else None
 
         # extract diameter tuple and from it mean and complete distribution
         diameters_tuple_i = utils.diameters(masks_i)
-        median_diameter_px_i = diameters_tuple_i[0]
+        diameter_median_px_i = diameters_tuple_i[0]
         diameter_array_px_i = diameters_tuple_i[1]
-        mean_diameter_px_i = np.mean(diameter_array_px_i)
+        diameter_mean_px_i = np.mean(diameter_array_px_i)
 
         # Calculate the relative frequency of each diameter in diameter_array_px_i
-        unique_diameters, counts_diameters = np.unique(diameter_array_px_i, return_counts=True)
-        total_diameters = diameter_array_px_i.size
-        relative_diameter_frequencies = counts_diameters / total_diameters
+        diameters_unique, counts_diameters = np.unique(diameter_array_px_i, return_counts=True)
+        diameters_total = diameter_array_px_i.size
+        diameters_relative_frequencies = counts_diameters / diameters_total
 
         # CP effectiveness measures
         N_cells_i = np.max(masks_i)
@@ -194,7 +194,7 @@ def CP_extract_1(
         CP_extract_df.at[i, 'CP_model_type'] = params['CP_model_type']
         CP_extract_df.at[i, 'channels'] = channels
         CP_extract_df.at[i, 'gpu'] = params['gpu']
-        CP_extract_df.at[i, 'diameter_estimate_manual'] = params['diameter_estimate_manual']
+        CP_extract_df.at[i, 'diameter_estimate_guess'] = params['diameter_estimate_guess']
         CP_extract_df.at[i, 'CP_segment_output_dir_comment'] = params['CP_segment_output_dir_comment']
         CP_extract_df.at[i, 'flow_threshold'] = params['flow_threshold']
         CP_extract_df.at[i, 'cellprob_threshold'] = params['cellprob_threshold']
@@ -211,9 +211,9 @@ def CP_extract_1(
         CP_extract_df.at[i, 'masks'] = masks_i
 
         CP_extract_df.at[i, 'diameter_training_px'] = diameter_training_px
-        CP_extract_df.at[i, 'diameter_estimate_px'] = diameter_estimate_px_i
-        CP_extract_df.at[i, 'diameter_mean_px'] = mean_diameter_px_i
-        CP_extract_df.at[i, 'diameter_median_px'] = median_diameter_px_i
+        CP_extract_df.at[i, 'diameter_estimate_used_px'] = diameter_estimate_used_px_i
+        CP_extract_df.at[i, 'diameter_mean_px'] = diameter_mean_px_i
+        CP_extract_df.at[i, 'diameter_median_px'] = diameter_median_px_i
         CP_extract_df.at[i, 'diameter_distribution_px'] = diameter_array_px_i
         CP_extract_df.at[i, 'N_cells'] = N_cells_i
         CP_extract_df.at[i, 'A_image_px2'] = A_image_px2
@@ -294,7 +294,7 @@ def CP_extract_1(
 
     # Add non-dimensional columns to the DataFrame
     nonDim_columns = [
-        'd_T_per_px', 'image_Nx_nonDim', 'image_Ny_nonDim', 'diameter_training_nonDim', 'diameter_estimate_nonDim',
+        'd_T_per_px', 'image_Nx_nonDim', 'image_Ny_nonDim', 'diameter_training_nonDim', 'diameter_estimate_used_nonDim',
         'diameter_mean_nonDim', 'diameter_median_nonDim', 'diameter_distribution_nonDim',
         'A_image_nonDim2', 'A_empty_nonDim2', 'A_FB_nonDim2', 'D_FB_nonDim', 'R_FB_nonDim', 'A_CP_mask_nonDim',
     ]
@@ -327,7 +327,7 @@ def CP_extract_1(
         image_Ny_nonDim = CP_extract_df.loc[i, "image_Ny_px"] * d_T_per_px_i
 
         diameter_training_px_i = CP_extract_df.loc[i, 'diameter_training_px']
-        diameter_estimate_px_i = CP_extract_df.loc[i, 'diameter_estimate_px']
+        diameter_estimate_used_px_i = CP_extract_df.loc[i, 'diameter_estimate_used_px']
         diameter_median_px_i = CP_extract_df.loc[i, 'diameter_median_px']
         diameter_mean_px_i = CP_extract_df.loc[i, 'diameter_mean_px']
 
@@ -337,7 +337,7 @@ def CP_extract_1(
         diameter_distribution_px_i = diameter_array_px_i_placeholder
 
         diameter_training_nonDim = diameter_training_px_i * d_T_per_px_i if diameter_training_px_i is not None and d_T_per_px_i is not None else None
-        diameter_estimate_nonDim_i = diameter_estimate_px_i * d_T_per_px_i if diameter_estimate_px_i is not None and d_T_per_px_i is not None else None
+        diameter_estimate_used_nonDim_i = diameter_estimate_used_px_i * d_T_per_px_i if diameter_estimate_used_px_i is not None and d_T_per_px_i is not None else None
         diameter_median_nonDim_i = diameter_median_px_i * d_T_per_px_i if diameter_median_px_i is not None and d_T_per_px_i is not None else None
         diameter_mean_nonDim_i = diameter_mean_px_i * d_T_per_px_i
         diameter_distribution_nonDim_i = diameter_distribution_px_i * d_T_per_px_i
@@ -354,7 +354,7 @@ def CP_extract_1(
         CP_extract_df.at[i, 'image_Nx_nonDim'] = image_Nx_nonDim
         CP_extract_df.at[i, 'image_Ny_nonDim'] = image_Ny_nonDim
         CP_extract_df.at[i, 'diameter_training_nonDim'] = diameter_training_nonDim
-        CP_extract_df.at[i, 'diameter_estimate_nonDim'] = diameter_estimate_nonDim_i
+        CP_extract_df.at[i, 'diameter_estimate_used_nonDim'] = diameter_estimate_used_nonDim_i
         CP_extract_df.at[i, 'diameter_mean_nonDim'] = diameter_mean_nonDim_i
         CP_extract_df.at[i, 'diameter_median_nonDim'] = diameter_median_nonDim_i
         CP_extract_df.at[i, 'diameter_distribution_nonDim'] = diameter_distribution_nonDim_i

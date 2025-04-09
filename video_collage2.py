@@ -10,14 +10,21 @@ base_folder = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\FB images\Visit
 # List of folders that contain a single .mp4 video
 video_dirs = [
     os.path.join(base_folder, r"CP_segment_1_2025-04-05_19-24-52_default\CP_extract_1_2025-04-05_19-37-12\CP_plotter_1_2025-04-05_19-38-02_default"),
-    os.path.join(base_folder, r"CP_segment_1_2025-04-05_19-58-36_resample_False\CP_extract_1_2025-04-05_20-07-39\CP_plotter_1_2025-04-05_20-08-04_resample_False"),
-    os.path.join(base_folder, r"CP_segment_1_2025-04-05_20-16-34_flow_threshold_0p2\CP_extract_1_2025-04-05_20-22-39\CP_plotter_1_2025-04-05_20-23-05_flow_threshold_0p2"),
-    os.path.join(base_folder, r"CP_segment_1_2025-04-05_20-27-34_flow_threshold_0p6\CP_extract_1_2025-04-05_20-33-54\CP_plotter_1_2025-04-05_20-34-21_flow_threshold_0p6"),
-    os.path.join(base_folder, r"CP_segment_1_2025-04-05_20-39-07_cellprob_threshold_0p5\CP_extract_1_2025-04-05_20-45-59\CP_plotter_1_2025-04-05_20-46-28_cellprob_threshold_0p5"),
-    os.path.join(base_folder, r"CP_segment_1_2025-04-05_20-55-26_cellprob_threshold_0p8\CP_extract_1_2025-04-05_21-02-00\CP_plotter_1_2025-04-05_21-02-23_cellprob_threshold_0p8"),
-    os.path.join(base_folder, r"CP_segment_1_2025-04-05_21-08-51_cellprob_threshold_1p0\CP_extract_1_2025-04-05_21-14-32\CP_plotter_1_2025-04-05_21-14-52_cellprob_threshold_1p0"),
-    os.path.join(base_folder, r"CP_segment_1_2025-04-05_21-19-13_niter_1000"),
-    os.path.join(base_folder, r"CP_segment_1_2025-04-05_21-29-40_niter_5000\CP_extract_1_2025-04-05_21-39-47\CP_plotter_1_2025-04-05_21-40-16_niter_5000")
+    #os.path.join(base_folder, r"CP_segment_1_2025-04-05_19-58-36_resample_False\CP_extract_1_2025-04-05_20-07-39\CP_plotter_1_2025-04-05_20-08-04_resample_False"),
+    #os.path.join(base_folder, r"CP_segment_1_2025-04-05_20-16-34_flow_threshold_0p2\CP_extract_1_2025-04-05_20-22-39\CP_plotter_1_2025-04-05_20-23-05_flow_threshold_0p2"),
+    #os.path.join(base_folder, r"CP_segment_1_2025-04-05_20-27-34_flow_threshold_0p6\CP_extract_1_2025-04-05_20-33-54\CP_plotter_1_2025-04-05_20-34-21_flow_threshold_0p6"),
+    #os.path.join(base_folder, r"CP_segment_1_2025-04-05_20-39-07_cellprob_threshold_0p5\CP_extract_1_2025-04-05_20-45-59\CP_plotter_1_2025-04-05_20-46-28_cellprob_threshold_0p5"),
+    #os.path.join(base_folder, r"CP_segment_1_2025-04-05_20-55-26_cellprob_threshold_0p8\CP_extract_1_2025-04-05_21-02-00\CP_plotter_1_2025-04-05_21-02-23_cellprob_threshold_0p8"),
+    #os.path.join(base_folder, r"CP_segment_1_2025-04-05_21-08-51_cellprob_threshold_1p0\CP_extract_1_2025-04-05_21-14-32\CP_plotter_1_2025-04-05_21-14-52_cellprob_threshold_1p0"),
+    #os.path.join(base_folder, r"CP_segment_1_2025-04-05_21-19-13_niter_1000\CP_extract_1_2025-04-05_21-25-04\CP_plotter_1_2025-04-05_21-25-22_niter_1000"),
+    #os.path.join(base_folder, r"CP_segment_1_2025-04-05_21-29-40_niter_5000\CP_extract_1_2025-04-05_21-39-47\CP_plotter_1_2025-04-05_21-40-16_niter_5000"),
+
+    os.path.join(base_folder, r"CP_segment_1_2025-04-06_13-33-56_flow_threshold_0p8\CP_extract_1_2025-04-06_13-46-40\CP_plotter_1_2025-04-06_13-47-32_flow_threshold_0p8"),
+    os.path.join(base_folder, r"CP_segment_1_2025-04-06_14-08-52_flow_threshold_1p0\CP_extract_1_2025-04-06_14-21-27\CP_plotter_1_2025-04-06_14-22-16_flow_threshold_1p0"),
+    os.path.join(base_folder, r"CP_segment_1_2025-04-06_14-43-41_cellprob_threshold_0p1\CP_extract_1_2025-04-06_14-55-35\CP_plotter_1_2025-04-06_14-56-24_cellprob_threshold_0p1"),
+    os.path.join(base_folder, r"CP_segment_1_2025-04-06_15-16-08_niter_100\CP_extract_1_2025-04-06_15-28-34\CP_plotter_1_2025-04-06_15-29-24_niter_100"),
+
+
 ]
 
 def find_mp4_in_dir(directory):
