@@ -48,8 +48,27 @@ def Visit_projector_1(
     print("Opened Database\n") if Visit_projector_1_log_level > 0 else None
 
     # define plot
-    vi.AddPlot("Contour", "temperature", 1, 1)
+    #vi.AddPlot("Contour", "temperature", 1, 1) 
+
+    vi.AddPlot("Pseudocolor", "velocity_magnitude", 1, 1)
+    vi.SetActivePlots(0)
+    vi.SetActivePlots(0)
+    vi.AddOperator("Isosurface", 1)
+    IsosurfaceAtts = vi.IsosurfaceAttributes()
+    IsosurfaceAtts.contourNLevels = 10
+    IsosurfaceAtts.contourValue = (3)
+    IsosurfaceAtts.contourPercent = ()
+    IsosurfaceAtts.contourMethod = IsosurfaceAtts.Value  # Level, Value, Percent
+    IsosurfaceAtts.minFlag = 0
+    IsosurfaceAtts.min = 0
+    IsosurfaceAtts.maxFlag = 0
+    IsosurfaceAtts.max = 1
+    IsosurfaceAtts.scaling = IsosurfaceAtts.Linear  # Linear, Log
+    IsosurfaceAtts.variable = "temperature"
+    vi.SetOperatorOptions(IsosurfaceAtts, 0, 1)
+
     print("Added plot\n") if Visit_projector_1_log_level > 0 else None
+
 
     # calculate plot
     vi.DrawPlots()
@@ -59,13 +78,13 @@ def Visit_projector_1(
     View3DAtts = vi.View3DAttributes()
     View3DAtts.viewNormal = (-0.313864, -0.493751, 0.810987)  # the direction from the camera location to the focal point
     View3DAtts.focus = (0, 0, 0)                              # the focal point
-    View3DAtts.viewUp = (-0.0333566, 0.859356, 0.510289)       # specifies the axis that goes along the height of the screen
-    View3DAtts.viewAngle = 30                                  # specifies the "view angle", meaning the "angle" of the pyramid that defines the view frustum
-    View3DAtts.parallelScale = parallelScale                     # scales how far the camera is located along the viewNormal from the focal point, which affects the scale of the data set in the screen
-    View3DAtts.nearPlane = -346.41                             # specifies where the pyramid of the view frustum is truncated on the near side; relative to the focal point, often negative
-    View3DAtts.farPlane = 346.41                               # specifies where the pyramid of the view frustum is truncated on the far side; relative to the focal point
+    View3DAtts.viewUp = (-0.0333566, 0.859356, 0.510289)      # specifies the axis that goes along the height of the screen
+    View3DAtts.viewAngle = 30                                 # specifies the "view angle", meaning the "angle" of the pyramid that defines the view frustum
+    View3DAtts.parallelScale = parallelScale                  # scales how far the camera is located along the viewNormal from the focal point, which affects the scale of the data set in the screen
+    View3DAtts.nearPlane = -300.0                             # specifies where the pyramid of the view frustum is truncated on the near side; relative to the focal point, often negative
+    View3DAtts.farPlane = 300.0                               # specifies where the pyramid of the view frustum is truncated on the far side; relative to the focal point
     View3DAtts.imagePan = (0, 0)                              # allows the image to be translated without affecting the view frustum definition
-    View3DAtts.imageZoom = imageZoom                                  # allows the image to be zoomed in on without affecting the view frustum definition
+    View3DAtts.imageZoom = imageZoom                          # allows the image to be zoomed in on without affecting the view frustum definition
     View3DAtts.perspective = 1                                # a Boolean: 1 for perspective projection, 0 for orthographic
     View3DAtts.eyeAngle = 2                                   # specifies the angle of the eye for stereo viewing
     View3DAtts.centerOfRotationSet = 0                        # specifies whether or not rotations occur around the focal point (0) or another point (1)
@@ -359,35 +378,14 @@ def Visit_projector_1(
     for state in States: 
         vi.SetTimeSliderState(state)
 
-        SaveWindowAtts.fileName = f"visit_{state:04d}"
+        SaveWindowAtts.fileName = f"visit_{state:06d}"
         vi.SetSaveWindowAttributes(SaveWindowAtts)
 
         vi.SaveWindow() 
-        print(f"saved image for file {state:04d}\n", end='\r') if Visit_projector_1_log_level > 0 else None
+        print(f"saved image for file {state:06d}\n", end='\r') if Visit_projector_1_log_level > 0 else None
 
     # Clean up
     vi.DeleteAllPlots()
     vi.CloseDatabase(r"euler.ethz.ch:/cluster/scratch/cfrouzak/spher_H2/postProc/fields/po_part2/po_s912k_post.nek5000")
 
     return output_dir
-
-
-
-
-# # A11 single timedumps #50 (if i remember correctly it's 50)
-# #Database = r"euler.ethz.ch:/cluster/scratch/cfrouzak/spher_H2/postProc/fields/po_part2/po_s912k_post.nek5000"
-# # A11 fist 20 timedumps
-# Database = r"euler.ethz.ch:/cluster/scratch/orsob/MastersThesis/postProc/po_part1/po_s912k_post.nek5000"
-
-# Visit_projector_1(
-#     input_dir = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\VisitOutput",
-#     Database = Database,
-#     no_annotations = 1,
-#     Visit_projector_1_log_level = 1,
-#     output_dir_manual = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\VisitOutput", output_dir_comment = "",
-# )
-
-
-
-
-# print("\ncode completely executed\n")

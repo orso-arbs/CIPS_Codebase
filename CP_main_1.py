@@ -32,7 +32,7 @@ if 1==1:
         Database = Database,
         no_annotations = 1, imageZoom = 2.5, parallelScale = 50,
         Visit_projector_1_log_level = 1,
-        output_dir_manual = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\VisitOutput", output_dir_comment = "",
+        output_dir_manual = "", output_dir_comment = "isoT3colVMag",
     )
 
     print("Note: Visit window can now be closed. 'VisIt: Error - Can't delete the last window' is inconsequentioal to the remaining code")
