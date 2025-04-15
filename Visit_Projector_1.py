@@ -19,7 +19,8 @@ print("imported visit \n")
 def Visit_projector_1(
         input_dir,
         Database,
-        no_annotations = 1, imageZoom = 1, parallelScale = 100,
+        Plots = ["Pseudocolor-velocity_magnitude Isosurface-temperature3"],
+        no_annotations = 1, viewNormal = [0,0,-1], viewUp = [1,0,0], imageZoom = 1, parallelScale = 100, perspective = 1,
         Visit_projector_1_log_level = 0,
         output_dir_manual = "", output_dir_comment = "",
 ):
@@ -47,25 +48,111 @@ def Visit_projector_1(
     vi.OpenDatabase(Database)
     print("Opened Database\n") if Visit_projector_1_log_level > 0 else None
 
+    # define Expressions
+    vi.DefineScalarExpression("X", "coord(mesh)[0]")
+    vi.DefineScalarExpression("Y", "coord(mesh)[1]")
+    vi.DefineScalarExpression("Z", "coord(mesh)[2]")
+    vi.DefineScalarExpression("R", "sqrt(X*X + Y*Y + Z*Z)")
+
+
     # define plot
     #vi.AddPlot("Contour", "temperature", 1, 1) 
+    if "Pseudocolor-velocity_magnitude Isosurface-temperature" in Plots:
+        print("plotting Pseudocolor-velocity_magnitude Isosurface-temperature\n") if Visit_projector_1_log_level > 0 else None
+        vi.AddPlot("Pseudocolor", "velocity_magnitude", 1, 1)
+        vi.SetActivePlots(0)
+        vi.AddOperator("Isosurface", 1)
+        IsosurfaceAtts = vi.IsosurfaceAttributes()
+        IsosurfaceAtts.contourNLevels = 10
+        IsosurfaceAtts.contourValue = (3)
+        IsosurfaceAtts.contourPercent = ()
+        IsosurfaceAtts.contourMethod = IsosurfaceAtts.Value  # Level, Value, Percent
+        IsosurfaceAtts.minFlag = 0
+        IsosurfaceAtts.min = 0
+        IsosurfaceAtts.maxFlag = 0
+        IsosurfaceAtts.max = 1
+        IsosurfaceAtts.scaling = IsosurfaceAtts.Linear  # Linear, Log
+        IsosurfaceAtts.variable = "temperature"
+        vi.SetOperatorOptions(IsosurfaceAtts, 0, 1)
 
-    vi.AddPlot("Pseudocolor", "velocity_magnitude", 1, 1)
-    vi.SetActivePlots(0)
-    vi.SetActivePlots(0)
-    vi.AddOperator("Isosurface", 1)
-    IsosurfaceAtts = vi.IsosurfaceAttributes()
-    IsosurfaceAtts.contourNLevels = 10
-    IsosurfaceAtts.contourValue = (3)
-    IsosurfaceAtts.contourPercent = ()
-    IsosurfaceAtts.contourMethod = IsosurfaceAtts.Value  # Level, Value, Percent
-    IsosurfaceAtts.minFlag = 0
-    IsosurfaceAtts.min = 0
-    IsosurfaceAtts.maxFlag = 0
-    IsosurfaceAtts.max = 1
-    IsosurfaceAtts.scaling = IsosurfaceAtts.Linear  # Linear, Log
-    IsosurfaceAtts.variable = "temperature"
-    vi.SetOperatorOptions(IsosurfaceAtts, 0, 1)
+    if "Pseudocolor-velocity_magnitude Isosurface-temperature colorTableName-CustomBW" in Plots:
+        print("plotting Pseudocolor-velocity_magnitude Isosurface-temperature colorTableName-CustomBW\n") if Visit_projector_1_log_level > 0 else None
+        vi.AddPlot("Pseudocolor", "velocity_magnitude", 1, 1)
+        vi.SetActivePlots(0)
+        vi.SetActivePlots(0)
+        vi.AddOperator("Isosurface", 1)
+        IsosurfaceAtts = vi.IsosurfaceAttributes()
+        IsosurfaceAtts.contourNLevels = 10
+        IsosurfaceAtts.contourValue = (3)
+        IsosurfaceAtts.contourPercent = ()
+        IsosurfaceAtts.contourMethod = IsosurfaceAtts.Value  # Level, Value, Percent
+        IsosurfaceAtts.minFlag = 0
+        IsosurfaceAtts.min = 0
+        IsosurfaceAtts.maxFlag = 0
+        IsosurfaceAtts.max = 1
+        IsosurfaceAtts.scaling = IsosurfaceAtts.Linear  # Linear, Log
+        IsosurfaceAtts.variable = "temperature"
+
+        vi.SetOperatorOptions(IsosurfaceAtts, 0, 1)
+        PseudocolorAtts = vi.PseudocolorAttributes()
+        PseudocolorAtts.scaling = PseudocolorAtts.Linear  # Linear, Log, Skew
+        PseudocolorAtts.skewFactor = 1
+        PseudocolorAtts.limitsMode = PseudocolorAtts.ActualData  # OriginalData, ActualData
+        PseudocolorAtts.minFlag = 0
+        PseudocolorAtts.min = 0
+        PseudocolorAtts.useBelowMinColor = 0
+        PseudocolorAtts.belowMinColor = (0, 0, 0, 255)
+        PseudocolorAtts.maxFlag = 0
+        PseudocolorAtts.max = 1
+        PseudocolorAtts.useAboveMaxColor = 0
+        PseudocolorAtts.aboveMaxColor = (0, 0, 0, 255)
+        PseudocolorAtts.centering = PseudocolorAtts.Natural  # Natural, Nodal, Zonal
+        PseudocolorAtts.colorTableName = "CustomBW"
+        PseudocolorAtts.invertColorTable = 0
+        PseudocolorAtts.opacityType = PseudocolorAtts.FullyOpaque  # ColorTable, FullyOpaque, Constant, Ramp, VariableRange
+        PseudocolorAtts.opacityVariable = ""
+        PseudocolorAtts.opacity = 1
+        PseudocolorAtts.opacityVarMin = 0
+        PseudocolorAtts.opacityVarMax = 1
+        PseudocolorAtts.opacityVarMinFlag = 0
+        PseudocolorAtts.opacityVarMaxFlag = 0
+        PseudocolorAtts.pointSize = 0.05
+        PseudocolorAtts.pointType = PseudocolorAtts.Point  # Box, Axis, Icosahedron, Octahedron, Tetrahedron, SphereGeometry, Point, Sphere
+        PseudocolorAtts.pointSizeVarEnabled = 0
+        PseudocolorAtts.pointSizeVar = "default"
+        PseudocolorAtts.pointSizePixels = 2
+        PseudocolorAtts.lineType = PseudocolorAtts.Line  # Line, Tube, Ribbon
+        PseudocolorAtts.lineWidth = 0
+        PseudocolorAtts.tubeResolution = 10
+        PseudocolorAtts.tubeRadiusSizeType = PseudocolorAtts.FractionOfBBox  # Absolute, FractionOfBBox
+        PseudocolorAtts.tubeRadiusAbsolute = 0.125
+        PseudocolorAtts.tubeRadiusBBox = 0.005
+        PseudocolorAtts.tubeRadiusVarEnabled = 0
+        PseudocolorAtts.tubeRadiusVar = ""
+        PseudocolorAtts.tubeRadiusVarRatio = 10
+        PseudocolorAtts.tailStyle = PseudocolorAtts.NONE  # NONE, Spheres, Cones
+        PseudocolorAtts.headStyle = PseudocolorAtts.NONE  # NONE, Spheres, Cones
+        PseudocolorAtts.endPointRadiusSizeType = PseudocolorAtts.FractionOfBBox  # Absolute, FractionOfBBox
+        PseudocolorAtts.endPointRadiusAbsolute = 0.125
+        PseudocolorAtts.endPointRadiusBBox = 0.05
+        PseudocolorAtts.endPointResolution = 10
+        PseudocolorAtts.endPointRatio = 5
+        PseudocolorAtts.endPointRadiusVarEnabled = 0
+        PseudocolorAtts.endPointRadiusVar = ""
+        PseudocolorAtts.endPointRadiusVarRatio = 10
+        PseudocolorAtts.renderSurfaces = 1
+        PseudocolorAtts.renderWireframe = 0
+        PseudocolorAtts.renderPoints = 0
+        PseudocolorAtts.smoothingLevel = 0
+        PseudocolorAtts.legendFlag = 1
+        PseudocolorAtts.lightingFlag = 1
+        PseudocolorAtts.wireframeColor = (0, 0, 0, 0)
+        PseudocolorAtts.pointColor = (0, 0, 0, 0)
+        vi.SetPlotOptions(PseudocolorAtts)
+
+
+
+
 
     print("Added plot\n") if Visit_projector_1_log_level > 0 else None
 
@@ -76,16 +163,16 @@ def Visit_projector_1(
 
     # set view
     View3DAtts = vi.View3DAttributes()
-    View3DAtts.viewNormal = (-0.313864, -0.493751, 0.810987)  # the direction from the camera location to the focal point
+    View3DAtts.viewNormal = (viewNormal[0], viewNormal[1], viewNormal[2])  # the direction from the camera location to the focal point
     View3DAtts.focus = (0, 0, 0)                              # the focal point
-    View3DAtts.viewUp = (-0.0333566, 0.859356, 0.510289)      # specifies the axis that goes along the height of the screen
+    View3DAtts.viewUp = (viewUp[0], viewUp[1], viewUp[2])      # specifies the axis that goes along the height of the screen
     View3DAtts.viewAngle = 30                                 # specifies the "view angle", meaning the "angle" of the pyramid that defines the view frustum
     View3DAtts.parallelScale = parallelScale                  # scales how far the camera is located along the viewNormal from the focal point, which affects the scale of the data set in the screen
     View3DAtts.nearPlane = -300.0                             # specifies where the pyramid of the view frustum is truncated on the near side; relative to the focal point, often negative
     View3DAtts.farPlane = 300.0                               # specifies where the pyramid of the view frustum is truncated on the far side; relative to the focal point
     View3DAtts.imagePan = (0, 0)                              # allows the image to be translated without affecting the view frustum definition
     View3DAtts.imageZoom = imageZoom                          # allows the image to be zoomed in on without affecting the view frustum definition
-    View3DAtts.perspective = 1                                # a Boolean: 1 for perspective projection, 0 for orthographic
+    View3DAtts.perspective = perspective                                # a Boolean: 1 for perspective projection, 0 for orthographic
     View3DAtts.eyeAngle = 2                                   # specifies the angle of the eye for stereo viewing
     View3DAtts.centerOfRotationSet = 0                        # specifies whether or not rotations occur around the focal point (0) or another point (1)
     View3DAtts.centerOfRotation = (0, 0, 0)                   # the place to rotate around if we are not using the focal point
@@ -317,44 +404,10 @@ def Visit_projector_1(
     SaveWindowAtts.format = SaveWindowAtts.PNG  # BMP, CURVE, JPEG, OBJ, PNG, POSTSCRIPT, POVRAY, PPM, RGB, STL, TIFF, ULTRA, VTK, PLY, EXR
     SaveWindowAtts.width = 1024
     SaveWindowAtts.height = 1024
-    #SaveWindowAtts.screenCapture = 0
-    #SaveWindowAtts.saveTiled = 0
     SaveWindowAtts.quality = 80
-    #SaveWindowAtts.progressive = 0
-    #SaveWindowAtts.binary = 0
-    #SaveWindowAtts.stereo = 0
-    #SaveWindowAtts.compression = SaveWindowAtts.NONE  # NONE, PackBits, Jpeg, Deflate, LZW
-    #SaveWindowAtts.forceMerge = 0
-    #SaveWindowAtts.resConstraint = SaveWindowAtts.ScreenProportions  # NoConstraint, EqualWidthHeight, ScreenProportions
-    #SaveWindowAtts.pixelData = 1
-    #SaveWindowAtts.advancedMultiWindowSave = 0
-    #SaveWindowAtts.subWindowAtts.win1.position = (0, 0)
-    #SaveWindowAtts.subWindowAtts.win1.size = (128, 128)
-    #SaveWindowAtts.subWindowAtts.win1.layer = 0
-    #SaveWindowAtts.subWindowAtts.win1.transparency = 0
-    #SaveWindowAtts.subWindowAtts.win1.omitWindow = 0
-    #SaveWindowAtts.opts.types = ()
-    #SaveWindowAtts.opts.help = ""
     vi.SetSaveWindowAttributes(SaveWindowAtts)
     print("window set\n") if Visit_projector_1_log_level > 0 else None
 
-
-
-
-    # Iterate through time and save window images
-
-    # Do time query
-    # startSlide = 0
-    # tstep = 1
-    # for i in range(startSlide, TimeSliderGetNStates(), tstep):
-    #     SetTimeSliderState(i)
-
-    #     Query("Time")
-    #     t = GetQueryOutputValue()
-    #     Query("Average Value")
-    #     vel_mag_avg = GetQueryOutputValue()
-    #     Query("Total Length")
-    #     length = GetQueryOutputValue()
 
 
     # States (t's) range
@@ -372,12 +425,12 @@ def Visit_projector_1(
             print("WARNING: No active time slider or sliders not initialized yet.")
             print(f"w.timeSliders = {w.timeSliders}")
             print(f"w.activeTimeSlider = {w.activeTimeSlider}")
+        print("States = ", States)
 
     # save images for all states (t's)
-    print("States = ", States)
     for state in States: 
         vi.SetTimeSliderState(state)
-
+        print("state = ", state)
         SaveWindowAtts.fileName = f"visit_{state:06d}"
         vi.SetSaveWindowAttributes(SaveWindowAtts)
 

@@ -30,9 +30,10 @@ if 1==1:
     VP1_output_dir = VP1.Visit_projector_1(
         input_dir = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\SF_CP_analysis_pipeline_data", # storage for this script
         Database = Database,
-        no_annotations = 1, imageZoom = 2.5, parallelScale = 50,
+        Plots = ["Pseudocolor-velocity_magnitude Isosurface-temperature colorTableName-CustomBW"],
+        no_annotations = 1, viewNormal = [0,0,-1], viewUp = [1,0,0], imageZoom = 1, parallelScale = 20, perspective = 0,
         Visit_projector_1_log_level = 1,
-        output_dir_manual = "", output_dir_comment = "isoT3colVMag",
+        output_dir_manual = "", output_dir_comment = "isoT3colVMag_orthogonal_standardView_CustomBW",
     )
 
     print("Note: Visit window can now be closed. 'VisIt: Error - Can't delete the last window' is inconsequentioal to the remaining code")
