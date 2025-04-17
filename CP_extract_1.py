@@ -43,6 +43,15 @@ def CP_extract_1(
     ### Load data
     print(f"\n Loading data \n")
 
+
+    # Load VisIt data
+    VisIt_output_dir = os.path.abspath(os.path.join(input_dir, os.pardir))
+    print(f"VisIt_output_dir: {VisIt_output_dir}") if CP_extract_log_level == 1 else None
+    VisIt_data_dir = f"{VisIt_output_dir}\Visit_projector_1_data.pkl"
+    print(f"VisIt_data_dir: {VisIt_data_dir}") if CP_extract_log_level == 1 else None
+    VisIt_data = pd.read_pickle(VisIt_data_dir)
+    print(f"VisIt_data: {VisIt_data}") if CP_extract_log_level == 1 else None
+
     # Load segmentation data
     seg_location = input_dir
     seg_files = glob.glob(os.path.join(seg_location, '*_seg.npy'))
@@ -86,6 +95,8 @@ def CP_extract_1(
 
     if N_images != N_seg:
         raise ValueError("Number of images and segmentations do not match")
+
+
 
     # import Cellpose model settings
     CP_settings_file = f"{input_dir}/CP_settings.pkl"

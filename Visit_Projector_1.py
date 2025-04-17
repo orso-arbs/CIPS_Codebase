@@ -1,17 +1,10 @@
 import os
 import sys
+import pandas as pd
 
-# Formater function for logging
 sys.path.append(os.path.abspath(r"C:/Users/obs/OneDrive/ETH/ETH_MSc/Masters Thesis/Python Code/Python_Orso_Utility_Scripts_MscThesis")) # dir containing Format_1 
 import Format_1 as F_1
 
-# visit installation
-sys.path.append(r"C:\Users\obs\LLNL\VisIt3.4.2\lib\site-packages")
-import visit as vi
-vi.Launch() # loads rest of visit functions
-print("launched visit")
-import visit as vi # loads rest of visit functions
-print("imported visit \n")
 
 
 
@@ -24,6 +17,18 @@ def Visit_projector_1(
         Visit_projector_1_log_level = 0,
         output_dir_manual = "", output_dir_comment = "",
 ):
+
+
+    # Formater function for logging
+
+    # visit import and launch
+    sys.path.append(r"C:\Users\obs\LLNL\VisIt3.4.2\lib\site-packages")
+    import visit as vi
+    vi.AddArgument("-nowin") #-gui
+    vi.Launch() # loads rest of visit functions
+    print("launched visit") if Visit_projector_1_log_level > 0 else None
+    import visit as vi # loads rest of visit functions
+    print("imported visit \n") if Visit_projector_1_log_level > 0 else None
 
     output_dir = F_1.F_out_dir(input_dir, __file__, output_dir_comment = output_dir_comment) # Format_1 required definition of output directory
 
@@ -92,6 +97,38 @@ def Visit_projector_1(
         IsosurfaceAtts.max = 1
         IsosurfaceAtts.scaling = IsosurfaceAtts.Linear  # Linear, Log
         IsosurfaceAtts.variable = "temperature"
+
+        # create color table
+        # Create a color control point list
+        ccpl = vi.ColorControlPointList()
+
+        # Point 1: white at 0.0 (fade from white)
+        p1 = vi.ColorControlPoint()
+        p1.colors = (255, 255, 255, 255)
+        p1.position = 0.0
+        ccpl.AddControlPoints(p1)
+
+        # Point 2: white at 0.5
+        p2 = vi.ColorControlPoint()
+        p2.colors = (255, 255, 255, 255)
+        p2.position = 0.4
+        ccpl.AddControlPoints(p2)
+
+        # Point 3: black at 0.8
+        p3 = vi.ColorControlPoint()
+        p3.colors = (0, 0, 0, 255)
+        p3.position = 0.6
+        ccpl.AddControlPoints(p3)
+
+        # Point 4: black at 1.0 (fade to black)
+        p4 = vi.ColorControlPoint()
+        p4.colors = (0, 0, 0, 255)
+        p4.position = 1.0
+        ccpl.AddControlPoints(p4)
+
+        # Add the color table to VisIt
+        vi.AddColorTable("CustomBW", ccpl)
+
 
         vi.SetOperatorOptions(IsosurfaceAtts, 0, 1)
         PseudocolorAtts = vi.PseudocolorAttributes()
@@ -172,7 +209,7 @@ def Visit_projector_1(
     View3DAtts.farPlane = 300.0                               # specifies where the pyramid of the view frustum is truncated on the far side; relative to the focal point
     View3DAtts.imagePan = (0, 0)                              # allows the image to be translated without affecting the view frustum definition
     View3DAtts.imageZoom = imageZoom                          # allows the image to be zoomed in on without affecting the view frustum definition
-    View3DAtts.perspective = perspective                                # a Boolean: 1 for perspective projection, 0 for orthographic
+    View3DAtts.perspective = perspective                      # a Boolean: 1 for perspective projection, 0 for orthographic
     View3DAtts.eyeAngle = 2                                   # specifies the angle of the eye for stereo viewing
     View3DAtts.centerOfRotationSet = 0                        # specifies whether or not rotations occur around the focal point (0) or another point (1)
     View3DAtts.centerOfRotation = (0, 0, 0)                   # the place to rotate around if we are not using the focal point
@@ -427,15 +464,30 @@ def Visit_projector_1(
             print(f"w.activeTimeSlider = {w.activeTimeSlider}")
         print("States = ", States)
 
-    # save images for all states (t's)
-    for state in States: 
-        vi.SetTimeSliderState(state)
-        print("state = ", state)
-        SaveWindowAtts.fileName = f"visit_{state:06d}"
-        vi.SetSaveWindowAttributes(SaveWindowAtts)
+    Times = []
 
+    # Loop once through all states (t's)
+    for state in States: 
+        # set state
+        vi.SetTimeSliderState(state)
+        print("state = ", state) if Visit_projector_1_log_level > 0 else None
+
+        # save window
+        SaveWindowAtts.fileName = f"visit_{state:06}"
+        vi.SetSaveWindowAttributes(SaveWindowAtts)
         vi.SaveWindow() 
         print(f"saved image for file {state:06d}\n", end='\r') if Visit_projector_1_log_level > 0 else None
+
+        # save properties
+        vi.Query("Time")
+        time = vi.GetQueryOutputValue()
+        Times.append(time)
+
+    # save data
+    df = pd.DataFrame({'Time': Times})
+    print(df)
+
+    df.to_pickle(f"{output_dir}/Visit_projector_1_data.pkl")
 
     # Clean up
     vi.DeleteAllPlots()

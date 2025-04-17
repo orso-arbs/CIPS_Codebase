@@ -23,20 +23,20 @@ start_time, current_date = F_1.start_inform(__file__)
 # Visit
 if 1==1:
     # A11 single timedumps #50 (if i remember correctly it's 50)
-    #Database = r"euler.ethz.ch:/cluster/scratch/cfrouzak/spher_H2/postProc/fields/po_part2/po_s912k_post.nek5000"
+    Database = r"euler.ethz.ch:/cluster/scratch/cfrouzak/spher_H2/postProc/fields/po_part2/po_s912k_post.nek5000"
     # A11 fist 20 timedumps
-    Database = r"euler.ethz.ch:/cluster/scratch/orsob/MastersThesis/postProc/po_part1/po_s912k_post.nek5000"
+    #Database = r"euler.ethz.ch:/cluster/scratch/orsob/MastersThesis/postProc/po_part1/po_s912k_post.nek5000"
 
     VP1_output_dir = VP1.Visit_projector_1(
         input_dir = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\SF_CP_analysis_pipeline_data", # storage for this script
         Database = Database,
         Plots = ["Pseudocolor-velocity_magnitude Isosurface-temperature colorTableName-CustomBW"],
         no_annotations = 1, viewNormal = [0,0,-1], viewUp = [1,0,0], imageZoom = 1, parallelScale = 20, perspective = 0,
-        Visit_projector_1_log_level = 1,
-        output_dir_manual = "", output_dir_comment = "isoT3colVMag_orthogonal_standardView_CustomBW",
+        Visit_projector_1_log_level = 0,
+        output_dir_manual = "", output_dir_comment = "isoT3colVMag_orthogonal_standardView_CustomBW_0w-0p4w-0p6b-1b",
     )
 
-    print("Note: Visit window can now be closed. 'VisIt: Error - Can't delete the last window' is inconsequentioal to the remaining code")
+    print("Note: Visit window can now be closed. 'VisIt: Error - Can't delete the last window' is now inconsequentioal to the remaining code")
 
 
 
@@ -51,7 +51,7 @@ if 1==1:
     #visit_images_dir = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\FB images\Visit_projections_initial_test\BW 134 ball flame - Crop small two only"
     #visit_images_dir = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\FB images\Visit_projections_initial_test\BW 134 ball flame - Crop Small First few"
     #visit_images_dir = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\FB images\A11 FB poster selection"
-    visit_images_dir = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\VisitOutput\Visit_Projector_1_2025-04-14_13-20-39"
+    #visit_images_dir = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\SF_CP_analysis_pipeline_data\Visit_Projector_1_2025-04-16_15-27-50_isoT3colVMag_orthogonal_standardView_CustomBW_0w-0p4w-0p6b-1b"
     visit_images_dir = VP1_output_dir
 
     CP_model_type = "cyto3"
@@ -61,9 +61,9 @@ if 1==1:
         input_dir = visit_images_dir,
         CP_model_type = CP_model_type,
         gpu = True,
-        diameter_estimate_guess = 0, # define for custom model. otherwise set to 0 or None
-        #output_dir_comment = "Zhang_Model_diameter_estimate_guess_100",
-        CP_segment_log_level = 1,
+        diameter_estimate_guess = None, # must define for custom model. otherwise set to 0 or None
+        output_dir_comment = "",
+        CP_segment_log_level = 0,
         )
 
 # CP_extract_1
@@ -148,5 +148,5 @@ if 1==0: # panel comparing CP A11
 
 
 
-######################################################## end inform
+######################################################## end 
 F_1.end_inform(__file__, start_time)

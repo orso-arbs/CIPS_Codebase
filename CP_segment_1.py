@@ -161,7 +161,6 @@ def CP_segment_1(input_dir, # Format_1 requires input_dir
     }
     with open(output_file, "wb") as file:
         pickle.dump(params, file)
-        
 
     for idx in range(N_images):
         maski = masks[idx]
@@ -173,7 +172,7 @@ def CP_segment_1(input_dir, # Format_1 requires input_dir
             output_seg_path = os.path.join(output_dir, output_seg_filename)
             io.masks_flows_to_seg(all_images, maski, flowi, output_seg_path, channels=channels, diams=diameter_estimate_used[idx])
 
-        if CP_default_plot_onoff ==1: # Save the CP default plot
+        if CP_default_plot_onoff == 1: # Save the CP default plot
             fig_CP_default_plot = plt.figure(figsize=(12,5))
             plot.show_segmentation(fig_CP_default_plot, all_images[idx], maski, flowi[0], channels=channels)
             plt.tight_layout()
