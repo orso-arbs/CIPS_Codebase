@@ -24,12 +24,15 @@ def CP_plotter_2_CPvsA11(input_dir, # Format_1 requires input_dir
     video = 1,
     ):
 
-    ### output 
+    #################################################### I/O
+    #  
     output_dir = F_1.F_out_dir(input_dir, __file__, output_dir_comment = output_dir_comment) # Format_1 required definition of output directory
+
+
+    #################################################### Load data
 
     pkl_files = glob.glob(os.path.join(input_dir, "*.pkl"))
 
-    ### Load CP extraxct data
     if pkl_files:
         CP_extract_df_pkl = pkl_files[0] # If a .pkl file exists, use it as the pickle file path. If multiple .pkl files exist the first is used.
     else:
@@ -90,6 +93,8 @@ def CP_plotter_2_CPvsA11(input_dir, # Format_1 requires input_dir
         A11_SF_K_geom
         '''
 
+
+    #################################################### Plotting
 
     # auxillary function to plot the data
 
@@ -311,5 +316,6 @@ def CP_plotter_2_CPvsA11(input_dir, # Format_1 requires input_dir
 
 
 
-    ### return
+    #################################################### return
+    
     return output_dir # Format_1 requires outpu_dir as first return

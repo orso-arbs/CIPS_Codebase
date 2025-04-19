@@ -61,7 +61,7 @@ def CP_segment_1(
                                         - channels = [2,1] # IF YOU HAVE G=cytoplasm and R=nucleus
         diameter_estimate_guess = None - Int > 0
                                         - diameter estimate to resize images such that model trained diameter is similar to diameters in images.
-                                        - if diameter is set to None, the size of the cells is estimated on a per image basis
+                                        - if diameter is set to 0 or None, the size of the cells is estimated on a per image basis with a Cellpose pretrained base model. If a custom model one is used, cyto3 is used to estimate the diameters.
                                         - you can set the average cell `diameter` in pixels yourself (recommended)
                                         - diameter can be a list or a single number for all images
 
@@ -105,10 +105,10 @@ def CP_segment_1(
         Cellpose default image (broken?)- if CP_default_image_onoff = 0
     '''
 
-    ### output 
-    output_dir = F_1.F_out_dir(input_dir, __file__, output_dir_comment = output_dir_comment) # Format_1 required definition of output directory
 
-    ### I/O 
+    #################################################### I/O 
+
+    output_dir = F_1.F_out_dir(input_dir, __file__, output_dir_comment = output_dir_comment) # Format_1 required definition of output directory
 
     # list of files
     files = glob.glob(input_dir + r"\*.png")
@@ -118,51 +118,53 @@ def CP_segment_1(
 
 
 
-    ### CellPose
+    #################################################### CellPose
 
     # log 
     io.logger_setup() if CP_segment_log_level >= 1 else None
 
     print("\n CellPose Segmenting")
-    if CP_model_type in ['cyto', 'nuclei', 'cyto2', 'cyto3']: # if its a cellpose pretraines base model
-        print("\nLoading CellPose Pretrained Model") if CP_segment_log_level >= 1 else None
-        # Initialize Cellpose (with base model)
+    if CP_model_type in ['cyto', 'nuclei', 'cyto2', 'cyto3']: # if its a cellpose pretrained base model
+        # Initialize Cellpose (with pretrained base model)
+        print("\nInitialize Cellpose with pretrained base model: ", CP_model_type) if CP_segment_log_level >= 2 else None
         CP_instance = models.Cellpose(model_type = CP_model_type, gpu = gpu)
-        # Run CP network (with base model)
+
+        # Run CP network (with pretrained base model)
+        print("\n Running CP network with model: ", CP_model_type) if CP_segment_log_level >= 1 else None
+        print("estimating diameters with model: ", CP_instance.sz.model_type) if CP_segment_log_level >= 1 else None
         masks, flows, styles, diameter_estimate_used = CP_instance.eval(
             all_images, diameter=diameter_estimate_guess, channels=channels,
             flow_threshold = flow_threshold, cellprob_threshold = cellprob_threshold,
-            resample = resample, niter = niter
+            resample = resample, niter = niter,
             )
+
     else: # if its a custom model
-        # Initialize Cellpose (with base model)
-        print("\n Initializing Cellpose instance") if CP_segment_log_level >= 1 else None
-        CP_instance = models.Cellpose(gpu=gpu) #  or model_type='cyto'/'nuclei'
+        # Initialize Cellpose (with default pretrained base model cyto3)
+        print("\n Initializing CellPose with default pretrained base Model cyto3") if CP_segment_log_level >= 1 else None
+        CP_instance = models.Cellpose(gpu=gpu)
         
-        # Load and assign the custom model using CellposeModel
+        # Load and assign the custom model using CellposeModel. With this separate loading for a custom model, you can still have cellpose estimate the diameters using a pretrained model which by default is cyto3
         print("\n Loading Custom Model") if CP_segment_log_level >= 1 else None
         CP_model = models.CellposeModel(pretrained_model=CP_model_type, gpu=gpu)
         CP_instance.cp = CP_model
 
         # Run CP network (with custom model)
+        print("\n Running CP network with model: ", CP_model_type) if CP_segment_log_level >= 1 else None
+        print("estimating diameters with model: ", CP_instance.sz.model_type ) if CP_segment_log_level >= 1 else None
         masks, flows, styles, diameter_estimate_used = CP_instance.eval(
             all_images,
-            diameter=diameter_estimate_guess,  # or None for estimation. Will use base model to estimate diameter
+            diameter=diameter_estimate_guess,  # = 0 or None for Cellpose diameter estimation. Will use a pretrained base model or default cyto3 to estimate diameter
             channels=channels,
             flow_threshold=flow_threshold,
             cellprob_threshold=cellprob_threshold,
             resample=resample,
             niter=niter,
         )
-        print("\n CP_instance.sz.model_type", CP_instance.sz.model_type ) if CP_segment_log_level >= 1 else None
-        print("\n diameter_estimate_used from cyto3") if CP_segment_log_level >= 1 else None
 
-    print("\ndiameter_estimate_used", diameter_estimate_used, "\n") if CP_segment_log_level >= 1 else None
     if isinstance(diameter_estimate_used, int):
         diameter_estimate_used = np.full(N_images, diameter_estimate_used)
 
     diameter_training_px = CP_instance.diam_mean # diameter used to train the model in pixels (diameter of the training set)
-    print("\ndiameter = CP_instance.diam_mean", diameter_training_px, "\n") if CP_segment_log_level >= 1 else None
     if isinstance(diameter_training_px, int):
         diameter_training_px = np.full(N_images, diameter_training_px)
 
@@ -170,7 +172,7 @@ def CP_segment_1(
 
 
 
-    ### Save/Print Results
+    #################################################### Save/Print Results
 
     print("\n Save Initial Results \n")
 
@@ -239,5 +241,8 @@ def CP_segment_1(
                 print(f", size={size} bytes")
             except TypeError:
                 print(" (size not available)")
+
+
+    #################################################### return
 
     return output_dir # Format_1 requires outpu_dir as first return

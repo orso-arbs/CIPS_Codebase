@@ -72,7 +72,7 @@ if 1==1:
         gpu = True,
         diameter_estimate_guess = None, # must define for custom model. otherwise set to 0 or None for Cellpose diameter estimate from styles vector
         output_dir_comment = "cyto3",                     
-        CP_segment_log_level = 1,
+        CP_segment_log_level = 0,
         )
 
 # CP_extract_1

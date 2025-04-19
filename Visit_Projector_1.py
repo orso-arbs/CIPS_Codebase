@@ -75,8 +75,11 @@ def Visit_projector_1(
     import visit as vi # loads rest of visit functions
     print("imported visit \n") if Visit_projector_1_log_level > 0 else None
 
-    # Formater function for logging
+    #################################################### I/O
     output_dir = F_1.F_out_dir(input_dir, __file__, output_dir_comment = output_dir_comment) # Format_1 required definition of output directory
+
+
+    #################################################### VisIt
 
     # launch compute engine
     print(
@@ -536,7 +539,8 @@ def Visit_projector_1(
         VisIt_image_filenames.append(VisIt_image_filename)
 
 
-    # save data
+    #################################################### save data
+
     VisIt_data = pd.DataFrame({
         'Time': Times,
         'State': State_range,
@@ -548,5 +552,8 @@ def Visit_projector_1(
     # Clean up
     vi.DeleteAllPlots()
     vi.CloseDatabase(r"euler.ethz.ch:/cluster/scratch/cfrouzak/spher_H2/postProc/fields/po_part2/po_s912k_post.nek5000")
+
+
+    #################################################### return
 
     return output_dir

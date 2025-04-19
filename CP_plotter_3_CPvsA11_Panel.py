@@ -22,12 +22,14 @@ def CP_plotter_3_CPvsA11_Panel(input_dir, # Format_1 requires input_dir
     Panel_1 = 0, Panel_2 = 0, Panel_3 = 0, Panel_4 = 0,
     ):
 
-    ### output 
+    #################################################### I/O
+    #  
     output_dir = F_1.F_out_dir(input_dir, __file__, output_dir_comment = output_dir_comment) # Format_1 required definition of output directory
 
+
+    #################################################### Load CP extraxct data
     pkl_files = glob.glob(os.path.join(input_dir, "*.pkl"))
 
-    ### Load CP extraxct data
     if pkl_files:
         CP_extract_df_pkl = pkl_files[0] # If a .pkl file exists, use it as the pickle file path. If multiple .pkl files exist the first is used.
     else:
@@ -61,6 +63,8 @@ def CP_plotter_3_CPvsA11_Panel(input_dir, # Format_1 requires input_dir
     A11_SF_iHRR = pd.read_csv(r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\Data\A11_manual_extraction\A11_SF_iHRR_as_integral_heat_release_rate_vs_time_manual_extraction.txt")
     A11_SF_K_geom = pd.read_csv(r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\Data\A11_manual_extraction\A11_SF_K_geom_as_geometric_stretch_rate_vs_time_manual_extraction.txt")
 
+
+    #################################################### Plotting
 
     # auxillary function to plot the data
 

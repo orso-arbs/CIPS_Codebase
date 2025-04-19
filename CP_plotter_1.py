@@ -24,14 +24,14 @@ def CP_plotter_1(input_dir, # Format_1 requires input_dir
     video = 1,
     ):
 
-    ### output 
+    #################################################### I/O 
     output_dir = F_1.F_out_dir(input_dir, __file__, output_dir_comment = output_dir_comment) # Format_1 required definition of output directory
     print(f"Output directory: {output_dir}")
     print(f"type Output directory: {type(output_dir)}")
 
     pkl_files = glob.glob(os.path.join(input_dir, "*.pkl"))
 
-    ### Load CP extraxct data
+    #################################################### Load CP extraxct data
     if pkl_files:
         CP_extract_df_pkl = pkl_files[0] # If a .pkl file exists, use it as the pickle file path. If multiple .pkl files exist the first is used.
     else:
@@ -52,6 +52,7 @@ def CP_plotter_1(input_dir, # Format_1 requires input_dir
         raise ValueError("Loading CP_extract data disambiguation failed. Check CP_extract_df and CP_extract_df_pkl")
     
     
+    #################################################### Plotting
 
     # auxillary function to plot the data
 
@@ -235,13 +236,6 @@ def CP_plotter_1(input_dir, # Format_1 requires input_dir
             )
 
 
-    ### ToDO
+    ####################################################### return
 
-    # add numbers to masks or outlines
-
-
-
-
-
-    ### return
     return output_dir # Format_1 requires outpu_dir as first return

@@ -34,12 +34,12 @@ def CP_extract_1(
     output_dir_manual = "", output_dir_comment = "",
     ):
     
-    ### output 
+    #################################################### I/O 
     output_dir = F_1.F_out_dir(input_dir, __file__, output_dir_comment = output_dir_comment) # Format_1 required definition of output directory
 
 
 
-    ### Load data
+    #################################################### Load data
     print(f"\n Loading data \n")
 
 
@@ -111,7 +111,7 @@ def CP_extract_1(
 
 
 
-    ### Extract and Tabularize data
+    #################################################### Extract and Tabularize data
     print(f"\n Extracting data \n")
 
     # Initialize DataFrame
@@ -168,8 +168,6 @@ def CP_extract_1(
         diameter_median_px_i = diameters_tuple_i[0]
         diameter_array_px_i = diameters_tuple_i[1]
         diameter_mean_px_i = np.mean(diameter_array_px_i)
-
-        print("diameter_median_px_i", diameter_median_px_i) if CP_extract_log_level == -10 else None
 
         # Calculate the relative frequency of each diameter in diameter_array_px_i
         diameters_unique, counts_diameters = np.unique(diameter_array_px_i, return_counts=True)
@@ -258,7 +256,7 @@ def CP_extract_1(
 
 
 
-    #################  Images and A11 data
+    ####################################################  Images and A11 data
 
     print("\n Non Dimentionalissing and matching CP and A11 data \n")  if CP_extract_log_level >= 1 else None
 
@@ -391,7 +389,7 @@ def CP_extract_1(
 
 
 
-    ### Save
+    #################################################### Save
 
     print(f"\n Saving data \n")
 
@@ -410,5 +408,5 @@ def CP_extract_1(
 
 
 
-    ### return
+    #################################################### return
     return output_dir # Format_1 requires output_dir as first return
