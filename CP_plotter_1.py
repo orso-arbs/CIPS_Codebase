@@ -1,14 +1,12 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from cellpose import models, plot, utils, io
-import datetime
+from cellpose import plot
 import glob
 import os
-import time
 import pandas as pd
 import matplotlib.gridspec as gridspec
 import numpy as np
-from skimage import io as sk_io, color, measure
+from skimage import io as sk_io, color
 import re
 
 import sys

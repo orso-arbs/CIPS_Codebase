@@ -1,15 +1,11 @@
 import numpy as np
-import matplotlib.pyplot as plt
-from cellpose import models, plot, utils, io
-import datetime
+from cellpose import utils, io
 import glob
 import os
-import time
 import pandas as pd
 import math
 from skimage import io as sk_io, color
 import re
-import csv
 import pickle
 
 
@@ -28,12 +24,16 @@ warnings.simplefilter(action='ignore', category=FutureWarning)
 
 @F_1.ParameterLog(max_size = 1024 * 10, log_level = 0) # 0.1KB per smallest unit in return (8 bits per ASCII character)
 def CP_extract_1(
-        input_dir,
-        masks = None, flows = None, styles = None, diameter_estimate_used = None, # can be implemented as input but usually read from seg files
-        CP_model_type = None, diameter_training_px = None,
-        CP_extract_log_level = 0,
-        output_dir_manual = "", output_dir_comment = "",
-        ):
+    # input
+    input_dir,
+
+    # extraction parameters
+    CP_model_type = None, diameter_training_px = None,
+
+    # output and logging 
+    CP_extract_log_level = 0,
+    output_dir_manual = "", output_dir_comment = "",
+    ):
     
     ### output 
     output_dir = F_1.F_out_dir(input_dir, __file__, output_dir_comment = output_dir_comment) # Format_1 required definition of output directory
@@ -46,11 +46,11 @@ def CP_extract_1(
 
     # Load VisIt data
     VisIt_output_dir = os.path.abspath(os.path.join(input_dir, os.pardir))
-    print(f"VisIt_output_dir: {VisIt_output_dir}") if CP_extract_log_level == 1 else None
+    print(f"VisIt_output_dir: {VisIt_output_dir}") if CP_extract_log_level >= 1 else None
     VisIt_data_dir = f"{VisIt_output_dir}\Visit_projector_1_data.pkl"
-    print(f"VisIt_data_dir: {VisIt_data_dir}") if CP_extract_log_level == 1 else None
+    print(f"VisIt_data_dir: {VisIt_data_dir}") if CP_extract_log_level >= 1 else None
     VisIt_data = pd.read_pickle(VisIt_data_dir)
-    print(f"VisIt_data: {VisIt_data}") if CP_extract_log_level == 1 else None
+    print(f"VisIt_data: {VisIt_data}") if CP_extract_log_level >= 1 else None
 
     # Load segmentation data
     seg_location = input_dir
@@ -64,7 +64,7 @@ def CP_extract_1(
         seg_filenames.append(filename)
         #print(f"Adding file to all_segs: {seg_file}")  # Print the file being added
     N_seg = len(all_segs)
-    print(f"Loaded {N_seg} seg files") if CP_extract_log_level == 1 else None
+    print(f"Loaded {N_seg} seg files") if CP_extract_log_level >= 1 else None
 
     # Load image data
     image_input_dir = os.path.dirname(input_dir) # one folder above
@@ -91,33 +91,34 @@ def CP_extract_1(
             image_number.append(None)  # Handle cases where no number is found
 
     N_images = len(all_images)
-    print(f"Loaded {N_images} images \n") if CP_extract_log_level == 1 else None
+    print(f"Loaded {N_images} images \n") if CP_extract_log_level >= 1 else None
 
     if N_images != N_seg:
         raise ValueError("Number of images and segmentations do not match")
 
-
-
-    # import Cellpose model settings
+    # Load Cellpose model settings
     CP_settings_file = f"{input_dir}/CP_settings.pkl"
     with open(CP_settings_file, "rb") as file:
-        params = pickle.load(file)
-        gpu = params["gpu"]
-        diameter_estimate_guess = params["diameter_estimate_guess"]
-        CP_segment_output_dir_comment = params["CP_segment_output_dir_comment"]
-        flow_threshold = params["flow_threshold"]
-        cellprob_threshold = params["cellprob_threshold"]
-        resample = params["resample"]
-        niter = params["niter"]
-        CP_model_type = params["CP_model_type"]
+        CP_settings = pickle.load(file)
+        CP_model_type = CP_settings["CP_model_type"]
+        CP_model_path = CP_settings["CP_model_path"]
+        gpu = CP_settings["gpu"]
+        diameter_estimate_guess = CP_settings["diameter_estimate_guess"]
+        CP_segment_output_dir_comment = CP_settings["CP_segment_output_dir_comment"]
+        flow_threshold = CP_settings["flow_threshold"]
+        cellprob_threshold = CP_settings["cellprob_threshold"]
+        resample = CP_settings["resample"]
+        niter = CP_settings["niter"]
 
-    ### Tabularize data
+
+
+    ### Extract and Tabularize data
     print(f"\n Extracting data \n")
 
     # Initialize DataFrame
     CP_extract_df_columns = [
         'image_file_name', 'image_file_path', 'image_number', 'image_Nx_px', 'image_Ny_px',
-        'seg_file_name', 'seg_file_path', 'ismanual', 'CP_model_type', 'channels',
+        'seg_file_name', 'seg_file_path', 'ismanual', 'CP_model_path', 'CP_model_type', 'channels',
         'flows0', 'flows1', 'flows2', 'flows3', 'flows4',
         'diameter_estimate_used', 'diameter_training_px',
         'diameter_mean_px', 'diameter_median_px', 'diameter_distribution_px', 'outlines', 'masks', 'N_cells',
@@ -139,7 +140,7 @@ def CP_extract_1(
         CP_extract_df[column] = pd.Series(dtype="object")  # Explicitly set dtype to 'object'
 
 
-
+    ## Extract data by looping through each image and its segmentation
     for i in range(N_images):
         image_i = all_images[i]
         grayscale_image_i = all_grayscale_images[i]
@@ -155,20 +156,21 @@ def CP_extract_1(
         seg_image_filename = seg_i["filename"] # gives seg filename though it shoud give images file name. weird...
 
         # training diameter. Thats the diameter of cells used for training the Cellpose U-net. 
-        if diameter_training_px is None and CP_model_type is not None:
-            if CP_model_type in ['cyto3', "cyto", "cyto2", "cyto3"]:
+        if diameter_training_px is None:
+            if CP_model_type in ["cyto", "cyto2", "cyto3"]:
                 diameter_training_px = 30
-            if CP_model_type == "nuclei":
+            elif CP_model_type == "nuclei":
                 diameter_training_px = 17
-        elif diameter_training_px is None and CP_model_type is None:
-            diameter_training_px = None
-            print("NB: diameter_training_px can't be deduced. supply it or a standard CP_model_type (one of 'cyto3', 'cyto', 'cyto2', 'cyto3', 'nuclei') as argument to CP_extract_1") if CP_extract_log_level >= 1 else None
+            elif CP_model_type is None:
+                print("NB: diameter_training_px can't be deduced. Please provide it explicitly or specify a standard CP_model_type ('cyto', 'cyto2', 'cyto3', or 'nuclei') as an argument to CP_extract_1.")
 
-        # extract diameter tuple and from it mean and complete distribution
+        # extract diameter tuple and from its mean and complete distribution
         diameters_tuple_i = utils.diameters(masks_i)
         diameter_median_px_i = diameters_tuple_i[0]
         diameter_array_px_i = diameters_tuple_i[1]
         diameter_mean_px_i = np.mean(diameter_array_px_i)
+
+        print("diameter_median_px_i", diameter_median_px_i) if CP_extract_log_level == -10 else None
 
         # Calculate the relative frequency of each diameter in diameter_array_px_i
         diameters_unique, counts_diameters = np.unique(diameter_array_px_i, return_counts=True)
@@ -191,8 +193,7 @@ def CP_extract_1(
         Ar_px2_CP_maskperFB = A_CP_mask_px / A_FB_px2
         
 
-        # Create a new DataFrame row
-
+        # Fill a DataFrame row
         
         CP_extract_df.at[i, 'image_file_name'] = image_files[i]  # Specific image
         CP_extract_df.at[i, 'image_file_path'] = image_input_dir  # All images
@@ -201,16 +202,16 @@ def CP_extract_1(
         CP_extract_df.at[i, 'image_Ny_px'] = image_Ny_px
         CP_extract_df.at[i, 'seg_file_name'] = seg_filenames[i]
         CP_extract_df.at[i, 'seg_file_path'] = seg_files[i]
-        
-        CP_extract_df.at[i, 'CP_model_type'] = params['CP_model_type']
+        CP_extract_df.at[i, 'CP_model_path'] = CP_settings['CP_model_path'].iloc[0]
+        CP_extract_df.at[i, 'CP_model_type'] = CP_settings['CP_model_type'].iloc[0]
         CP_extract_df.at[i, 'channels'] = channels
-        CP_extract_df.at[i, 'gpu'] = params['gpu']
-        CP_extract_df.at[i, 'diameter_estimate_guess'] = params['diameter_estimate_guess']
-        CP_extract_df.at[i, 'CP_segment_output_dir_comment'] = params['CP_segment_output_dir_comment']
-        CP_extract_df.at[i, 'flow_threshold'] = params['flow_threshold']
-        CP_extract_df.at[i, 'cellprob_threshold'] = params['cellprob_threshold']
-        CP_extract_df.at[i, 'resample'] = params['resample']
-        CP_extract_df.at[i, 'niter'] = params['niter']
+        CP_extract_df.at[i, 'gpu'] = CP_settings['gpu'].iloc[0]
+        CP_extract_df.at[i, 'diameter_estimate_guess'] = CP_settings['diameter_estimate_guess'].iloc[0]
+        CP_extract_df.at[i, 'CP_segment_output_dir_comment'] = CP_settings['CP_segment_output_dir_comment'].iloc[0]
+        CP_extract_df.at[i, 'flow_threshold'] = CP_settings['flow_threshold'].iloc[0]
+        CP_extract_df.at[i, 'cellprob_threshold'] = CP_settings['cellprob_threshold'].iloc[0]
+        CP_extract_df.at[i, 'resample'] = CP_settings['resample'].iloc[0]
+        CP_extract_df.at[i, 'niter'] = CP_settings['niter'].iloc[0]
 
         CP_extract_df.at[i, 'ismanual'] = ismanual
         CP_extract_df.at[i, 'flows0'] = flow_i[0]
@@ -246,7 +247,7 @@ def CP_extract_1(
 
     # Print columns that have None values
     none_columns = CP_extract_df.columns[CP_extract_df.isnull().any()].tolist()
-    print(f"NB: Columns with None values: {none_columns}") if CP_extract_log_level == 1 else None
+    print(f"NB: Columns with None values: {none_columns}") if CP_extract_log_level >= 1 else None
 
 
 
@@ -258,9 +259,9 @@ def CP_extract_1(
 
 
 
-    ################# Match Images and A11 data^
+    #################  Images and A11 data
 
-    print("\n Non Dimentionalissing and matching CP and A11 data \n")  if CP_extract_log_level == 1 else None
+    print("\n Non Dimentionalissing and matching CP and A11 data \n")  if CP_extract_log_level >= 1 else None
 
     # Load A11 data
     A11_SF_K_mean = pd.read_csv(r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\Data\A11_manual_extraction\A11_SF_K_mean_as_mean_stretch_rate_vs_time_manual_extraction.txt")
@@ -296,11 +297,11 @@ def CP_extract_1(
     max_image_num = CP_extract_df["image_number"].max()
     if min_image_num == max_image_num:
         CP_extract_df["time"] = 0  # Assign 0 to all if there's no range
-        print("Warning: min_image_num == max_image_num")
+        print("Warning in dimetionalisation: min_image_num == max_image_num")
     else:
-        # Linear mapping from [min_image_num, 134] to [0, t_max]
-        CP_extract_df["time"] = (CP_extract_df["image_number"] - min_image_num) / (134 - min_image_num) * t_max
-        print("CP_extract_df[time]", CP_extract_df["time"]) if CP_extract_log_level == 1 else None
+        # Linear mapping from [min_image_num, max_image_num] to [0, t_max]
+        CP_extract_df["time"] = (CP_extract_df["image_number"] - min_image_num) / (max_image_num - min_image_num) * t_max
+        print("CP_extract_df[time]", CP_extract_df["time"]) if CP_extract_log_level >= 1 else None
 
 
     # Add non-dimensional columns to the DataFrame
@@ -322,7 +323,7 @@ def CP_extract_1(
 
     # extract pixel to nonDimentionalised length scaling.
     for i in range(N_images):
-        print("i = ", i) if CP_extract_log_level == 1 else None
+        print("i = ", i) if CP_extract_log_level >= 1 else None
 
 
         # find d_T_per_px
@@ -402,19 +403,13 @@ def CP_extract_1(
     # Save DataFrame to Pickle
     pickle_filename = f'segmentation_DataFramee.pkl'
     CP_extract_df.to_pickle(os.path.join(output_dir, pickle_filename))
-    #
-    # # Load DataFrame from Pickle
-    # CP_extract_df = pd.read_pickle(os.path.join(seg_location, pickle_filename))
 
-    # Save DataFrame to Excel
+    # Save DataFrame to Excel (usefull to manually look at data)
     excel_filename = f'segmentation_DataFramee.xlsx'
     CP_extract_df.to_excel(os.path.join(output_dir, excel_filename), index=False)
     #
 
 
+
     ### return
-    return output_dir, CP_extract_df # Format_1 requires outpu_dir as first return
-
-
-
-
+    return output_dir # Format_1 requires output_dir as first return

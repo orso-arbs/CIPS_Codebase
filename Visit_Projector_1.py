@@ -7,29 +7,76 @@ import Format_1 as F_1
 
 
 
-
 @F_1.ParameterLog(max_size = 1024 * 10) # 10KB 
 def Visit_projector_1(
-        input_dir,
-        Database,
-        Plots = ["Pseudocolor-velocity_magnitude Isosurface-temperature3"],
-        no_annotations = 1, viewNormal = [0,0,-1], viewUp = [1,0,0], imageZoom = 1, parallelScale = 100, perspective = 1,
-        Visit_projector_1_log_level = 0,
-        output_dir_manual = "", output_dir_comment = "",
+    # input
+    input_dir,
+
+    # VisIt parameters
+    Database, State_range_manual = [], # Data
+    Plots = ["Pseudocolor-velocity_magnitude Isosurface-temperature3"], # Plots
+    no_annotations = 1, viewNormal = [0,0,-1], viewUp = [1,0,0], imageZoom = 1, parallelScale = 100, perspective = 1, # View
+    Visit_projector_1_show_windows = 0, # Window
+
+    # output and logging
+    Visit_projector_1_log_level = 0,
+    output_dir_manual = "", output_dir_comment = "",
 ):
+    """
+    Uses VisIt to output .png images from a .nek5000 database.
 
+    Parameters
+    ----------
+    input_dir : str
+        Used to set output directory.
 
-    # Formater function for logging
+    Database : str
+        Path to the Nek5000 database.
+    State_range_manual : list of int, optional
+        States (time dumps in my case) to be processed. If empty ("[]"), all states are processed.
+        Note that states usually start at 0.
+    Plots : list of str, optional
+        List of plot names to be created. Plots are defined inside the Visit_projector_1 function. Feel free to add ones!
+        Default is ["Pseudocolor-velocity_magnitude Isosurface-temperature3"].
+    no_annotations : int, optional
+        If 1, no annotations are added to the plot. Default is 1.
+    viewNormal : list of float, optional
+        VisIt View normal vector. Default is [0,0,-1].
+    viewUp : list of float, optional
+        VisIt View up vector. Default is [1,0,0].
+    imageZoom : float, optional
+        VisIt Zoom level for the image. Default is 1.
+    parallelScale : float, optional
+        VisIt Parallel scale for the view. Default is 100.
+    perspective : int, optional
+        If 1, VisIt perspective view is used. Default is 1.
+    Visit_projector_1_show_windows : int, optional
+        If 1, VisIt windows are shown. Default is 0. Does not work :(.
+
+    Visit_projector_1_log_level : int, optional
+        Log level for the function. Default is 0.
+    output_dir_manual : str, optional
+        Manual output directory. If empty, a default directory is used.
+    output_dir_comment : str, optional
+        Comment for the output directory. Default is "".
+
+    Returns
+    -------
+    output_dir : str
+        Output directory where the images are saved.
+    """
+
 
     # visit import and launch
     sys.path.append(r"C:\Users\obs\LLNL\VisIt3.4.2\lib\site-packages")
     import visit as vi
-    vi.AddArgument("-nowin") #-gui
+    vi.AddArgument("-nowin") if Visit_projector_1_show_windows == 1 else None #-gui
     vi.Launch() # loads rest of visit functions
     print("launched visit") if Visit_projector_1_log_level > 0 else None
     import visit as vi # loads rest of visit functions
     print("imported visit \n") if Visit_projector_1_log_level > 0 else None
 
+    # Formater function for logging
     output_dir = F_1.F_out_dir(input_dir, __file__, output_dir_comment = output_dir_comment) # Format_1 required definition of output directory
 
     # launch compute engine
@@ -437,7 +484,7 @@ def Visit_projector_1(
     SaveWindowAtts.outputToCurrentDirectory = 0
     SaveWindowAtts.outputDirectory = output_dir
     #SaveWindowAtts.fileName = "visit"
-    #SaveWindowAtts.family = 0
+    SaveWindowAtts.family = 0
     SaveWindowAtts.format = SaveWindowAtts.PNG  # BMP, CURVE, JPEG, OBJ, PNG, POSTSCRIPT, POVRAY, PPM, RGB, STL, TIFF, ULTRA, VTK, PLY, EXR
     SaveWindowAtts.width = 1024
     SaveWindowAtts.height = 1024
@@ -448,10 +495,13 @@ def Visit_projector_1(
 
 
     # States (t's) range
-    States = range(vi.TimeSliderGetNStates())
-    startSlide = 0
-    tstep = 1
-    States = range(startSlide, vi.TimeSliderGetNStates(), tstep)
+    if State_range_manual: # if it's not []
+        State_range = State_range_manual
+    else:
+        State_range = range(vi.TimeSliderGetNStates())
+        startSlide = 0
+        tstep = 1
+        State_range = range(startSlide, vi.TimeSliderGetNStates(), tstep)
 
     # check timeslider to troubleshoot 
     if Visit_projector_1_log_level > 1:
@@ -462,18 +512,20 @@ def Visit_projector_1(
             print("WARNING: No active time slider or sliders not initialized yet.")
             print(f"w.timeSliders = {w.timeSliders}")
             print(f"w.activeTimeSlider = {w.activeTimeSlider}")
-        print("States = ", States)
+        print("States = ", State_range)
 
     Times = []
+    VisIt_image_filenames = []
 
     # Loop once through all states (t's)
-    for state in States: 
+    for state in State_range: 
         # set state
         vi.SetTimeSliderState(state)
         print("state = ", state) if Visit_projector_1_log_level > 0 else None
 
         # save window
-        SaveWindowAtts.fileName = f"visit_{state:06}"
+        VisIt_image_filename = f"visit_{state:06}"
+        SaveWindowAtts.fileName = VisIt_image_filename
         vi.SetSaveWindowAttributes(SaveWindowAtts)
         vi.SaveWindow() 
         print(f"saved image for file {state:06d}\n", end='\r') if Visit_projector_1_log_level > 0 else None
@@ -482,12 +534,17 @@ def Visit_projector_1(
         vi.Query("Time")
         time = vi.GetQueryOutputValue()
         Times.append(time)
+        VisIt_image_filenames.append(VisIt_image_filename)
+
 
     # save data
-    df = pd.DataFrame({'Time': Times})
-    print(df)
-
-    df.to_pickle(f"{output_dir}/Visit_projector_1_data.pkl")
+    VisIt_data = pd.DataFrame({
+        'Time': Times,
+        'State': State_range,
+        'VisIt_image_filename': VisIt_image_filenames,
+        })
+    print(VisIt_data)
+    VisIt_data.to_pickle(f"{output_dir}/Visit_projector_1_data.pkl")
 
     # Clean up
     vi.DeleteAllPlots()
