@@ -7,6 +7,7 @@ import matplotlib.ticker as mticker
 import matplotlib.lines as mlines
 plt.rcParams['text.usetex'] = False  # Keep False unless you have a full LaTeX installation
 
+
 import sys
 import os
 import Format_1 as F_1
