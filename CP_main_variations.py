@@ -1,6 +1,5 @@
 import sys
 import os
-sys.path.append(os.path.abspath(r"C:/Users/obs/OneDrive/ETH/ETH_MSc/Masters Thesis/Python Code/Python_Orso_Utility_Scripts_MscThesis")) # dir containing Format_1 
 import Format_1 as F_1
 
 import CP_segment_1 as CPs1
