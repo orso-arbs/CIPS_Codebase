@@ -6,7 +6,7 @@ import Format_1 as F_1
 
 
 
-@F_1.ParameterLog(max_size = 1024 * 10) # 10KB 
+@F_1.StandardLog(max_size = 1024 * 10) # 10KB 
 def Visit_projector_1(
     # input
     input_dir,

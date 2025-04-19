@@ -16,7 +16,7 @@ import Format_1 as F_1
 
 
 
-@F_1.ParameterLog(max_size = 1024 * 10, log_level = 0) # 0.1KB per smallest unit in return (8 bits per ASCII character)
+@F_1.StandardLog(max_size = 1024 * 10, log_level = 0) # 0.1KB per smallest unit in return (8 bits per ASCII character)
 def CP_segment_1(
     # input
     input_dir,

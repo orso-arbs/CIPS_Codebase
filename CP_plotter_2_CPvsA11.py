@@ -17,7 +17,7 @@ import Format_1 as F_1
 import video_maker_1 as vm1
 
 
-@F_1.ParameterLog(max_size = 1024 * 10) # 10KB 
+@F_1.StandardLog(max_size = 1024 * 10) # 10KB 
 def CP_plotter_2_CPvsA11(input_dir, # Format_1 requires input_dir
     CP_extract_df = None, # if None a .pkl file has to be in the input_dir. otherwise no CP_extract data is provided.
     output_dir_manual = "", output_dir_comment = "",
