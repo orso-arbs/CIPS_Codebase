@@ -14,49 +14,56 @@ These functions are used to format the output directory and save the arguments o
 #####################################################################################################
 
 
-'''
-purpose:
-  Print the current time and name of script
-  save the start time
+"""
+Prints the start time and script name, and records the start time.
 
-Input: 
-  script_location - string, name of script to be printed
-                  - default is the Misc_funcition script name
+Parameters
+----------
+script_location : str, optional
+    The path to the script file. Defaults to the location of this script (__file__).
 
-Output:
-  Start time      - float, time.time() object	
-  Current date    - string, current date
-'''
+Returns
+-------
+start_time : float
+    The time the function was called, obtained from time.time().
+current_date : str
+    The current date and time formatted as "YYYY-MM-DD_HH-MM-SS".
+"""
 
 import os
 import datetime
 import time
 
-def start_inform(script_location=__file__):  # Pass filename as an argument
+def start_inform(script_location: str = __file__):
     start_time = time.time()
     current_date = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     print(f"{os.path.basename(script_location)}:", datetime.datetime.now())
     return start_time, current_date
 
-''' 
-purpose:
-  Print the name of the script
-  Print the time taken to execute the script
+"""
+Prints the script name and the execution duration.
 
-Input: 
-  script_location - string, script name
-                  - default is the Misc_funcition script name
+Parameters
+----------
+script_location : str, optional
+    The path to the script file. Defaults to the location of this script (__file__).
+start_time : float, optional
+    The start time recorded by `start_inform`. If 0 or not provided,
+    the execution duration is not calculated or printed. Defaults to 0.
 
-Output:
-  End time        - float, time.time() object
-  Elapsed time    - float, time taken to execute the script
-'''
+Returns
+-------
+end_time : float
+    The time the function was called, obtained from time.time().
+elapsed_time : float, optional
+    The time elapsed since `start_time`. Only returned if `start_time` is provided and non-zero.
+"""
 
 import os
 import datetime
 import time
 
-def end_inform(script_location=__file__, start_time=0):  # Pass filename as an argument
+def end_inform(script_location: str = __file__, start_time: float = 0):
     end_time = time.time()
     if start_time == 0:
         print(f"{os.path.basename(script_location)}: Completely Executed")

@@ -32,78 +32,88 @@ def CP_segment_1(
     ):
 
 
-    '''
-    Purpose:
-        Take images and segment them with CellPose. 
+    """
+    Segments images using the Cellpose library.
 
-    Arguments:
-        input_dir 				        - string
-                                        - directory containing images
-        output_dir_manual = ""	        - string
-                                        - output_dir_manual allows setting output path. 
-        output_dir_comment = ""         - string
-                                        - sets comment. default output path created as nameScript_date+time_comment.
+    This function takes a directory of images, applies Cellpose segmentation,
+    and saves the results along with logging information.
 
-        CP_model_type = 'cyto3'         - string
-                                        - Cellpose pretraining model.
-                                        - 'cyto' or 'nuclei' or 'cyto2' or 'cyto3' or custon model (human in the loop trained for example)
-                                        - 'cyto3' is the newest and is trained as a generalist making it versatile.
-        gpu = False                     - Bool
-                                        - use gpu to speed up. reccomended True. CUDA + torch required
-        channels = [0,0]                - list (2)
-                                        - define CHANNELS to run segementation on
-                                        - grayscale=0, R=1, G=2, B=3
-                                        - channels = [cytoplasm, nucleus]
-                                        - if NUCLEUS channel does not exist, set the second channel to 0
-                                        - IF ALL YOUR IMAGES ARE THE SAME TYPE, you can give a list with 2 elements
-                                        - channels = [0,0] # IF YOU HAVE GRAYSCALE
-                                        - channels = [2,3] # IF YOU HAVE G=cytoplasm and B=nucleus
-                                        - channels = [2,1] # IF YOU HAVE G=cytoplasm and R=nucleus
-        diameter_estimate_guess = None - Int > 0
-                                        - diameter estimate to resize images such that model trained diameter is similar to diameters in images.
-                                        - if diameter is set to 0 or None, the size of the cells is estimated on a per image basis with a Cellpose pretrained base model. If a custom model one is used, cyto3 is used to estimate the diameters.
-                                        - you can set the average cell `diameter` in pixels yourself (recommended)
-                                        - diameter can be a list or a single number for all images
+    Parameters
+    ----------
+    input_dir : str
+        Directory containing the input images (expects .png files).
+    CP_model_type : str, optional
+        Specifies the Cellpose model to use. Can be a pretrained model name
+        ('cyto', 'nuclei', 'cyto2', 'cyto3') or a path to a custom model file.
+        Defaults to 'cyto3'.
+    gpu : bool, optional
+        Whether to use the GPU for computation (requires CUDA and PyTorch).
+        Defaults to True.
+    diameter_estimate_guess : float or None, optional
+        Estimated diameter of the objects in pixels. If None or 0, Cellpose
+        estimates the diameter automatically using a base model (cyto3 if a
+        custom model is used). Providing an estimate is officiall recommended but the estimate
+        usually works well. Defaults to None.
+    channels : list of int, optional
+        Specifies the channels to use for segmentation. For bilogical application that allows 
+        distinction of cytoplasm and nucleus. The list then is: [cytoplasm, nucleus].
+        Use 0 for grayscale, 1 for Red, 2 for Green, 3 for Blue.
+        If the nucleus channel doesn't exist, set the second element to 0.
+        Example: [0, 0] for grayscale, [2, 3] for Green cytoplasm and Blue nucleus.
+        For the flame images, use i.e. [0, 0] for grayscale of the flame
+        cells (cytoplasm and no "nucleus" structure), Defaults to [0, 0].
+    flow_threshold : float, optional
+        Flow error threshold. Pixels with flow errors above this threshold are
+        not used in dynamics. Defaults to 0.4.
+    cellprob_threshold : float, optional
+        Cell probability threshold. Pixels with cell probability below this
+        threshold are excluded. Defaults to 0.0.
+    resample : bool, optional
+        Whether to run dynamics on original image with resampled interpolated flows (True) or
+        on the rescaled image (False). Defaults to True.
+    niter : int, optional
+        Number of iterations for dynamics simulation. If 0, Cellpose estimates
+        the number of iterations. Defaults to 0.
+    CP_default_plot_onoff : int, optional
+        If 1, saves the default Cellpose segmentation plot for each image.
+        Defaults to 0.
+    CP_default_image_onoff : int, optional
+        If 1, saves the default Cellpose image output (functionality might be broken).
+        Defaults to 0.
+    CP_default_seg_file_onoff : int, optional
+        If 1, saves the Cellpose default segmentation file (_seg.npy) for each image.
+        Defaults to 1.
+    CP_segment_log_level : int, optional
+        Controls the verbosity of logging to the console.
+        0: Minimal logging.
+        1: Basic Cellpose logs.
+        2: Detailed logs including return types and sizes.
+        Defaults to 0.
+    output_dir_manual : str, optional
+        If provided, specifies the exact output directory path. Overrides the
+        default Format_1 naming convention. Defaults to "" (using the standard output_dir by using
+        Format_1).
+    output_dir_comment : str, optional
+        A comment to append to the default output directory name.
+        Defaults to "".
 
-        CP_default_seg_file_onoff = 1   - Bool
-                                        - save the Cellpose default seg file
-        CP_default_plot_onoff = 0       - Bool
-                                        - plot and save the Cellpose default plot
-        CP_default_image_onoff = 0      - Bool
-                                        - plot and save the Cellpose default image (broken?)
+    Returns
+    -------
+    output_dir : str
+        The path to the directory where results and logs are saved.
+        This is always the first return value as required by Format_1.
 
-        CP_segment_log_level = 0                - wether to output log of CP operaitions to console
-
-    Return:
-        output_dir 				        - string
-                                        - necessary. first return has to be the output directory as created in function by F_1.F_out_dir
-
-        masks                           - list (N_images) of numpy arrays (Nx_image x Ny_image)
-                                        - each pixel in the image is assigned to an ROI (0 = NO ROI; 1,2,… = ROI labels)
-        flows                           - list (N_images) of lists of numpy arrays
-                                            (
-                                            flows[0] is XY flow in RGB,
-                                            flows[1] is the cell probability in range 0-255,
-                                            flows[2] is Z flow in range 0-255 (if it exists, otherwise zeros),
-                                            flows[3] is [dY, dX, cellprob] (or [dZ, dY, dX, cellprob] for 3D), flows[4] is pixel destinations (for internal use)
-                                            
-                                            or (contradictory sources)
-                                            
-                                            - flows[k][0] = XY flow in HSV 0-255
-                                            - flows[k][1] = XY flows at each pixel
-                                            - flows[k][2] = cell probability (if > cellprob_threshold, pixel used for dynamics)
-                                            - flows[k][3] = final pixel locations after Euler integration
-                                            )
-        styles                          - list (N_images) of arrays of length 256 or single 1D array
-                                        - Style vector summarizing each image, also used to estimate size of objects in image.
-        diameter_estimate_used               - list (N_images) or float
-                                        - estimated diameter used to resize image to run model on
-
-    Other Output:
-        Cellpose default seg file       - if CP_default_seg_file_onoff == 1
-        Cellpose default plot           - if CP_default_plot_onoff = 0
-        Cellpose default image (broken?)- if CP_default_image_onoff = 0
-    '''
+    Notes
+    -----
+    - This function relies on `Format_1.py` for output directory creation (`F_out_dir`)
+      and parameter logging (`@F_1.ParameterLog`).
+    - Besides the returned variables, the function saves several files to the `output_dir`:
+        - `_log.json`: Contains logged parameters and execution details.
+        - `CP_settings.pkl`: A pickle file storing the Cellpose settings used.
+        - Optional Cellpose default outputs (`_seg.npy`, `_plot.png`, `_img.png`)
+        based on the `CP_default_*_onoff` flags.
+        - `_seg.npy` file contains the extracted masks and flows used in the further data analysis.
+    """
 
 
     #################################################### I/O 
