@@ -23,7 +23,7 @@ def CP_segment_1(
 
     # Cellpose parameters
     CP_model_type = 'cyto3', gpu = True, # models.Cellpose() parameters
-    diameter_estimate_guess = None, channels = [0,0], flow_threshold = 0.4, cellprob_threshold = 0.0, resample = True, niter = 0, # model.eval() parameters
+    diameter_estimate_guess_px = None, channels = [0,0], flow_threshold = 0.4, cellprob_threshold = 0.0, resample = True, niter = 0, # model.eval() parameters
     CP_default_plot_onoff = 0, CP_default_image_onoff = 0, CP_default_seg_file_onoff = 1, # output default Cellpose files
 
     # output and logging 
@@ -49,7 +49,7 @@ def CP_segment_1(
     gpu : bool, optional
         Whether to use the GPU for computation (requires CUDA and PyTorch).
         Defaults to True.
-    diameter_estimate_guess : float or None, optional
+    diameter_estimate_guess_px : float or None, optional
         Estimated diameter of the objects in pixels. If None or 0, Cellpose
         estimates the diameter automatically using a base model (cyto3 if a
         custom model is used). Providing an estimate is officiall recommended but the estimate
@@ -130,9 +130,8 @@ def CP_segment_1(
 
     #################################################### CellPose
 
-    # log 
-    io.logger_setup() if CP_segment_log_level >= 1 else None
 
+    # Segment the imafges with cellpose
     print("\n CellPose Segmenting")
     if CP_model_type in ['cyto', 'nuclei', 'cyto2', 'cyto3']: # if its a cellpose pretrained base model
         # Initialize Cellpose (with pretrained base model)
@@ -141,9 +140,10 @@ def CP_segment_1(
 
         # Run CP network (with pretrained base model)
         print("\n Running CP network with model: ", CP_model_type) if CP_segment_log_level >= 1 else None
-        print("estimating diameters with model: ", CP_instance.sz.model_type) if CP_segment_log_level >= 1 else None
-        masks, flows, styles, diameter_estimate_used = CP_instance.eval(
-            all_images, diameter=diameter_estimate_guess, channels=channels,
+        CP_model_for_diameter_estimate = CP_instance.sz.model_type
+        print("estimating diameters with model: ", CP_model_for_diameter_estimate) if CP_segment_log_level >= 1 else None
+        masks, flows, styles, diameter_estimate_used_px = CP_instance.eval(
+            all_images, diameter=diameter_estimate_guess_px, channels=channels,
             flow_threshold = flow_threshold, cellprob_threshold = cellprob_threshold,
             resample = resample, niter = niter,
             )
@@ -160,10 +160,11 @@ def CP_segment_1(
 
         # Run CP network (with custom model)
         print("\n Running CP network with model: ", CP_model_type) if CP_segment_log_level >= 1 else None
-        print("estimating diameters with model: ", CP_instance.sz.model_type ) if CP_segment_log_level >= 1 else None
-        masks, flows, styles, diameter_estimate_used = CP_instance.eval(
+        CP_model_for_diameter_estimate = CP_instance.sz.model_type
+        print("estimating diameters with model: ", CP_model_for_diameter_estimate ) if CP_segment_log_level >= 1 else None
+        masks, flows, styles, diameter_estimate_used_px = CP_instance.eval(
             all_images,
-            diameter=diameter_estimate_guess,  # = 0 or None for Cellpose diameter estimation. Will use a pretrained base model or default cyto3 to estimate diameter
+            diameter=diameter_estimate_guess_px,  # = 0 or None for Cellpose diameter estimation. Will use a pretrained base model or default cyto3 to estimate diameter
             channels=channels,
             flow_threshold=flow_threshold,
             cellprob_threshold=cellprob_threshold,
@@ -171,8 +172,8 @@ def CP_segment_1(
             niter=niter,
         )
 
-    if isinstance(diameter_estimate_used, int):
-        diameter_estimate_used = np.full(N_images, diameter_estimate_used)
+    if isinstance(diameter_estimate_used_px, int):
+        diameter_estimate_used_px = np.full(N_images, diameter_estimate_used_px)
 
     diameter_training_px = CP_instance.diam_mean # diameter used to train the model in pixels (diameter of the training set)
     if isinstance(diameter_training_px, int):
@@ -187,11 +188,14 @@ def CP_segment_1(
     print("\n Save Initial Results \n")
 
     # Write the parameters to the pkl file
+
+    F_1.debug_info(output_dir_comment)
     CP_settings = {
         "CP_model_type": CP_model_type,
         "CP_model_path": CP_instance.cp.pretrained_model,
+        "CP_model_for_diameter_estimate": CP_model_for_diameter_estimate,
         "gpu": gpu,
-        "diameter_estimate_guess": diameter_estimate_guess,
+        "diameter_estimate_guess_px": diameter_estimate_guess_px,
         "diameter_training_px": diameter_training_px,
         "flow_threshold": flow_threshold,
         "cellprob_threshold": cellprob_threshold,
@@ -201,6 +205,19 @@ def CP_segment_1(
     }
     # Convert to DataFrame (single row)
     CP_settings_df = pd.DataFrame([CP_settings])
+
+    F_1.debug_info(CP_settings_df["CP_model_type"])
+    F_1.debug_info(CP_settings_df["CP_model_path"])
+    F_1.debug_info(CP_settings_df["CP_model_for_diameter_estimate"])
+    F_1.debug_info(CP_settings_df["gpu"])
+    F_1.debug_info(CP_settings_df["diameter_estimate_guess_px"])
+    F_1.debug_info(CP_settings_df["diameter_training_px"])
+    F_1.debug_info(CP_settings_df["flow_threshold"])
+    F_1.debug_info(CP_settings_df["cellprob_threshold"])
+    F_1.debug_info(CP_settings_df["resample"])
+    F_1.debug_info(CP_settings_df["niter"])
+    F_1.debug_info(CP_settings_df["CP_segment_output_dir_comment"])
+
     # Save as pickle
     CP_settings_df.to_pickle(f"{output_dir}/CP_settings.pkl")
 
@@ -213,7 +230,7 @@ def CP_segment_1(
         if CP_default_seg_file_onoff == 1: # Save the seg file
             output_seg_filename = os.path.splitext(input_filename)[0] + "_CP_default_seg_file"
             output_seg_path = os.path.join(output_dir, output_seg_filename)
-            io.masks_flows_to_seg(all_images, maski, flowi, output_seg_path, channels=channels, diams=diameter_estimate_used[idx])
+            io.masks_flows_to_seg(all_images, maski, flowi, output_seg_path, channels=channels, diams=diameter_estimate_used_px[idx])
 
         if CP_default_plot_onoff == 1: # Save the CP default plot
             fig_CP_default_plot = plt.figure(figsize=(12,5))
@@ -237,7 +254,7 @@ def CP_segment_1(
             "masks": masks,
             "flows": flows,
             "styles": styles,
-            "diameter_estimate_used": diameter_estimate_used,
+            "diameter_estimate_used_px": diameter_estimate_used_px,
             "CP_model_type": CP_model_type,
         }
 

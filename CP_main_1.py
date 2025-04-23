@@ -5,6 +5,7 @@ import Format_1 as F_1
 import Visit_Projector_1 as VP1
 import CP_segment_1 as CPs1
 import CP_extract_1 as CPe1
+import CP_dimentionalise_1 as CPd1 # Import the new dimensionalisation script
 import CP_plotter_1 as CPp1
 import CP_plotter_2_CPvsA11 as CPp2
 import CP_plotter_3_CPvsA11_Panel as CPp3_panel
@@ -44,7 +45,7 @@ if 1==0:
 
 
 # CP_segment_1
-if 1==1:
+if 1==0:
     #visit_images_dir = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\FB images\Visit_projections_initial_test\BW 134 ball flame - Crop"
     #visit_images_dir = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\FB images\Visit_projections_initial_test\BW 134 ball flame - Crop small"
     #visit_images_dir = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\FB images\Visit_projections_initial_test\BW 134 ball flame - Crop small two only"
@@ -70,10 +71,12 @@ if 1==1:
         input_dir = visit_images_dir,
         CP_model_type = CP_model_type,
         gpu = True,
-        diameter_estimate_guess = None, # must define for custom model. otherwise set to 0 or None for Cellpose diameter estimate from styles vector
+        diameter_estimate_guess_px = None, # must define for custom model. otherwise set to 0 or None for Cellpose diameter estimate from styles vector
         output_dir_comment = "cyto3",                     
-        CP_segment_log_level = 0,
+        CP_segment_log_level = 1,
         )
+
+#########################################        Process Data
 
 # CP_extract_1
 if 1==1:
@@ -86,13 +89,32 @@ if 1==1:
     # A11 FB poster selection
     #CPs1_output_dir = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\FB images\A11 FB poster selection\CP_segment_1_2025-03-13_17-49-00"
 
+    # A11 first 20 images
+    CPs1_output_dir = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\SF_CP_analysis_pipeline_data\Visit_Projector_1_2025-04-19_13-27-49_testing_around\CP_segment_1_2025-04-23_17-19-50_cyto3"
+
+
     CPe1_output_dir = CPe1.CP_extract_1(
         input_dir = CPs1_output_dir,
         #masks = masks, flows = flows, styles = styles, diameter_estimate_used = diameter_estimate_used, CP_model_type = CP_model_type,
-        CP_extract_log_level = -10,
+        CP_extract_log_level = 2,
         diameter_training_px = 30, # define for custom model
         )
 
+
+
+
+
+# CP_dimentionalise_1
+if 1==1: # Add this block to call the new function
+
+    # first 20 images extracted
+    #CPe1_output_dir = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\SF_CP_analysis_pipeline_data\Visit_Projector_1_2025-04-19_13-27-49_testing_around\CP_segment_1_2025-04-23_17-19-50_cyto3\CP_extract_1_2025-04-23_17-21-34"
+
+    CPd1_output_dir = CPd1.CP_dimentionalise_1(
+        input_dir = CPe1_output_dir, # Use output from CP_extract_1 as input
+        CP_dimentionalise_log_level = 3,
+        output_dir_comment = "", # Add comment if needed
+    )
 
 
 #########################################        Plot
@@ -111,7 +133,7 @@ if 1==1: # video to evaluate CP segmentation settings and extracted results
 
 
     CPp1_output_dir = CPp1.CP_plotter_1(
-        input_dir = CPe1_output_dir,
+        input_dir = CPd1_output_dir, # Use output from CP_dimentionalise_1
         output_dir_manual = "", output_dir_comment = "",
         video = 1
         )
@@ -121,7 +143,7 @@ if 1==0: # video comparing CP A11
     #CPe1_output_dir = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\FB images\Visit_projections_initial_test\BW 134 ball flame - Crop\CP_segment_1_2025-03-12_13-42-11\CP_extract_1_2025-03-12_13-48-48"
 
     CPp2_output_dir = CPp2.CP_plotter_2_CPvsA11(
-        input_dir = CPe1_output_dir,
+        input_dir = CPd1_output_dir, # Use output from CP_dimentionalise_1
         output_dir_manual = "", output_dir_comment = "",
         video = 1
         )
@@ -134,8 +156,8 @@ if 1==0: # panel comparing CP A11
     # BW 134 ball flame - Crop Small First few
     #CPe1_output_dir = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\FB images\Visit_projections_initial_test\BW 134 ball flame - Crop Small First few\CP_segment_1_2025-03-10_15-13-26\CP_extract_1_2025-03-11_12-30-00"
 
-    CPp2_output_dir = CPp3_panel.CP_plotter_3_CPvsA11_Panel(
-        input_dir = CPe1_output_dir,
+    CPp3_output_dir = CPp3_panel.CP_plotter_3_CPvsA11_Panel( # Renamed output variable for clarity
+        input_dir = CPd1_output_dir, # Use output from CP_dimentionalise_1
         output_dir_manual = "", output_dir_comment = "",
         video = 0, show_plot = 0,
         Panel_1 = 0, # 

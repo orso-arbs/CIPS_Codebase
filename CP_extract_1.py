@@ -35,17 +35,17 @@ def CP_extract_1(
     ):
     
     """
-    Extracts segmentation data, calculates metrics, non-dimensionalizes them,
-    and saves the results to a pandas DataFrame.
+    Extracts segmentation data and calculates pixel-based metrics, saving the
+    results to a pandas DataFrame.
 
     This function processes Cellpose segmentation output files (`_seg.npy`)
     located in the `input_dir`. It loads corresponding image data, VisIt projection
-    data, and Cellpose settings. It then calculates various metrics like cell counts,
-    diameters (mean, median, distribution), and areas. These metrics are
-    non-dimensionalized using reference flame properties (d_T, S_L) and data
-    interpolated from external A11 simulation result files. Finally, all
-    extracted and calculated data is compiled into a pandas DataFrame and saved
-    in CSV, Pickle, and Excel formats in the specified output directory.
+    data, and Cellpose settings. It then calculates various pixel-based metrics
+    like cell counts, diameters (mean, median, distribution), and areas.
+    Finally, all extracted and calculated data is compiled into a pandas DataFrame
+    named 'extracted_DataFrame' and saved in CSV, Pickle, and Excel formats
+    in the specified output directory. This DataFrame serves as input for the
+    `CP_dimentionalise_1` function.
 
     Parameters
     ----------
@@ -77,28 +77,23 @@ def CP_extract_1(
     -------
     output_dir : str
         The path to the directory where the output DataFrame files
-        (`segmentation_DataFrame.csv`, `segmentation_DataFramee.pkl`,
-        `segmentation_DataFramee.xlsx`) and logs (`_log.json`) are saved.
+        (`extracted_DataFrame.csv`, `extracted_DataFrame.pkl`,
+        `extracted_DataFrame.xlsx`) and logs (`_log.json`) are saved.
         This is always the first return value as required by Format_1.
 
     Notes
     -----
     - This function relies on `Format_1.py` for output directory creation (`F_out_dir`)
       and parameter logging (`@F_1.ParameterLog`).
-    - [It requires external data files containing A11 simulation results located at
-      fixed paths (e.g., "C:\\Users\\obs\\OneDrive\\ETH\\ETH_MSc\\Masters Thesis\\Data\\A11_manual_extraction\\...").]
     - Assumes the input directory (`input_dir`) is a subdirectory of the directory
       containing the original images (`.png`) and the VisIt data (`Visit_projector_1_data.pkl`).
-    - The non-dimensionalization process maps image sequence numbers linearly to a
-      simulation time range [0, t_max=6.81] and uses interpolated A11 data (specifically
-      `A11_SF_R_mean`) to determine the scaling factor `d_T_per_px`.
     """
     #################################################### I/O
     output_dir = F_1.F_out_dir(input_dir, __file__, output_dir_comment = output_dir_comment) # Format_1 required definition of output directory
 
 
 
-    #################################################### Load data
+    #################################################### Load and extract data
     print(f"\n Loading data \n")
 
 
@@ -106,9 +101,9 @@ def CP_extract_1(
     VisIt_output_dir = os.path.abspath(os.path.join(input_dir, os.pardir))
     VisIt_data_dir = f"{VisIt_output_dir}\Visit_projector_1_data.pkl"
     VisIt_data = pd.read_pickle(VisIt_data_dir)
-    print(f"VisIt_output_dir: {VisIt_output_dir}") if CP_extract_log_level >= 1 else None
-    print(f"VisIt_data_dir: {VisIt_data_dir}") if CP_extract_log_level >= 1 else None
-    print(f"VisIt_data: {VisIt_data}") if CP_extract_log_level >= 1 else None
+    print(f"VisIt_output_dir: {VisIt_output_dir}") if CP_extract_log_level >= 2 else None
+    print(f"VisIt_data_dir: {VisIt_data_dir}") if CP_extract_log_level >= 2 else None
+    print(f"VisIt_data: {VisIt_data}") if CP_extract_log_level >= 2 else None
 
     # Load image data (could be VisIt output images)
     image_input_dir = os.path.dirname(input_dir) # one folder above
@@ -136,8 +131,6 @@ def CP_extract_1(
 
     N_images = len(all_images)
     print(f"Loaded {N_images} images \n") if CP_extract_log_level >= 1 else None
-    if N_images != N_seg:
-        raise ValueError("Number of images and segmentations do not match")
 
     # Load Cellpose segmentation data
     seg_location = input_dir
@@ -152,20 +145,26 @@ def CP_extract_1(
         #print(f"Adding file to all_segs: {seg_file}")  # Print the file being added
     N_seg = len(all_segs)
     print(f"Loaded {N_seg} seg files") if CP_extract_log_level >= 1 else None
+    if N_images != N_seg:
+        raise ValueError("Number of images and segmentations do not match")
+
 
     # Load Cellpose model settings
     CP_settings_file = f"{input_dir}/CP_settings.pkl"
     with open(CP_settings_file, "rb") as file:
         CP_settings = pickle.load(file)
-        CP_model_type = CP_settings["CP_model_type"]
-        CP_model_path = CP_settings["CP_model_path"]
-        gpu = CP_settings["gpu"]
-        diameter_estimate_guess = CP_settings["diameter_estimate_guess"]
-        CP_segment_output_dir_comment = CP_settings["CP_segment_output_dir_comment"]
-        flow_threshold = CP_settings["flow_threshold"]
-        cellprob_threshold = CP_settings["cellprob_threshold"]
-        resample = CP_settings["resample"]
-        niter = CP_settings["niter"]
+        CP_model_type = CP_settings["CP_model_type"].iloc[0]
+        CP_model_path = CP_settings["CP_model_path"].iloc[0]
+        CP_model_for_diameter_estimate = CP_settings["CP_model_for_diameter_estimate"].iloc[0]
+        gpu = CP_settings["gpu"].iloc[0]
+        diameter_estimate_guess_px = CP_settings["diameter_estimate_guess_px"].iloc[0]
+        CP_segment_output_dir_comment = CP_settings["CP_segment_output_dir_comment"].iloc[0]
+        flow_threshold = CP_settings["flow_threshold"].iloc[0]
+        cellprob_threshold = CP_settings["cellprob_threshold"].iloc[0]
+        resample = CP_settings["resample"].iloc[0]
+        niter = CP_settings["niter"].iloc[0]
+    print(f"CP_settings_file: {CP_settings_file}") if CP_extract_log_level >= 2 else None
+    print(f"CP_settings: {CP_settings}") if CP_extract_log_level >= 2 else None
 
 
 
@@ -174,28 +173,38 @@ def CP_extract_1(
     print(f"\n Extracting data \n")
 
     # Initialize DataFrame
-    CP_extract_df_columns = [
+    extracted_df_columns = [
         'image_file_name', 'image_file_path', 'image_number', 'image_Nx_px', 'image_Ny_px',
         'seg_file_name', 'seg_file_path', 'ismanual', 'CP_model_path', 'CP_model_type', 'channels',
         'flows0', 'flows1', 'flows2', 'flows3', 'flows4',
-        'diameter_estimate_used', 'diameter_training_px',
+        'diameter_estimate_used_px', 'diameter_training_px',
         'diameter_mean_px', 'diameter_median_px', 'diameter_distribution_px', 'outlines', 'masks', 'N_cells',
-        'A_image_px2', 'A_empty_px2', 'A_FB_px2', 'Ar_px2_FBperimage', 'D_FB_px',
+        'A_image_px2', 'A_empty_px2', 'A_FB_px2', 'Ar_px2_FBperimage', 'D_FB_px', 'R_FB_px',
         'A_CP_mask_px', 'Ar_px2_CP_maskperImage', 'Ar_px2_CP_maskperFB',
+        # Added columns from CP_settings that were previously read but not explicitly added here
+        'gpu', 'diameter_estimate_guess_px', 'CP_segment_output_dir_comment', 'flow_threshold',
+        'cellprob_threshold', 'resample', 'niter'
     ]
-    CP_extract_df = pd.DataFrame(columns=CP_extract_df_columns)
+    extracted_df = pd.DataFrame(columns=extracted_df_columns)
 
     # Preallocate columns to avoid growing the DataFrame dynamically
-    for col in CP_extract_df_columns:
-        CP_extract_df[col] = np.nan  # Initialize all columns with NaN
+    for col in extracted_df_columns:
+        extracted_df[col] = np.nan  # Initialize all columns with NaN
 
     # Explicitly set multiple columns to 'object' to allow lists or complex data types
-    columns_with_lists = [ 
+    columns_with_lists = [
         'ismanual', 'flows0', 'flows1', 'flows2', 'flows3', 'flows4', 'channels',
         'outlines', 'masks', 'diameter_distribution_px',
     ]
     for column in columns_with_lists:
-        CP_extract_df[column] = pd.Series(dtype="object")  # Explicitly set dtype to 'object'
+        # Check if column exists before setting dtype, as some might be added later
+        if column in extracted_df.columns:
+            extracted_df[column] = pd.Series(dtype="object")
+
+    # Ensure all columns intended to be object are explicitly set, even if pre-allocated differently
+    for col in columns_with_lists:
+        if col in extracted_df.columns:
+            extracted_df[col] = extracted_df[col].astype('object')
 
 
     ## Extract data by looping through each image and its segmentation
@@ -249,221 +258,93 @@ def CP_extract_1(
         Ar_px2_CP_maskperFB = A_CP_mask_px / A_FB_px2
         
 
-        # Fill a DataFrame row
-        
-        CP_extract_df.at[i, 'image_file_name'] = image_files[i]  # Specific image
-        CP_extract_df.at[i, 'image_file_path'] = image_input_dir  # All images
-        CP_extract_df.at[i, 'image_number'] = image_number[i]
-        CP_extract_df.at[i, 'image_Nx_px'] = image_Nx_px
-        CP_extract_df.at[i, 'image_Ny_px'] = image_Ny_px
-        CP_extract_df.at[i, 'seg_file_name'] = seg_filenames[i]
-        CP_extract_df.at[i, 'seg_file_path'] = seg_files[i]
-        CP_extract_df.at[i, 'CP_model_path'] = CP_settings['CP_model_path'].iloc[0]
-        CP_extract_df.at[i, 'CP_model_type'] = CP_settings['CP_model_type'].iloc[0]
-        CP_extract_df.at[i, 'channels'] = channels
-        CP_extract_df.at[i, 'gpu'] = CP_settings['gpu'].iloc[0]
-        CP_extract_df.at[i, 'diameter_estimate_guess'] = CP_settings['diameter_estimate_guess'].iloc[0]
-        CP_extract_df.at[i, 'CP_segment_output_dir_comment'] = CP_settings['CP_segment_output_dir_comment'].iloc[0]
-        CP_extract_df.at[i, 'flow_threshold'] = CP_settings['flow_threshold'].iloc[0]
-        CP_extract_df.at[i, 'cellprob_threshold'] = CP_settings['cellprob_threshold'].iloc[0]
-        CP_extract_df.at[i, 'resample'] = CP_settings['resample'].iloc[0]
-        CP_extract_df.at[i, 'niter'] = CP_settings['niter'].iloc[0]
+        ### Fill a DataFrame row
+        # Data from Images
+        extracted_df.at[i, 'image_file_name'] = os.path.basename(image_files[i]) # Store only filename
+        extracted_df.at[i, 'image_file_path'] = image_files[i]
+        extracted_df.at[i, 'image_number'] = image_number[i]
+        extracted_df.at[i, 'image_Nx_px'] = image_Nx_px
+        extracted_df.at[i, 'image_Ny_px'] = image_Ny_px
+        # Data from Cellpose settings
+        extracted_df.at[i, 'CP_model_path'] = CP_model_path 
+        extracted_df.at[i, 'CP_model_type'] = CP_model_type
+        extracted_df.at[i, 'CP_model_for_diameter_estimate'] = CP_model_for_diameter_estimate
+        extracted_df.at[i, 'channels'] = channels
+        extracted_df.at[i, 'gpu'] = gpu
+        extracted_df.at[i, 'diameter_estimate_guess_px'] = diameter_estimate_guess_px
+        extracted_df.at[i, 'CP_segment_output_dir_comment'] = CP_segment_output_dir_comment
+        extracted_df.at[i, 'flow_threshold'] = flow_threshold
+        extracted_df.at[i, 'cellprob_threshold'] = cellprob_threshold
+        extracted_df.at[i, 'resample'] = resample
+        extracted_df.at[i, 'niter'] = niter
+        # Data from seg file
+        extracted_df.at[i, 'seg_file_name'] = seg_filenames[i]
+        extracted_df.at[i, 'seg_file_path'] = seg_files[i] # Store full path to seg file
+        extracted_df.at[i, 'ismanual'] = ismanual
+        extracted_df.at[i, 'flows0'] = flow_i[0]
+        extracted_df.at[i, 'flows1'] = flow_i[1]
+        extracted_df.at[i, 'flows2'] = flow_i[2]
+        extracted_df.at[i, 'flows3'] = flow_i[3]
+        extracted_df.at[i, 'flows4'] = flow_i[4]
+        extracted_df.at[i, 'outlines'] = outlines_i
+        extracted_df.at[i, 'masks'] = masks_i
+        extracted_df.at[i, 'diameter_estimate_used_px'] = diameter_estimate_used_px_i
+        # Data calculated
+        extracted_df.at[i, 'diameter_training_px'] = diameter_training_px
+        extracted_df.at[i, 'diameter_mean_px'] = diameter_mean_px_i
+        extracted_df.at[i, 'diameter_median_px'] = diameter_median_px_i
+        extracted_df.at[i, 'diameter_distribution_px'] = diameter_array_px_i
+        extracted_df.at[i, 'N_cells'] = N_cells_i
+        extracted_df.at[i, 'A_image_px2'] = A_image_px2
+        extracted_df.at[i, 'A_empty_px2'] = A_empty_px2
+        extracted_df.at[i, 'A_FB_px2'] = A_FB_px2
+        extracted_df.at[i, 'Ar_px2_FBperimage'] = Ar_px2_FBperimage
+        extracted_df.at[i, 'D_FB_px'] = D_FB_px
+        extracted_df.at[i, 'R_FB_px'] = R_FB_px
+        extracted_df.at[i, 'A_CP_mask_px'] = A_CP_mask_px
+        extracted_df.at[i, 'Ar_px2_CP_maskperImage'] = Ar_px2_CP_maskperImage
+        extracted_df.at[i, 'Ar_px2_CP_maskperFB'] = Ar_px2_CP_maskperFB
 
-        CP_extract_df.at[i, 'ismanual'] = ismanual
-        CP_extract_df.at[i, 'flows0'] = flow_i[0]
-        CP_extract_df.at[i, 'flows1'] = flow_i[1]
-        CP_extract_df.at[i, 'flows2'] = flow_i[2]
-        CP_extract_df.at[i, 'flows3'] = flow_i[3]
-        CP_extract_df.at[i, 'flows4'] = flow_i[4]
-        CP_extract_df.at[i, 'outlines'] = outlines_i
-        CP_extract_df.at[i, 'masks'] = masks_i
 
-        CP_extract_df.at[i, 'diameter_training_px'] = diameter_training_px
-        CP_extract_df.at[i, 'diameter_estimate_used_px'] = diameter_estimate_used_px_i
-        CP_extract_df.at[i, 'diameter_mean_px'] = diameter_mean_px_i
-        CP_extract_df.at[i, 'diameter_median_px'] = diameter_median_px_i
-        CP_extract_df.at[i, 'diameter_distribution_px'] = diameter_array_px_i
-        CP_extract_df.at[i, 'N_cells'] = N_cells_i
-        CP_extract_df.at[i, 'A_image_px2'] = A_image_px2
-        CP_extract_df.at[i, 'A_empty_px2'] = A_empty_px2
-        CP_extract_df.at[i, 'A_FB_px2'] = A_FB_px2
-        CP_extract_df.at[i, 'Ar_px2_FBperimage'] = Ar_px2_FBperimage
-        CP_extract_df.at[i, 'D_FB_px'] = D_FB_px
-        CP_extract_df.at[i, 'R_FB_px'] = R_FB_px
-        CP_extract_df.at[i, 'A_CP_mask_px'] = A_CP_mask_px
-        CP_extract_df.at[i, 'Ar_px2_CP_maskperImage'] = Ar_px2_CP_maskperImage
-        CP_extract_df.at[i, 'Ar_px2_CP_maskperFB'] = Ar_px2_CP_maskperFB
-
-
-        # clean diameter_distribution_px
-        CP_extract_df['diameter_distribution_px'] = CP_extract_df['diameter_distribution_px'].apply(
-            lambda x: np.array([x]) if isinstance(x, np.ndarray) and x.ndim == 0 else x
-        )
-
+    # Clean diameter_distribution_px after the loop
+    extracted_df['diameter_distribution_px'] = extracted_df['diameter_distribution_px'].apply(
+        lambda x: np.array([x]) if isinstance(x, np.ndarray) and x.ndim == 0 else x
+    )
 
     # Print columns that have None values
-    none_columns = CP_extract_df.columns[CP_extract_df.isnull().any()].tolist()
-    print(f"NB: Columns with None values: {none_columns}") if CP_extract_log_level >= 1 else None
+    none_columns = extracted_df.columns[extracted_df.isnull().any()].tolist()
+    print(f"NB: Columns with None/NaN values after extraction: {none_columns}") if CP_extract_log_level >= 1 else None
 
 
-
-
-
-
-
-
-
-
-
-    ####################################################  Images and A11 data
-
-    print("\n Non Dimentionalissing and matching CP and A11 data \n")  if CP_extract_log_level >= 1 else None
-
-    # Load A11 data
-    A11_SF_K_mean = pd.read_csv(r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\Data\A11_manual_extraction\A11_SF_K_mean_as_mean_stretch_rate_vs_time_manual_extraction.txt")
-    A11_SF_N_c = pd.read_csv(r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\Data\A11_manual_extraction\A11_SF_N_c_as_number_of_cells_vs_time_manual_extraction.txt")
-    A11_SF_R_mean = pd.read_csv(r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\Data\A11_manual_extraction\A11_SF_R_mean_as_average_radius_of_the_wrinkled_flame_fron_vs_time_manual_extraction.txt")
-    A11_SF_R_mean_dot = pd.read_csv(r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\Data\A11_manual_extraction\A11_SF_R_mean_dot_as_first_time_derivative_of_the_average_radius_of_the_wrinkled_flame_front_vs_time_manual_extraction.txt")
-    A11_SF_s_a = pd.read_csv(r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\Data\A11_manual_extraction\A11_SF_s_a_as_average_normal_component_of_the_absolute_propagation_velocity_vs_time_manual_extraction.txt")
-    A11_SF_s_d = pd.read_csv(r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\Data\A11_manual_extraction\A11_SF_s_d_as_average_density_weighted_displacement_speed_vs_time_manual_extraction.txt")
-    A11_SF_A = pd.read_csv(r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\Data\A11_manual_extraction\A11_SF_A_as_flame_surface_area_of_the_wrinkled_spherical_front_vs_time_manual_extraction.txt")
-    A11_SF_a_t = pd.read_csv(r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\Data\A11_manual_extraction\A11_SF_a_t_as_average_total_aerodynamic_strain_vs_time_manual_extraction.txt")
-    A11_SF_iHRR = pd.read_csv(r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\Data\A11_manual_extraction\A11_SF_iHRR_as_integral_heat_release_rate_vs_time_manual_extraction.txt")
-    A11_SF_K_geom = pd.read_csv(r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\Data\A11_manual_extraction\A11_SF_K_geom_as_geometric_stretch_rate_vs_time_manual_extraction.txt")
-
-    # reference vales
-    ''' A11 p.36
-    "...reference values from detailed description of chemistry is based on the mech-
-    anism of Li et al. [2004], consisting of 9 species and 19 non-duplicate
-    elementary reactions. The planar premixed flame structure calculated us-
-    ing PREMIX [Rupley et al., 1995]..."
-    '''
-    d_T = 7.516 * 1e-3 # flame thickness
-    S_L = 51.44 # laminar flame speed
-    T_b = 1843.5 # burned gas temperature
-
-    t_ref = d_T/S_L # flame time scale
-    
-    t_max = 6.81 # max time estimated from plots
-    R0 = 10 * d_T # initial Spherical flame radius
-
-    # Calculate the time values for each DataFrame
-    CP_extract_df['time'] = np.nan # initialize time collumn filled with nan
-    min_image_num = CP_extract_df["image_number"].min()
-    max_image_num = CP_extract_df["image_number"].max()
-    if min_image_num == max_image_num:
-        CP_extract_df["time"] = 0  # Assign 0 to all if there's no range
-        print("Warning in dimetionalisation: min_image_num == max_image_num")
-    else:
-        # Linear mapping from [min_image_num, max_image_num] to [0, t_max]
-        CP_extract_df["time"] = (CP_extract_df["image_number"] - min_image_num) / (max_image_num - min_image_num) * t_max
-        print("CP_extract_df[time]", CP_extract_df["time"]) if CP_extract_log_level >= 1 else None
-
-
-    # Add non-dimensional columns to the DataFrame
-    nonDim_columns = [
-        'd_T_per_px', 'image_Nx_nonDim', 'image_Ny_nonDim', 'diameter_training_nonDim', 'diameter_estimate_used_nonDim',
-        'diameter_mean_nonDim', 'diameter_median_nonDim', 'diameter_distribution_nonDim',
-        'A_image_nonDim2', 'A_empty_nonDim2', 'A_FB_nonDim2', 'D_FB_nonDim', 'R_FB_nonDim', 'A_CP_mask_nonDim',
-    ]
-    # Add these columns to the existing DataFrame
-    for col in nonDim_columns:
-        CP_extract_df[col] = np.nan  # Initialize them with NaN
-    # Add non-dimensional columns to the DataFrame
-    columns_with_lists = [ 
-        'diameter_distribution_nonDim',
-    ]
-    for column in columns_with_lists:
-        CP_extract_df[column] = pd.Series(dtype="object")  # Explicitly set dtype to 'object'
-
-
-    # extract pixel to nonDimentionalised length scaling.
-    for i in range(N_images):
-        print("i = ", i) if CP_extract_log_level >= 1 else None
-
-
-        # find d_T_per_px
-        A11_SF_R_mean = A11_SF_R_mean.sort_values(by='time')
-        CP_extract_df = CP_extract_df.sort_values(by='time')
-        CP_extract_df['R_mean_interpolated'] = np.interp(CP_extract_df['time'], A11_SF_R_mean['time'], A11_SF_R_mean['R_mean']) # Interpolate 'R_mean' at the 'time' values in CP_extract_df
-        CP_extract_df['d_T_per_px'] = CP_extract_df['R_mean_interpolated'] / CP_extract_df['R_FB_px']
-
-        # Calculate non-dimensionalised values
-        d_T_per_px_i = CP_extract_df.loc[i, 'd_T_per_px']
-
-        image_Nx_nonDim = CP_extract_df.loc[i, "image_Nx_px"] * d_T_per_px_i
-        image_Ny_nonDim = CP_extract_df.loc[i, "image_Ny_px"] * d_T_per_px_i
-
-        diameter_training_px_i = CP_extract_df.loc[i, 'diameter_training_px']
-        diameter_estimate_used_px_i = CP_extract_df.loc[i, 'diameter_estimate_used_px']
-        diameter_median_px_i = CP_extract_df.loc[i, 'diameter_median_px']
-        diameter_mean_px_i = CP_extract_df.loc[i, 'diameter_mean_px']
-
-        masks_i = CP_extract_df.loc[i, 'masks']
-        diameters_tuple_i_placeholder = utils.diameters(masks_i)
-        diameter_array_px_i_placeholder = diameters_tuple_i_placeholder[1]
-        diameter_distribution_px_i = diameter_array_px_i_placeholder
-
-        diameter_training_nonDim = diameter_training_px_i * d_T_per_px_i if diameter_training_px_i is not None and d_T_per_px_i is not None else None
-        diameter_estimate_used_nonDim_i = diameter_estimate_used_px_i * d_T_per_px_i if diameter_estimate_used_px_i is not None and d_T_per_px_i is not None else None
-        diameter_median_nonDim_i = diameter_median_px_i * d_T_per_px_i if diameter_median_px_i is not None and d_T_per_px_i is not None else None
-        diameter_mean_nonDim_i = diameter_mean_px_i * d_T_per_px_i
-        diameter_distribution_nonDim_i = diameter_distribution_px_i * d_T_per_px_i
-
-        A_image_nonDim = CP_extract_df.loc[i, "A_image_px2"] * d_T_per_px_i**2
-        A_empty_nonDim = CP_extract_df.loc[i, "A_empty_px2"] * d_T_per_px_i**2
-        A_FB_nonDim = CP_extract_df.loc[i, "A_FB_px2"] * d_T_per_px_i**2
-        D_FB_nonDim = CP_extract_df.loc[i, "D_FB_px"] * d_T_per_px_i
-        R_FB_nonDim = CP_extract_df.loc[i, "R_FB_px"] * d_T_per_px_i
-        A_CP_mask_nonDim = CP_extract_df.loc[i, "A_CP_mask_px"] * d_T_per_px_i**2
-
-
-        CP_extract_df.at[i, 'd_T_per_px_i'] = d_T_per_px_i
-        CP_extract_df.at[i, 'image_Nx_nonDim'] = image_Nx_nonDim
-        CP_extract_df.at[i, 'image_Ny_nonDim'] = image_Ny_nonDim
-        CP_extract_df.at[i, 'diameter_training_nonDim'] = diameter_training_nonDim
-        CP_extract_df.at[i, 'diameter_estimate_used_nonDim'] = diameter_estimate_used_nonDim_i
-        CP_extract_df.at[i, 'diameter_mean_nonDim'] = diameter_mean_nonDim_i
-        CP_extract_df.at[i, 'diameter_median_nonDim'] = diameter_median_nonDim_i
-        CP_extract_df.at[i, 'diameter_distribution_nonDim'] = diameter_distribution_nonDim_i
-        CP_extract_df.at[i, 'A_image_nonDim2'] = A_image_nonDim
-        CP_extract_df.at[i, 'A_empty_nonDim2'] = A_empty_nonDim
-        CP_extract_df.at[i, 'A_FB_nonDim2'] = A_FB_nonDim
-        CP_extract_df.at[i, 'D_FB_nonDim'] = D_FB_nonDim
-        CP_extract_df.at[i, 'R_FB_nonDim'] = R_FB_nonDim
-        CP_extract_df.at[i, 'A_CP_mask_nonDim'] = A_CP_mask_nonDim
-
-        # clean diameter_distribution_nonDim
-        CP_extract_df['diameter_distribution_nonDim'] = CP_extract_df['diameter_distribution_nonDim'].apply(
-            lambda x: np.array([x]) if isinstance(x, np.ndarray) and x.ndim == 0 else x
-        )
-
-
-
-
-
-
-
-
-
-
-
-    #################################################### Save
+    #################################################### Save Data
 
     print(f"\n Saving data \n")
 
-    ### Save DataFrame to CSV
-    csv_filename = f'segmentation_DataFrame.csv'
-    CP_extract_df.to_csv(os.path.join(output_dir, csv_filename), sep='\t', index=False)
+    ### Save Extracted DataFrame
+    csv_filename = 'extracted_DataFrame.csv'
+    extracted_df.to_csv(os.path.join(output_dir, csv_filename), sep='\t', index=False)
+    print(f"Saved extracted DataFrame to {csv_filename}") if CP_extract_log_level >= 1 else None
 
-    # Save DataFrame to Pickle
-    pickle_filename = f'segmentation_DataFrame.pkl'
-    CP_extract_df.to_pickle(os.path.join(output_dir, pickle_filename))
+    # Save DataFrame to Pickle (Primary input for CP_dimentionalise_1)
+    pickle_filename = 'extracted_DataFrame.pkl'
+    extracted_df.to_pickle(os.path.join(output_dir, pickle_filename))
+    print(f"Saved extracted DataFrame to {pickle_filename}") if CP_extract_log_level >= 1 else None
 
-    # Save DataFrame to Excel (usefull to manually look at data)
-    excel_filename = f'segmentation_DataFrame.xlsx'
-    CP_extract_df.to_excel(os.path.join(output_dir, excel_filename), index=False)
-    #
+    # # Save DataFrame to Excel (useful for manual inspection)
+    # excel_filename = 'extracted_DataFrame.xlsx'
+    # try:
+    #     # Convert complex objects like numpy arrays to strings for Excel compatibility
+    #     df_for_excel = extracted_df.copy()
+    #     for col in df_for_excel.columns:
+    #         print(f"Saving to excel: Checking column: {col}") if CP_extract_log_level >= 2 else None
+    #         if df_for_excel[col].apply(lambda x: isinstance(x, np.ndarray)).any():
+    #             df_for_excel[col] = df_for_excel[col].apply(lambda x: str(x.tolist()) if isinstance(x, np.ndarray) else x) # Convert arrays to string representation of list
+    #     df_for_excel.to_excel(os.path.join(output_dir, excel_filename), index=False)
+    #     print(f"Saved extracted DataFrame to {excel_filename}") if CP_extract_log_level >= 1 else None
+
+    # except Exception as e:
+    #     print(f"Warning: Could not save extracted data to Excel format. Error: {e}")
+    #     print("Excel format might not support complex data types like numpy arrays stored in the DataFrame.")
 
 
 

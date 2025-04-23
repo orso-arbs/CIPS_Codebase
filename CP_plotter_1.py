@@ -141,7 +141,7 @@ def CP_plotter_1(input_dir, # Format_1 requires input_dir
 
 
         # Get the image, outlines, and masks for the current row
-        image = color.rgb2gray(sk_io.imread(CP_extract_df.loc[i, 'image_file_name'])[..., :3]) # grayscale
+        image = color.rgb2gray(sk_io.imread(CP_extract_df.loc[i, 'image_file_path'])[..., :3]) # grayscale
         outlines = CP_extract_df.loc[i, 'outlines']
         masks = CP_extract_df.loc[i, 'masks']
 
@@ -267,7 +267,8 @@ def CP_plotter_1(input_dir, # Format_1 requires input_dir
         f"cellprob_threshold =  {CP_extract_df.iloc[i]['cellprob_threshold']}\n" \
         f"CP_segment_output_dir_comment =  {CP_extract_df.iloc[i]['CP_segment_output_dir_comment']}\n" \
         f"channels =            {CP_extract_df.iloc[i]['channels']}\n" \
-        f"Image set =           {os.path.basename(CP_extract_df.iloc[i]['image_file_path'])}\n" \
+        f"Image directory =     {os.path.dirname(CP_extract_df.iloc[i]['image_file_path'])}\n" \
+        f"Image =               {os.path.basename(CP_extract_df.iloc[i]['image_file_path'])}\n" \
         
         bottom_text = "" \
         "Orso Birelli Schmid\n" \

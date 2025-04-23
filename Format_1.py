@@ -140,8 +140,32 @@ def get_json_value(input_dir, json_data, *path_keys):
 
 
 
+'''
+debugger
+'''
+def debug_info(x):
+    print("Type:", type(x))
 
+    # Check for shape/size
+    if hasattr(x, 'shape'):
+        print("Shape:", x.shape)
+    elif hasattr(x, '__len__') and not isinstance(x, (str, bytes)):
+        try:
+            # Try to get sizes of nested structures like lists of lists
+            def get_shape(obj):
+                if hasattr(obj, '__len__') and not isinstance(obj, (str, bytes)):
+                    return [len(obj)] + get_shape(obj[0])
+                else:
+                    return []
+            shape = get_shape(x)
+            print("Shape:", tuple(shape))
+        except Exception:
+            print("Length:", len(x))
+    else:
+        print("No shape or length available")
 
+    print("Value:", x)
+    print()
 
 
 

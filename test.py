@@ -1,59 +1,35 @@
-import numpy as np
+import pandas as pd
+import Format_1 as F_1
 
-listZhang = [
-    27.685559519911603,
-    27.708544629325143,
-    32.897623212397704,
-    30.007522253354892,
-    36.910246719124274,
-    33.708761503740476,
-    31.855484883359175,
-    28.14154950788879,
-    34.53088401372773,
-    39.00668219624068,
-    38.08175207961617,
-    42.72222358168309,
-    41.88703967392604,
-    34.262616074167774,
-    29.03247455203703,
-    36.266464532835606,
-    30.15116971098976,
-    36.763339103419725,
-    37.64459607022283,
-    29.430955018741724,
-]
+CP_model_type = "cyto3"
+CP_model_path = "path/to/model"
+gpu = True
+diameter_estimate_guess = None
+diameter_training_px = 30
+flow_threshold = 0.4
+cellprob_threshold = 0.0
+resample = True
+niter = 20
+output_dir_comment = "cyto3"
 
-listcyto3 = [
-    32.469092358862525,
-    32.15385684991696,
-    34.373918855932494,
-    35.61104585035691,
-    37.905814273241525,
-    39.6220186090822,
-    39.44488209725527,
-    39.071907410029816,
-    41.10460893699831,
-    43.861884958296436,
-    44.10793370854407,
-    43.277300829983176,
-    45.092832611647445,
-    43.67279288084601,
-    38.2152555638613,
-    42.099280828433955,
-    40.370120352322566,
-    41.49763368218647,
-    43.8835159640632,
-    43.04141653790756,
-]
 
-# Convert lists to NumPy arrays for element-wise subtraction
-zhang_arr = np.array(listZhang)
-cyto3_arr = np.array(listcyto3)
 
-# Perform element-wise subtraction
-difference_arr = zhang_arr - cyto3_arr
+F_1.debug_info(output_dir_comment)
 
-# If you want the result back as a list:
-difference_list = difference_arr.tolist()
-
-print(difference_list)
+CP_settings = {
+    "CP_model_type": CP_model_type,
+    "CP_model_path": CP_model_path,
+    "gpu": gpu,
+    "diameter_estimate_guess": diameter_estimate_guess,
+    "diameter_training_px": diameter_training_px,
+    "flow_threshold": flow_threshold,
+    "cellprob_threshold": cellprob_threshold,
+    "resample": resample,
+    "niter": niter,
+    "CP_segment_output_dir_comment": output_dir_comment,
+}
+# Convert to DataFrame (single row)
+CP_settings_df = pd.DataFrame([CP_settings])
+F_1.debug_info(CP_settings_df["CP_segment_output_dir_comment"])
+F_1.debug_info(CP_settings_df["CP_model_type"])
+print(CP_settings_df["CP_model_type"])
