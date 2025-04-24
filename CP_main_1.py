@@ -23,7 +23,7 @@ start_time, current_date = F_1.start_inform(__file__)
 
 
 # Visit
-if 1==0:
+if 1==1:
     # A11 single timedumps #50 (if i remember correctly it's 50)
     #Database = r"euler.ethz.ch:/cluster/scratch/cfrouzak/spher_H2/postProc/fields/po_part2/po_s912k_post.nek5000"
     # A11 fist 20 timedumps
@@ -31,11 +31,11 @@ if 1==0:
 
     VP1_output_dir = VP1.Visit_projector_1(
         input_dir = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\SF_CP_analysis_pipeline_data", # storage for this script
-        Database = Database, State_range_manual = [0,3,6],
+        Database = Database, State_range_manual = [],
         Plots = ["Pseudocolor-velocity_magnitude Isosurface-temperature colorTableName-CustomBW"],
         no_annotations = 1, viewNormal = [0,0,-1], viewUp = [1,0,0], imageZoom = 1, parallelScale = 20, perspective = 0,
         Visit_projector_1_log_level = 1, Visit_projector_1_show_windows = 0,
-        output_dir_manual = "", output_dir_comment = "testing 3 images 0 3 9",
+        output_dir_manual = "", output_dir_comment = "testing first 20",
     )
 
     print("Note: Visit window can now be closed. 'VisIt: Error - Can't delete the last window' is now inconsequentioal to the remaining code")
@@ -47,7 +47,7 @@ if 1==0:
 
 
 # CP_segment_1
-if 1==0:
+if 1==1:
     #visit_images_dir = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\FB images\Visit_projections_initial_test\BW 134 ball flame - Crop"
     #visit_images_dir = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\FB images\Visit_projections_initial_test\BW 134 ball flame - Crop small"
     #visit_images_dir = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\FB images\Visit_projections_initial_test\BW 134 ball flame - Crop small two only"
@@ -63,9 +63,9 @@ if 1==0:
     #visit_images_dir = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\SF_CP_analysis_pipeline_data\Visit_Projector_1_2025-04-19_13-27-49_testing_around"
     
     # 3 images with VisIt data R_Average_VisIt
-    visit_images_dir = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\SF_CP_analysis_pipeline_data\Visit_Projector_1_2025-04-24_17-26-38_testing_3_images"
+    #visit_images_dir = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\SF_CP_analysis_pipeline_data\Visit_Projector_1_2025-04-24_17-26-38_testing_3_images"
 
-    #visit_images_dir = VP1_output_dir
+    visit_images_dir = VP1_output_dir
 
     CP_model_type = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\Python Code\msc python cellpose\CP Models"
     CP_model_type = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\Python Code\msc python cellpose\CP Models\ZGX model_UoB"
@@ -83,7 +83,7 @@ if 1==0:
 #########################################        Process Data
 
 # CP_extract_1
-if 1==0:
+if 1==1:
     # BW 134 ball flame - Crop
     #CPs1_output_dir = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\FB images\Visit_projections_initial_test\BW 134 ball flame - Crop\CP_segment_1_2025-03-12_13-42-11"
     
@@ -97,7 +97,7 @@ if 1==0:
     #CPs1_output_dir = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\SF_CP_analysis_pipeline_data\Visit_Projector_1_2025-04-19_13-27-49_testing_around\CP_segment_1_2025-04-23_17-19-50_cyto3"
 
     # images 0,3,6 with R_average
-    CPs1_output_dir = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\SF_CP_analysis_pipeline_data\Visit_Projector_1_2025-04-24_17-26-38_testing_3_images\CP_segment_1_2025-04-24_17-41-01_cyto3"
+    #CPs1_output_dir = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\SF_CP_analysis_pipeline_data\Visit_Projector_1_2025-04-24_17-26-38_testing_3_images\CP_segment_1_2025-04-24_17-41-01_cyto3"
 
 
     CPe1_output_dir = CPe1.CP_extract_1(
@@ -109,7 +109,7 @@ if 1==0:
 
 
 # CP_dimentionalise_1
-if 1==0: # Add this block to call the new function
+if 1==1: # Add this block to call the new function
 
     # first 20 images extracted
     #CPe1_output_dir = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\SF_CP_analysis_pipeline_data\Visit_Projector_1_2025-04-19_13-27-49_testing_around\CP_segment_1_2025-04-23_17-19-50_cyto3\CP_extract_1_2025-04-24_14-11-38"
@@ -137,6 +137,7 @@ if 1==0: # video to evaluate CP segmentation settings and extracted results
 
     # A11 FB poster selection
     #CPe1_output_dir = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\FB images\A11 FB poster selection\CP_segment_1_2025-03-13_15-47-30\CP_extract_1_2025-03-13_15-48-12"
+    #CPd1_output_dir = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\SF_CP_analysis_pipeline_data\Visit_Projector_1_2025-04-24_17-26-38_testing_3_images\CP_segment_1_2025-04-24_17-41-01_cyto3\CP_extract_1_2025-04-24_17-55-48\CP_dimentionalise_2_from_VisIt_R_Average_2025-04-24_17-55-49"
 
 
     CPp1_output_dir = CPp1.CP_plotter_1(
@@ -149,12 +150,12 @@ if 1==0: # video to evaluate CP segmentation settings and extracted results
 if 1==1: # plots to evaluate non dimentionalisation quality
 
     # 3 images 0,3,6 with R_average
-    CPd1_output_dir = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\SF_CP_analysis_pipeline_data\Visit_Projector_1_2025-04-24_17-26-38_testing_3_images\CP_segment_1_2025-04-24_17-41-01_cyto3\CP_extract_1_2025-04-24_17-55-48\CP_dimentionalise_2_from_VisIt_R_Average_2025-04-24_17-55-49"
+    #CPd1_output_dir = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\SF_CP_analysis_pipeline_data\Visit_Projector_1_2025-04-24_17-26-38_testing_3_images\CP_segment_1_2025-04-24_17-41-01_cyto3\CP_extract_1_2025-04-24_17-55-48\CP_dimentionalise_2_from_VisIt_R_Average_2025-04-24_17-55-49"
 
     CPp4_output_dir = CPp4.CP_plotter_4_dimentionalisation(
         input_dir = CPd1_output_dir, # Use output from CP_dimentionalise_1
         output_dir_manual = "", output_dir_comment = "",
-        video = 1, show_plot = 1, Plot_log_level = 1,
+        show_plot = 1, Plot_log_level = 1,
         # Panel_1_A11
         Panel_1_A11 = 0, A11_manual_data_base_dir = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\Data\A11_manual_extraction",
         Panel_2_Dimentionalised_from_VisIt = 1,

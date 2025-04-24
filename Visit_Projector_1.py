@@ -94,7 +94,7 @@ def Visit_projector_1(
     p.activeProfile = 1
     p.GetLaunchProfiles(1).numProcessors = 4
     p.GetLaunchProfiles(1).numNodes = 1
-    p.GetLaunchProfiles(1).timeLimit = "00:30:00"
+    p.GetLaunchProfiles(1).timeLimit = "02:00:00"
     vi.OpenComputeEngine(p)
     print("launched compute engine \n") if Visit_projector_1_log_level > 0 else None
 

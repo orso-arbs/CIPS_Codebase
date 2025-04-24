@@ -1,26 +1,43 @@
+import matplotlib.pyplot as plt
 import pandas as pd
+import numpy as np
 
-Plots = ["Pseudocolor-velocity_magnitude Isosurface-temperature3"], # Plots
-Image_filenames_VisIt = ["0.png", "1.png", "2.png", "3.png",]
-State_range = [0, 1, 2, 3] # State range for each image
-Times_VisIt = [0.0, 0.1, 0.2, 0.3] # Times for each image
-R_Average_VisIt = [0.5, 0.6, 0.7, 0.8] # R_Average for each image
+def test_ax1_and_twin():
+    # Mock data similar to what your dataframe likely contains
+    time = np.linspace(0, 1, 100)
+    R_SF_nonDim = np.sin(2 * np.pi * time) * 0.5 + 1
+    R_SF_px = np.cos(2 * np.pi * time) * 10 + 50
 
-VisIt_data_df = pd.DataFrame({
-    'Plot': Plots[0] * len(State_range),
-    'Image_filename_VisIt': Image_filenames_VisIt,
-    'State_range_VisIt': State_range,
-    'Time_VisIt': Times_VisIt,
-    'R_Average_VisIt': R_Average_VisIt,
+    dimentionalised_df = pd.DataFrame({
+        'Time_VisIt': time,
+        'R_SF_nonDim': R_SF_nonDim,
+        'R_SF_px': R_SF_px,
     })
 
+    fig, (ax_1, ax_2, ax_3, ax_4) = plt.subplots(4, 1, figsize=(8, 10))
 
-extracted_df.at[i, 'Plot_VisIt'] = VisIt_data[i]
-extracted_df.at[i, 'Image_filename_VisIt'] = VisIt_data[i]
-extracted_df.at[i, 'State_range_VisIt'] = VisIt_data[i]
-extracted_df.at[i, 'Time_VisIt'] = VisIt_data[i]
-extracted_df.at[i, 'R_Average_VisIt'] = VisIt_data[i]
+    # Subplot 1: R_SF_nonDim and R_SF_px vs time
+    ax_1.plot(dimentionalised_df['Time_VisIt'], dimentionalised_df['R_SF_nonDim'],
+              label="R_SF_nonDim", color='orange', linestyle='solid')
+    ax_1.set_xlabel('Time')
+    ax_1.set_ylabel("R_SF_nonDim", color='orange')
+    ax_1.tick_params(axis='y', labelcolor='orange')
+    ax_1.spines["left"].set_position(("outward", 0))
+    ax_1.set_title('Spherical Flame Radius Comparison of nondimensionalised ($d_L$) vs px\nof VisIt')
 
+    # Twin axis
+    ax_1_twin = ax_1.twinx()
+    ax_1_twin.plot(dimentionalised_df['Time_VisIt'], dimentionalised_df['R_SF_px'],
+                   label="R_SF_px", color='orange', linestyle='dashed')
+    ax_1.spines['right'].set_visible(False)
+    ax_1_twin.set_ylabel("R_SF_px", color='orange')
+    ax_1_twin.tick_params(axis='y', labelcolor='orange', colors='orange')
+    ax_1_twin.spines["right"].set_linestyle('dashed')
+    ax_1_twin.spines["right"].set_color('orange')
+    ax_1_twin.spines["right"].set_position(("outward", 0))
 
+    fig.tight_layout()
+    plt.show()
 
-print(VisIt_data_df)
+# Run the test
+test_ax1_and_twin()

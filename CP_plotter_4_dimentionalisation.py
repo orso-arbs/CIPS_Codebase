@@ -4,6 +4,7 @@ import os
 import pandas as pd
 import matplotlib.gridspec as gridspec
 import matplotlib.ticker as mticker
+import matplotlib.ticker as ticker
 import matplotlib.lines as mlines
 plt.rcParams['text.usetex'] = False  # Keep False unless you have a full LaTeX installation
 
@@ -19,7 +20,7 @@ import video_maker_1 as vm1
 def CP_plotter_4_dimentionalisation(input_dir, # Format_1 requires input_dir
     dimentionalised_df = None, # if None a .pkl file has to be in the input_dir. otherwise no CP_extract data is provided.
     output_dir_manual = "", output_dir_comment = "",
-    video = 1, show_plot = 1, Plot_log_level = 0,
+    show_plot = 1, Plot_log_level = 0,
     Panel_1_A11 = 0, A11_manual_data_base_dir = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\Data\A11_manual_extraction",
     Panel_2_Dimentionalised_from_VisIt = 0,
     ):
@@ -158,47 +159,52 @@ def CP_plotter_4_dimentionalisation(input_dir, # Format_1 requires input_dir
         # Find the maximum frequency for all histograms
         max_diameter = max([diameter for sublist in dimentionalised_df['diameter_distribution_nonDim'] for diameter in sublist])
     
-        fig, (ax_1, ax_2, ax_3, ax_4) = plt.subplots(4, 1, figsize=(8, 10))  # 2 rows, 1 column
+        fig, (ax_1, ax_2, ax_3) = plt.subplots(3, 1, figsize=(8, 10), sharex=True, gridspec_kw={'hspace': 0})  # 2 rows, 1 column
         
-        # Subplot 1:
-        ax_1.plot(dimentionalised_df['Time_VisIt'], dimentionalised_df['R_SF_nonDim'], label="R_SF_nonDim", color='olive', linestyle='solid')
+        # Subplot 1: R_SF_nonDim and R_SF_px vs time
+        ax_1.plot(dimentionalised_df['Time_VisIt'], dimentionalised_df['R_SF_nonDim'], label="R_SF_nonDim", color='orange', linestyle='solid')
         ax_1.set_xlabel('Time')
-        ax_1.set_ylabel('Radius')
-        ax_1.set_title('Spherical Flame Radius Comparison of nondimentionalised ($d_L$) vs px')
-        ax_1.legend(loc='upper left')
+        ax_1.set_ylabel("R_SF_nonDim")
+        ax_1.set_title('Spherical Flame Radius')
 
-        # Twin axes 1
         ax_1_twin = ax_1.twinx()  # Create a twin axes sharing the same x-axis
-        ax_1_twin.plot(dimentionalised_df['Time_VisIt'], dimentionalised_df['R_SF_px'], label="R_SF_px", color='green', linestyle='dashed')
+        ax_1_twin.plot(dimentionalised_df['Time_VisIt'], dimentionalised_df['R_SF_px'], label="R_SF_px", color='orange', linestyle='dashed')
+        ax_1_twin.set_ylabel("R_SF_px")
         ax_1_twin.spines["right"].set_position(("outward", 0))  # Slightly to the right
 
-        # Second axis for d_T_per_px
-        ax_2.plot(dimentionalised_df['Time_VisIt'], dimentionalised_df['d_T_per_px'], label="d_T_per_px", color='blue', linestyle='solid')
-        ax_2.set_ylabel('d_T_per_px', color='blue')
-        ax_2.tick_params(axis='y', labelcolor='blue')
-        ax_2.legend(loc='upper left')
+        lines1, labels1 = ax_1.get_legend_handles_labels()
+        lines2, labels2 = ax_1_twin.get_legend_handles_labels()
+        ax_1.legend(lines1 + lines2, labels1 + labels2, loc='upper left')
 
+        ax_1.tick_params(axis='x', top=True, labeltop=True)
+        ax_1.grid(True, which='both', axis='x', linestyle='--', color='gray', alpha=0.5)
 
         # Third axis for diameter_mean_nonDim
-        ax_3.plot(dimentionalised_df['Time_VisIt'], dimentionalised_df['diameter_mean_nonDim'], label="diameter_mean_nonDim", color='red', linestyle='solid')
-        ax_3.set_ylabel('diameter_mean_nonDim', color='red')
-        ax_3.tick_params(axis='y', labelcolor='red')
+        ax_2.plot(dimentionalised_df['Time_VisIt'], dimentionalised_df['diameter_mean_nonDim'], label="diameter_mean_nonDim", color='blue', linestyle='solid')
+        ax_2.set_xlabel('Time')
+        ax_2.set_ylabel("R_SF_nonDim")
+        ax_2.set_title('Spherical Flame Radius\n------------------------')
+
+        ax_2_twin = ax_2.twinx()  # Create a twin axes sharing the same x-axis
+        ax_2_twin.plot(dimentionalised_df['Time_VisIt'], dimentionalised_df['diameter_mean_px'], label="diameter_mean_px", color='green', linestyle='solid')
+        ax_1_twin.set_ylabel("diameter_mean_px")
+        ax_2_twin.spines["right"].set_position(("outward", 0))  # Slightly to the right
+
+        lines1, labels1 = ax_2.get_legend_handles_labels()
+        lines2, labels2 = ax_2_twin.get_legend_handles_labels()
+        ax_2.legend(lines1 + lines2, labels1 + labels2, loc='upper left')
+        ax_2.grid(True, which='both', axis='x', linestyle='--', color='gray', alpha=0.5)
+
+        # Subplot 3: d_T_per_px vs time
+        ax_3.plot(dimentionalised_df['Time_VisIt'], dimentionalised_df['d_T_per_px'], label="d_T_per_px", color='black', linestyle='solid')
+        ax_3.set_xlabel('Time')
+        ax_3.set_ylabel("d_T_per_px")
+        ax_3.set_title('Spherical Flame Radius')
+        #ax_3.xaxis.set_major_formatter(ticker.ScalarFormatter())
+        #ax_3.ticklabel_format(style='sci', axis='y', scilimits=(0, 0))  # Enable scientific notation
+
         ax_3.legend(loc='upper left')
-
-
-        ax_3_twin = ax_3.twinx()  # Create a twin axes sharing the same x-axis
-        ax_3_twin.plot(dimentionalised_df['Time_VisIt'], dimentionalised_df['diameter_mean_px'], label="diameter_mean_px", color='green', linestyle='dashed')
-        ax_3_twin.spines["right"].set_position(("outward", 0))  # Slightly to the right
-
-        # # Collect handles and labels from all axes
-        # handles, labels = [], []
-        # for ax in [ax_1, ax_1_twin, ax_1_twin2, ax_1_twin3, ax_2, ax_3, ax_3_twin]:
-        #     h, l = ax.get_legend_handles_labels()
-        #     handles.extend(h)
-        #     labels.extend(l)
-
-        # # Add a unified legend for the entire figure
-        # ax_4.legend(handles, labels, loc='center', ncol=1)  # Place legend at the center of ax_4
+        ax_3.grid(True, which='both', axis='x', linestyle='--', color='gray', alpha=0.5)
 
         # Adjust layout and save the figure as a PNG file
         plt.legend()
