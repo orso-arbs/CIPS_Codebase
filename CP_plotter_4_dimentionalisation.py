@@ -17,10 +17,11 @@ import video_maker_1 as vm1
 
 @F_1.ParameterLog(max_size = 1024 * 10) # 10KB 
 def CP_plotter_4_dimentionalisation(input_dir, # Format_1 requires input_dir
-    CP_extract_df = None, # if None a .pkl file has to be in the input_dir. otherwise no CP_extract data is provided.
+    dimentionalised_df = None, # if None a .pkl file has to be in the input_dir. otherwise no CP_extract data is provided.
     output_dir_manual = "", output_dir_comment = "",
     video = 1, show_plot = 1, Plot_log_level = 0,
-    Panel_1_A11 = 1, A11_manual_data_base_dir = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\Data\A11_manual_extraction",
+    Panel_1_A11 = 0, A11_manual_data_base_dir = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\Data\A11_manual_extraction",
+    Panel_2_Dimentionalised_from_VisIt = 0,
     ):
 
     #################################################### I/O
@@ -31,23 +32,23 @@ def CP_plotter_4_dimentionalisation(input_dir, # Format_1 requires input_dir
     pkl_files = glob.glob(os.path.join(input_dir, "*.pkl"))
 
     if pkl_files:
-        CP_extract_df_pkl = pkl_files[0] # If a .pkl file exists, use it as the pickle file path. If multiple .pkl files exist the first is used.
+        dimentionalised_df_pkl = pkl_files[0] # If a .pkl file exists, use it as the pickle file path. If multiple .pkl files exist the first is used.
     else:
-        CP_extract_df_pkl = None
+        dimentionalised_df_pkl = None
 
-    if CP_extract_df is None and CP_extract_df_pkl is None:
+    if dimentionalised_df is None and dimentionalised_df_pkl is None:
         raise ValueError("No CP_extract data provided. Provide Data.")
-    elif CP_extract_df is None and CP_extract_df_pkl is not None:
-        print(f"Loading CP_extract data from pickle file {os.path.basename(CP_extract_df_pkl)}")
-        CP_extract_df = pd.read_pickle(CP_extract_df_pkl)
-    elif CP_extract_df is not None and CP_extract_df_pkl is None:
+    elif dimentionalised_df is None and dimentionalised_df_pkl is not None:
+        print(f"Loading CP_extract data from pickle file {os.path.basename(dimentionalised_df_pkl)}")
+        dimentionalised_df = pd.read_pickle(dimentionalised_df_pkl)
+    elif dimentionalised_df is not None and dimentionalised_df_pkl is None:
         print("Loading CP_extract data from passed DataFrame in function argument")
-        # No action needed since CP_extract_df is already passed
-    elif CP_extract_df is not None and CP_extract_df_pkl is not None:
-        print("Both CP_extract_df and CP_extract_df_pkl provided. Using data from passed DataFrame in function argument")
-        # No action needed since CP_extract_df is already passed
+        # No action needed since dimentionalised_df is already passed
+    elif dimentionalised_df is not None and dimentionalised_df_pkl is not None:
+        print("Both dimentionalised_df and dimentionalised_df_pkl provided. Using data from passed DataFrame in function argument")
+        # No action needed since dimentionalised_df is already passed
     else:
-        raise ValueError("Loading CP_extract data disambiguation failed. Check CP_extract_df and CP_extract_df_pkl")
+        raise ValueError("Loading CP_extract data disambiguation failed. Check dimentionalised_df and dimentionalised_df_pkl")
 
 
 
@@ -71,16 +72,16 @@ def CP_plotter_4_dimentionalisation(input_dir, # Format_1 requires input_dir
         # auxillary function to plot the data
 
         # Number of rows in the DataFrame
-        N_images = len(CP_extract_df)
+        N_images = len(dimentionalised_df)
 
         # Find the maximum frequency for all histograms
-        max_diameter = max([diameter for sublist in CP_extract_df['diameter_distribution_nonDim'] for diameter in sublist])
+        max_diameter = max([diameter for sublist in dimentionalised_df['diameter_distribution_nonDim'] for diameter in sublist])
     
         print("\nPlotting Panel 1: dimentionalisation with A11 manually extracted data from the thesis\n") if Plot_log_level >= 1 else None
         fig, (ax_1, ax_2, ax_3, ax_4) = plt.subplots(4, 1, figsize=(8, 10))  # 2 rows, 1 column
         
         # Subplot 1:
-        ax_1.plot(CP_extract_df['time'], CP_extract_df['R_SF_nonDim'], label="R_SF_nonDim", color='olive', linestyle='solid')
+        ax_1.plot(dimentionalised_df['time'], dimentionalised_df['R_SF_nonDim'], label="R_SF_nonDim", color='olive', linestyle='solid')
         ax_1.set_xlabel('Time')
         ax_1.set_ylabel('Radius')
         ax_1.set_title('Spherical Flame Radius Comparison')
@@ -93,33 +94,33 @@ def CP_plotter_4_dimentionalisation(input_dir, # Format_1 requires input_dir
 
         # Twin axes 2
         ax_1_twin2 = ax_1.twinx()  # Create a twin axes sharing the same x-axis
-        ax_1_twin2.plot(CP_extract_df['time'], CP_extract_df['D_SF_px'], label="D_SF_px", color='blue', linestyle='dashed')
+        ax_1_twin2.plot(dimentionalised_df['time'], dimentionalised_df['D_SF_px'], label="D_SF_px", color='blue', linestyle='dashed')
         ax_1_twin2.spines["right"].set_position(("outward", 40))  # Slightly to the right
 
         # Calculate R_mean_interpolated_i
         ax_1_twin3 = ax_1.twinx()  # Create a twin axes sharing the same x-axis
-        CP_extract_df['R_mean_interpolated_i'] = (CP_extract_df['d_T_per_px'] * CP_extract_df['D_SF_px']) / 2
-        ax_1_twin3.plot(CP_extract_df['time'], CP_extract_df['R_mean_interpolated_i'], label="R_mean_interpolated_i", color='black', linestyle='solid')
+        dimentionalised_df['R_mean_interpolated_i'] = (dimentionalised_df['d_T_per_px'] * dimentionalised_df['D_SF_px']) / 2
+        ax_1_twin3.plot(dimentionalised_df['time'], dimentionalised_df['R_mean_interpolated_i'], label="R_mean_interpolated_i", color='black', linestyle='solid')
         ax_1_twin3.set_ylabel('R_mean_interpolated_i', color='black')
         ax_1_twin3.tick_params(axis='y', labelcolor='black')
         ax_1_twin3.spines["right"].set_position(("outward", 80))  # Slightly to the right
 
         # Second axis for d_T_per_px
-        ax_2.plot(CP_extract_df['time'], CP_extract_df['d_T_per_px'], label="d_T_per_px", color='blue', linestyle='solid')
+        ax_2.plot(dimentionalised_df['time'], dimentionalised_df['d_T_per_px'], label="d_T_per_px", color='blue', linestyle='solid')
         ax_2.set_ylabel('d_T_per_px', color='blue')
         ax_2.tick_params(axis='y', labelcolor='blue')
         ax_2.legend(loc='upper left')
 
 
         # Third axis for diameter_mean_nonDim
-        ax_3.plot(CP_extract_df['time'], CP_extract_df['diameter_mean_nonDim'], label="diameter_mean_nonDim", color='red', linestyle='solid')
+        ax_3.plot(dimentionalised_df['time'], dimentionalised_df['diameter_mean_nonDim'], label="diameter_mean_nonDim", color='red', linestyle='solid')
         ax_3.set_ylabel('diameter_mean_nonDim', color='red')
         ax_3.tick_params(axis='y', labelcolor='red')
         ax_3.legend(loc='upper left')
 
 
         ax_3_twin = ax_3.twinx()  # Create a twin axes sharing the same x-axis
-        ax_3_twin.plot(CP_extract_df['time'], CP_extract_df['diameter_mean_px'], label="diameter_mean_px", color='green', linestyle='dashed')
+        ax_3_twin.plot(dimentionalised_df['time'], dimentionalised_df['diameter_mean_px'], label="diameter_mean_px", color='green', linestyle='dashed')
         ax_3_twin.spines["right"].set_position(("outward", 0))  # Slightly to the right
 
         # # Collect handles and labels from all axes
@@ -142,5 +143,73 @@ def CP_plotter_4_dimentionalisation(input_dir, # Format_1 requires input_dir
 
         print("\n") # new line
 
+
+    if Panel_2_Dimentionalised_from_VisIt == 1:
+
+        print("\nPlotting Panel 2: dimentionalisation from VisIt\n") if Plot_log_level >= 1 else None
+
+        #################################################### Plotting
+
+        # auxillary function to plot the data
+
+        # Number of rows in the DataFrame
+        N_images = len(dimentionalised_df)
+
+        # Find the maximum frequency for all histograms
+        max_diameter = max([diameter for sublist in dimentionalised_df['diameter_distribution_nonDim'] for diameter in sublist])
     
+        fig, (ax_1, ax_2, ax_3, ax_4) = plt.subplots(4, 1, figsize=(8, 10))  # 2 rows, 1 column
+        
+        # Subplot 1:
+        ax_1.plot(dimentionalised_df['Time_VisIt'], dimentionalised_df['R_SF_nonDim'], label="R_SF_nonDim", color='olive', linestyle='solid')
+        ax_1.set_xlabel('Time')
+        ax_1.set_ylabel('Radius')
+        ax_1.set_title('Spherical Flame Radius Comparison of nondimentionalised ($d_L$) vs px')
+        ax_1.legend(loc='upper left')
+
+        # Twin axes 1
+        ax_1_twin = ax_1.twinx()  # Create a twin axes sharing the same x-axis
+        ax_1_twin.plot(dimentionalised_df['Time_VisIt'], dimentionalised_df['R_SF_px'], label="R_SF_px", color='green', linestyle='dashed')
+        ax_1_twin.spines["right"].set_position(("outward", 0))  # Slightly to the right
+
+        # Second axis for d_T_per_px
+        ax_2.plot(dimentionalised_df['Time_VisIt'], dimentionalised_df['d_T_per_px'], label="d_T_per_px", color='blue', linestyle='solid')
+        ax_2.set_ylabel('d_T_per_px', color='blue')
+        ax_2.tick_params(axis='y', labelcolor='blue')
+        ax_2.legend(loc='upper left')
+
+
+        # Third axis for diameter_mean_nonDim
+        ax_3.plot(dimentionalised_df['Time_VisIt'], dimentionalised_df['diameter_mean_nonDim'], label="diameter_mean_nonDim", color='red', linestyle='solid')
+        ax_3.set_ylabel('diameter_mean_nonDim', color='red')
+        ax_3.tick_params(axis='y', labelcolor='red')
+        ax_3.legend(loc='upper left')
+
+
+        ax_3_twin = ax_3.twinx()  # Create a twin axes sharing the same x-axis
+        ax_3_twin.plot(dimentionalised_df['Time_VisIt'], dimentionalised_df['diameter_mean_px'], label="diameter_mean_px", color='green', linestyle='dashed')
+        ax_3_twin.spines["right"].set_position(("outward", 0))  # Slightly to the right
+
+        # # Collect handles and labels from all axes
+        # handles, labels = [], []
+        # for ax in [ax_1, ax_1_twin, ax_1_twin2, ax_1_twin3, ax_2, ax_3, ax_3_twin]:
+        #     h, l = ax.get_legend_handles_labels()
+        #     handles.extend(h)
+        #     labels.extend(l)
+
+        # # Add a unified legend for the entire figure
+        # ax_4.legend(handles, labels, loc='center', ncol=1)  # Place legend at the center of ax_4
+
+        # Adjust layout and save the figure as a PNG file
+        plt.legend()
+        plt.tight_layout()
+        plot_filename = os.path.join(output_dir, f'plot_panel.png')
+        plt.savefig(plot_filename)
+        plt.show() if show_plot == 1 else None
+        plt.close(fig)
+
+        print("\n") # new line
+
+
+
     return output_dir

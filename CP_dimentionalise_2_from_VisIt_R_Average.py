@@ -9,7 +9,7 @@ from cellpose import utils # Needed for utils.diameters
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
 @F_1.ParameterLog(max_size = 1024 * 10, log_level = 0)
-def CP_dimentionalise_1_from_manual_A11(
+def CP_dimentionalise_2_from_VisIt_R_Average(
     # input
     input_dir, # Should be the output directory of CP_extract_1
 
@@ -39,6 +39,7 @@ def CP_dimentionalise_1_from_manual_A11(
     # Get number of images/rows from loaded data
     N_images = len(extracted_df)
 
+
     #################################################### Reference Values
 
     # reference values
@@ -60,6 +61,15 @@ def CP_dimentionalise_1_from_manual_A11(
     # length -> length / flame thickness
     # speed -> speed / flame speed
 
+
+
+
+
+
+
+
+
+
     #################### Initialise DataFrame for non-dimensionalisation
 
     # Create a copy to avoid modifying the loaded CP_exctract DataFrame 
@@ -73,28 +83,19 @@ def CP_dimentionalise_1_from_manual_A11(
     for col in nonDim_columns:
         dimentionalised_df[col] = np.nan  # Initialize them with NaN
 
-    #################### Match time values for each DataFrame row to the manually extracted A11 data
+    #################### Calculate ratio of nonDimensionalised length per pixel (d_T_per_px)
 
-
-    # Ensure 'diameter_distribution_nonDim' column exists and has dtype 'object'
-    if 'diameter_distribution_nonDim' not in dimentionalised_df.columns:
-        dimentionalised_df['diameter_distribution_nonDim'] = pd.Series(dtype="object")
-    else:
-        # Ensure existing column can hold lists/arrays if it wasn't already object type
-        if dimentionalised_df['diameter_distribution_nonDim'].dtype != 'object':
-             dimentionalised_df['diameter_distribution_nonDim'] = dimentionalised_df['diameter_distribution_nonDim'].astype(object)
-
-
-    #### Calculate pixel to nonDimensionalised length scaling (d_T_per_px)
-
-
-    # Calculate d_T_per_px = (R_mean_nonDim * d_T) / R_SF_px
-    # Or if R_mean in A11 is dimensional: d_T_per_px = R_mean_interpolated_dim / R_SF_px
-    # Assuming A11 R_mean is non-dimensionalized by d_T as per typical flame analysis
-    dimentionalised_df['d_T_per_px'] = (dimentionalised_df['R_mean_interpolated_nonDim'] * d_T) / dimentionalised_df['R_SF_px']
+    print("NOTE: assuming VisIt data is in nonDImentionalised scaling d_T to calculate ratio of nonDimensionalised length per pixel (d_T_per_px)")
+    # d_T_per_px = (R_mean_nonDim * d_T) / R_SF_px
+    dimentionalised_df['d_T_per_px'] = (dimentionalised_df['R_SF_Average_VisIt'] * d_T) / dimentionalised_df['R_SF_px']
     print("Calculated d_T_per_px:", dimentionalised_df['d_T_per_px'].to_string()) if CP_dimentionalise_log_level >= 1 else None
 
-    # Calculate non-dimensionalised values row by row (vectorization might be faster if needed)
+
+
+
+    #################### Calculate non-dimensionalised values 
+
+    # row by row (by Image) (vectorization might be faster if needed)
     for i in dimentionalised_df.index: # Use index after sorting
         print("Processing row index =", i) if CP_dimentionalise_log_level >= 2 else None
 
@@ -119,6 +120,13 @@ def CP_dimentionalise_1_from_manual_A11(
         diameter_median_nonDim_i = diameter_median_px_i * d_T_per_px_i if pd.notna(diameter_median_px_i) else np.nan
         diameter_mean_nonDim_i = diameter_mean_px_i * d_T_per_px_i if pd.notna(diameter_mean_px_i) else np.nan
 
+        # Ensure 'diameter_distribution_nonDim' column exists and has dtype 'object'
+        if 'diameter_distribution_nonDim' not in dimentionalised_df.columns:
+            dimentionalised_df['diameter_distribution_nonDim'] = pd.Series(dtype="object")
+        else:
+            # Ensure existing column can hold lists/arrays if it wasn't already object type
+            if dimentionalised_df['diameter_distribution_nonDim'].dtype != 'object':
+                dimentionalised_df['diameter_distribution_nonDim'] = dimentionalised_df['diameter_distribution_nonDim'].astype(object)
         # Handle potential issues with diameter_distribution_px (e.g., if it's NaN or not an array)
         if isinstance(diameter_distribution_px_i, np.ndarray):
             diameter_distribution_nonDim_i = diameter_distribution_px_i * d_T_per_px_i
@@ -154,7 +162,7 @@ def CP_dimentionalise_1_from_manual_A11(
     # Clean diameter_distribution_nonDim again after loop if necessary (e.g., ensure arrays)
     # This might not be needed if handled correctly within the loop
     dimentionalised_df['diameter_distribution_nonDim'] = dimentionalised_df['diameter_distribution_nonDim'].apply(
-         lambda x: np.array([x]) if isinstance(x, np.ndarray) and x.ndim == 0 else x
+        lambda x: np.array([x]) if isinstance(x, np.ndarray) and x.ndim == 0 else x
     )
 
 

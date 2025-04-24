@@ -100,10 +100,10 @@ def CP_extract_1(
     # Load VisIt data (VisIt data not images)
     VisIt_output_dir = os.path.abspath(os.path.join(input_dir, os.pardir))
     VisIt_data_dir = f"{VisIt_output_dir}\Visit_projector_1_data.pkl"
-    VisIt_data = pd.read_pickle(VisIt_data_dir)
+    VisIt_data_df = pd.read_pickle(VisIt_data_dir)
     print(f"VisIt_output_dir: {VisIt_output_dir}") if CP_extract_log_level >= 2 else None
     print(f"VisIt_data_dir: {VisIt_data_dir}") if CP_extract_log_level >= 2 else None
-    print(f"VisIt_data: {VisIt_data}") if CP_extract_log_level >= 2 else None
+    print(f"VisIt_data: {VisIt_data_df}") if CP_extract_log_level >= 2 else None
 
     # Load image data (could be VisIt output images)
     image_input_dir = os.path.dirname(input_dir) # one folder above
@@ -207,7 +207,7 @@ def CP_extract_1(
             extracted_df[col] = extracted_df[col].astype('object')
 
 
-    ## Extract data by looping through each image and its segmentation
+    ## Extract data by looping through each image and its segmentation for better controll (computationally more expensive but its ok)
     for i in range(N_images):
         image_i = all_images[i]
         grayscale_image_i = all_grayscale_images[i]
@@ -259,6 +259,12 @@ def CP_extract_1(
         
 
         ### Fill a DataFrame row
+        # Data from VisIt
+        extracted_df.at[i, 'Plot_VisIt']                = VisIt_data_df.at[i, 'Plot_VisIt']
+        extracted_df.at[i, 'Image_filename_VisIt']      = VisIt_data_df.at[i, 'Image_filename_VisIt']
+        extracted_df.at[i, 'State_range_VisIt']         = VisIt_data_df.at[i, 'State_range_VisIt']
+        extracted_df.at[i, 'Time_VisIt']                = VisIt_data_df.at[i, 'Time_VisIt']
+        extracted_df.at[i, 'R_SF_Average_VisIt']        = VisIt_data_df.at[i, 'R_SF_Average_VisIt']
         # Data from Images
         extracted_df.at[i, 'image_file_name'] = os.path.basename(image_files[i]) # Store only filename
         extracted_df.at[i, 'image_file_path'] = image_files[i]

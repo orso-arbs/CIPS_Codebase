@@ -520,13 +520,14 @@ def Visit_projector_1(
 
     Image_filenames_VisIt = []
     Times_VisIt = []
-    R_Average_VisIt = []
+    R_SF_Average_VisIt = []
 
     # Loop once through all states (t's)
     for state in State_range: 
+        print("state = ", state) if Visit_projector_1_log_level > 0 else None
+        
         # set state
         vi.SetTimeSliderState(state)
-        print("state = ", state) if Visit_projector_1_log_level > 0 else None
 
         # save window as .png image
         Image_filenames_VisIt_state = f"visit_{state:06}"
@@ -544,19 +545,19 @@ def Visit_projector_1(
 
         vi.ChangeActivePlotsVar("R")
         vi.Query("Average Value")
-        R_Average_state = vi.GetQueryOutputValue()
-        R_Average_VisIt.append(R_Average_state)
-        print(f"saved R_Average_state for file {state:06d}\n", end='\r') if Visit_projector_1_log_level > 0 else None
+        R_SF_Average_state = vi.GetQueryOutputValue()
+        R_SF_Average_VisIt.append(R_SF_Average_state)
+        print(f"saved R_Average_state = {R_SF_Average_state} for file {state:06d}\n", end='\r') if Visit_projector_1_log_level > 0 else None
 
 
     #################################################### save data
 
     VisIt_data_df = pd.DataFrame({
-        'Plot': Plots,
+        'Plot_VisIt': Plots[0] * len(State_range),
         'Image_filename_VisIt': Image_filenames_VisIt,
         'State_range_VisIt': State_range,
         'Time_VisIt': Times_VisIt,
-        'R_Average_VisIt': R_Average_VisIt,
+        'R_SF_Average_VisIt': R_SF_Average_VisIt,
         })
     print(VisIt_data_df)
 
