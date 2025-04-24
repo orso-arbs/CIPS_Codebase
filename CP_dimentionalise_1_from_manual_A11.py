@@ -9,7 +9,7 @@ from cellpose import utils # Needed for utils.diameters
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
 @F_1.ParameterLog(max_size = 1024 * 10, log_level = 0)
-def CP_dimentionalise_1(
+def CP_dimentionalise_1_from_manual_A11(
     # input
     input_dir, # Should be the output directory of CP_extract_1
 
@@ -18,12 +18,15 @@ def CP_dimentionalise_1(
     output_dir_manual = "", output_dir_comment = "",
     ):
     """
-    Loads extracted segmentation data, non-dimensionalizes metrics using A11 data,
+    WARNING: might be wrong! Use at own risk
+
+    Loads extracted segmentation data, non-dimensionalizes metrics using A11 data as taken manually from the Altantzis PHD thesis
     and saves the results to a pandas DataFrame.
 
     This function reads the DataFrame produced by CP_extract_1 (expected to be
     'extracted_DataFrame.pkl' in the input_dir). It then loads external A11
-    simulation data, calculates a time mapping based on image numbers, interpolates
+    simulation data which was manually gathered from the thesis .pdf,
+    calculates a time mapping based on image numbers, interpolates
     A11 flame radius data (R_mean) to determine a scaling factor (d_T_per_px)
     for each image/time step. Using this scaling factor, it calculates
     non-dimensional versions of various metrics (diameters, areas) and appends
@@ -62,9 +65,9 @@ def CP_dimentionalise_1(
     - Requires external data files containing A11 simulation results located at
       fixed paths (e.g., "C:\\Users\\obs\\OneDrive\\ETH\\ETH_MSc\\Masters Thesis\\Data\\A11_manual_extraction\\...").
     - Assumes the input DataFrame contains necessary columns like 'image_number',
-      'R_FB_px', 'diameter_training_px', 'diameter_estimate_used_px', etc.
+      'R_SF_px', 'diameter_training_px', 'diameter_estimate_used_px', etc.
     - The non-dimensionalization process maps image sequence numbers linearly to a
-      simulation time range [0, t_max=6.81] and uses interpolated A11 data (specifically
+      simulation time range [0, t_A11_max=6.81] and uses interpolated A11 data (specifically
       `A11_SF_R_mean`) to determine the scaling factor `d_T_per_px`.
     """
     #################################################### I/O
@@ -83,7 +86,7 @@ def CP_dimentionalise_1(
 
     N_images = len(extracted_df) # Get number of images/rows from loaded data
 
-    #################################################### Images and A11 data for Non-Dimensionalization
+    #################################################### Images and A11 data
 
     print("\n Non Dimentionalising and matching CP and A11 data \n") if CP_dimentionalise_log_level >= 1 else None
 
@@ -119,13 +122,29 @@ def CP_dimentionalise_1(
 
     t_ref = d_T/S_L # flame time scale [s]
 
-    t_max = 6.81 # max time estimated from plots [s] - Check if this is non-dim or dimensional time
+    t_A11_init = 0.0 # initial time [-]
+    t_A11_max = 6.81 # max time estimated from plots [-]
     R0 = 10 * d_T # initial Spherical flame radius [m]
 
-    # Create a copy to avoid modifying the original DataFrame loaded
-    dimentionalised_df = extracted_df.copy()
 
-    # Calculate the time values for each DataFrame row
+#################################################### Non-Dimensionalization from A11 manually extracted data
+
+    # length -> length / flame thickness
+    # speed -> speed / flame speed
+
+    #################### Initialise DataFrame for non-dimensionalisation
+
+    # Create a copy to avoid modifying the loaded CP_exctract DataFrame 
+    dimentionalised_df = extracted_df.copy()
+    # Add non-dimensional columns to the new DataFrame
+    nonDim_columns = [
+        'd_T_per_px', 'image_Nx_nonDim', 'image_Ny_nonDim', 'diameter_training_nonDim', 'diameter_estimate_used_nonDim',
+        'diameter_mean_nonDim', 'diameter_median_nonDim', 'diameter_distribution_nonDim',
+        'A_image_nonDim2', 'A_empty_nonDim2', 'A_SF_nonDim2', 'D_SF_nonDim', 'R_SF_nonDim', 'A_CP_mask_nonDim',
+    ]
+
+    #################### Match time values for each DataFrame row to the manually extracted A11 data
+
     dimentionalised_df['time'] = np.nan # initialize time collumn filled with nan
     min_image_num = dimentionalised_df["image_number"].min()
     max_image_num = dimentionalised_df["image_number"].max()
@@ -136,17 +155,11 @@ def CP_dimentionalise_1(
         dimentionalised_df["time"] = 0  # Assign 0 to all if there's no range
         print("Warning in dimensionalisation: min_image_num == max_image_num. Setting time to 0.")
     else:
-        # Linear mapping from [min_image_num, max_image_num] to [0, t_max]
-        dimentionalised_df["time"] = (dimentionalised_df["image_number"] - min_image_num) / (max_image_num - min_image_num) * t_max
+        # Linear mapping from [min_image_num, max_image_num] to [0, t_A11_max]
+        dimentionalised_df["time"] = (dimentionalised_df["image_number"] - min_image_num) / (max_image_num - min_image_num) * t_A11_max
         print("dimentionalised_df['time']:", dimentionalised_df["time"].to_string()) if CP_dimentionalise_log_level >= 1 else None
 
 
-    # Add non-dimensional columns to the DataFrame
-    nonDim_columns = [
-        'd_T_per_px', 'image_Nx_nonDim', 'image_Ny_nonDim', 'diameter_training_nonDim', 'diameter_estimate_used_nonDim',
-        'diameter_mean_nonDim', 'diameter_median_nonDim', 'diameter_distribution_nonDim',
-        'A_image_nonDim2', 'A_empty_nonDim2', 'A_FB_nonDim2', 'D_FB_nonDim', 'R_FB_nonDim', 'A_CP_mask_nonDim',
-    ]
     # Add these columns to the existing DataFrame
     for col in nonDim_columns:
         dimentionalised_df[col] = np.nan  # Initialize them with NaN
@@ -160,7 +173,8 @@ def CP_dimentionalise_1(
              dimentionalised_df['diameter_distribution_nonDim'] = dimentionalised_df['diameter_distribution_nonDim'].astype(object)
 
 
-    # Calculate pixel to nonDimensionalised length scaling (d_T_per_px)
+    #### Calculate pixel to nonDimensionalised length scaling (d_T_per_px)
+
     # Sort both dataframes by time for interpolation
     A11_SF_R_mean = A11_SF_R_mean.sort_values(by='time')
     dimentionalised_df = dimentionalised_df.sort_values(by='time')
@@ -173,10 +187,10 @@ def CP_dimentionalise_1(
         A11_SF_R_mean['R_mean'] # Assuming A11 R_mean is already non-dimensionalized by d_T
     )
 
-    # Calculate d_T_per_px = (R_mean_nonDim * d_T) / R_FB_px
-    # Or if R_mean in A11 is dimensional: d_T_per_px = R_mean_interpolated_dim / R_FB_px
+    # Calculate d_T_per_px = (R_mean_nonDim * d_T) / R_SF_px
+    # Or if R_mean in A11 is dimensional: d_T_per_px = R_mean_interpolated_dim / R_SF_px
     # Assuming A11 R_mean is non-dimensionalized by d_T as per typical flame analysis
-    dimentionalised_df['d_T_per_px'] = (dimentionalised_df['R_mean_interpolated_nonDim'] * d_T) / dimentionalised_df['R_FB_px']
+    dimentionalised_df['d_T_per_px'] = (dimentionalised_df['R_mean_interpolated_nonDim'] * d_T) / dimentionalised_df['R_SF_px']
     print("Calculated d_T_per_px:", dimentionalised_df['d_T_per_px'].to_string()) if CP_dimentionalise_log_level >= 1 else None
 
     # Calculate non-dimensionalised values row by row (vectorization might be faster if needed)
@@ -213,12 +227,12 @@ def CP_dimentionalise_1(
         # Calculate non-dimensional areas (multiply px^2 value by d_T_per_px^2)
         A_image_nonDim = dimentionalised_df.loc[i, "A_image_px2"] * d_T_per_px_i**2
         A_empty_nonDim = dimentionalised_df.loc[i, "A_empty_px2"] * d_T_per_px_i**2
-        A_FB_nonDim = dimentionalised_df.loc[i, "A_FB_px2"] * d_T_per_px_i**2
+        A_SF_nonDim = dimentionalised_df.loc[i, "A_SF_px2"] * d_T_per_px_i**2
         A_CP_mask_nonDim = dimentionalised_df.loc[i, "A_CP_mask_px"] * d_T_per_px_i**2
 
         # Calculate non-dimensional lengths derived from areas
-        D_FB_nonDim = dimentionalised_df.loc[i, "D_FB_px"] * d_T_per_px_i
-        R_FB_nonDim = dimentionalised_df.loc[i, "R_FB_px"] * d_T_per_px_i
+        D_SF_nonDim = dimentionalised_df.loc[i, "D_SF_px"] * d_T_per_px_i
+        R_SF_nonDim = dimentionalised_df.loc[i, "R_SF_px"] * d_T_per_px_i
 
 
         # Assign calculated values back to the DataFrame
@@ -231,9 +245,9 @@ def CP_dimentionalise_1(
         dimentionalised_df.at[i, 'diameter_distribution_nonDim'] = diameter_distribution_nonDim_i # Assign the array
         dimentionalised_df.at[i, 'A_image_nonDim2'] = A_image_nonDim
         dimentionalised_df.at[i, 'A_empty_nonDim2'] = A_empty_nonDim
-        dimentionalised_df.at[i, 'A_FB_nonDim2'] = A_FB_nonDim
-        dimentionalised_df.at[i, 'D_FB_nonDim'] = D_FB_nonDim
-        dimentionalised_df.at[i, 'R_FB_nonDim'] = R_FB_nonDim
+        dimentionalised_df.at[i, 'A_SF_nonDim2'] = A_SF_nonDim
+        dimentionalised_df.at[i, 'D_SF_nonDim'] = D_SF_nonDim
+        dimentionalised_df.at[i, 'R_SF_nonDim'] = R_SF_nonDim
         dimentionalised_df.at[i, 'A_CP_mask_nonDim'] = A_CP_mask_nonDim
 
     # Clean diameter_distribution_nonDim again after loop if necessary (e.g., ensure arrays)
@@ -247,18 +261,16 @@ def CP_dimentionalise_1(
 
     print(f"\n Saving dimensionalized data to: {output_dir} \n") if CP_dimentionalise_log_level >= 1 else None
 
-    # Define output filenames
-    csv_filename = 'dimentionalised_DataFrame.csv'
-    pickle_filename = 'dimentionalised_DataFrame.pkl'
-    excel_filename = 'dimentionalised_DataFrame.xlsx'
-
     # Save DataFrame to CSV
+    csv_filename = 'dimentionalised_DataFrame.csv'
     dimentionalised_df.to_csv(os.path.join(output_dir, csv_filename), sep='\t', index=False)
 
     # Save DataFrame to Pickle
+    pickle_filename = 'dimentionalised_DataFrame.pkl'
     dimentionalised_df.to_pickle(os.path.join(output_dir, pickle_filename))
 
     # # Save DataFrame to Excel (useful for manual inspection)
+    #excel_filename = 'dimentionalised_DataFrame.xlsx'
     # try:
     #     # Ensure complex objects like numpy arrays are handled if needed, or select subset of columns
     #     # excel_safe_df = dimentionalised_df.select_dtypes(exclude=['object']) # Example: exclude object columns
@@ -276,60 +288,5 @@ def CP_dimentionalise_1(
 
 
     #################################################### return
+
     return output_dir # Format_1 requires output_dir as first return
-
-# Example usage (if run directly)
-if __name__ == '__main__':
-    # This is placeholder logic and needs actual paths
-    print("Running CP_dimentionalise_1 as main script (Example Usage)")
-    # Define a dummy input directory where CP_extract_1 output would be
-    # You would replace this with the actual output directory from a CP_extract_1 run
-    example_input_dir = r"C:\path\to\your\cp_extract_output_directory" # MUST BE SET MANUALLY FOR TESTING
-
-    if not os.path.exists(example_input_dir):
-         print(f"Error: Example input directory does not exist: {example_input_dir}")
-         print("Please set 'example_input_dir' to a valid directory containing 'extracted_DataFrame.pkl'")
-    else:
-        # Create a dummy extracted_DataFrame.pkl for testing if it doesn't exist
-        dummy_pkl_path = os.path.join(example_input_dir, 'extracted_DataFrame.pkl')
-        if not os.path.exists(dummy_pkl_path):
-            print(f"Creating dummy 'extracted_DataFrame.pkl' in {example_input_dir} for testing.")
-            # Create a minimal DataFrame structure similar to what CP_extract would produce
-            dummy_data = {
-                'image_number': [1, 2, 3],
-                'image_Nx_px': [100, 100, 100], 'image_Ny_px': [100, 100, 100],
-                'diameter_training_px': [30, 30, 30], 'diameter_estimate_used_px': [28, 29, 31],
-                'diameter_mean_px': [27.5, 28.5, 30.5], 'diameter_median_px': [27, 28, 30],
-                'diameter_distribution_px': [np.array([26, 27, 28, 29]), np.array([27, 28, 29, 30]), np.array([29, 30, 31, 32])],
-                'A_image_px2': [10000, 10000, 10000], 'A_empty_px2': [1000, 1100, 900],
-                'A_FB_px2': [9000, 8900, 9100], 'D_FB_px': [106.9, 106.3, 107.5], 'R_FB_px': [53.5, 53.2, 53.8],
-                'A_CP_mask_px': [5000, 5100, 4900],
-                # Add other necessary columns if the function depends on them
-            }
-            dummy_df = pd.DataFrame(dummy_data)
-            # Ensure object dtype for array column
-            dummy_df['diameter_distribution_px'] = dummy_df['diameter_distribution_px'].astype(object)
-            dummy_df.to_pickle(dummy_pkl_path)
-
-        # Create dummy A11 files if they don't exist (replace with actual paths if available)
-        a11_test_path = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\Data\A11_manual_extraction" # Use the same path as in the function
-        os.makedirs(a11_test_path, exist_ok=True)
-        a11_r_mean_path = os.path.join(a11_test_path, "A11_SF_R_mean_as_average_radius_of_the_wrinkled_flame_fron_vs_time_manual_extraction.txt")
-        if not os.path.exists(a11_r_mean_path):
-             print(f"Creating dummy A11 R_mean file at {a11_r_mean_path}")
-             a11_r_mean_data = {'time': [0, 2, 4, 6, 7], 'R_mean': [10, 15, 25, 40, 50]} # Example non-dim R_mean/d_T
-             pd.DataFrame(a11_r_mean_data).to_csv(a11_r_mean_path, index=False)
-        # Create other dummy A11 files if needed by the function logic
-
-        # Call the function
-        output_directory = CP_dimentionalise_1(
-            input_dir=example_input_dir,
-            CP_dimentionalise_log_level=1,
-            output_dir_comment="_test_run"
-        )
-
-        if output_directory:
-            print(f"CP_dimentionalise_1 completed successfully.")
-            print(f"Output saved to: {output_directory}")
-        else:
-            print("CP_dimentionalise_1 failed.")

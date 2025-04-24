@@ -108,13 +108,15 @@ def Visit_projector_1(
     vi.DefineScalarExpression("Z", "coord(mesh)[2]")
     vi.DefineScalarExpression("R", "sqrt(X*X + Y*Y + Z*Z)")
 
-
     # define plot
     #vi.AddPlot("Contour", "temperature", 1, 1) 
     if "Pseudocolor-velocity_magnitude Isosurface-temperature" in Plots:
         print("plotting Pseudocolor-velocity_magnitude Isosurface-temperature\n") if Visit_projector_1_log_level > 0 else None
+        
         vi.AddPlot("Pseudocolor", "velocity_magnitude", 1, 1)
+
         vi.SetActivePlots(0)
+
         vi.AddOperator("Isosurface", 1)
         IsosurfaceAtts = vi.IsosurfaceAttributes()
         IsosurfaceAtts.contourNLevels = 10
@@ -131,9 +133,13 @@ def Visit_projector_1(
 
     if "Pseudocolor-velocity_magnitude Isosurface-temperature colorTableName-CustomBW" in Plots:
         print("plotting Pseudocolor-velocity_magnitude Isosurface-temperature colorTableName-CustomBW\n") if Visit_projector_1_log_level > 0 else None
+        
         vi.AddPlot("Pseudocolor", "velocity_magnitude", 1, 1)
+
         vi.SetActivePlots(0)
+
         vi.SetActivePlots(0)
+
         vi.AddOperator("Isosurface", 1)
         IsosurfaceAtts = vi.IsosurfaceAttributes()
         IsosurfaceAtts.contourNLevels = 10
@@ -147,34 +153,30 @@ def Visit_projector_1(
         IsosurfaceAtts.scaling = IsosurfaceAtts.Linear  # Linear, Log
         IsosurfaceAtts.variable = "temperature"
 
-        # create color table
+
+        ### create color table
         # Create a color control point list
         ccpl = vi.ColorControlPointList()
-
         # Point 1: white at 0.0 (fade from white)
         p1 = vi.ColorControlPoint()
         p1.colors = (255, 255, 255, 255)
         p1.position = 0.0
         ccpl.AddControlPoints(p1)
-
         # Point 2: white at 0.5
         p2 = vi.ColorControlPoint()
         p2.colors = (255, 255, 255, 255)
         p2.position = 0.4
         ccpl.AddControlPoints(p2)
-
         # Point 3: black at 0.8
         p3 = vi.ColorControlPoint()
         p3.colors = (0, 0, 0, 255)
         p3.position = 0.6
         ccpl.AddControlPoints(p3)
-
         # Point 4: black at 1.0 (fade to black)
         p4 = vi.ColorControlPoint()
         p4.colors = (0, 0, 0, 255)
         p4.position = 1.0
         ccpl.AddControlPoints(p4)
-
         # Add the color table to VisIt
         vi.AddColorTable("CustomBW", ccpl)
 
@@ -516,8 +518,9 @@ def Visit_projector_1(
             print(f"w.activeTimeSlider = {w.activeTimeSlider}")
         print("States = ", State_range)
 
-    Times = []
-    VisIt_image_filenames = []
+    Image_filenames_VisIt = []
+    Times_VisIt = []
+    R_Average_VisIt = []
 
     # Loop once through all states (t's)
     for state in State_range: 
@@ -525,29 +528,48 @@ def Visit_projector_1(
         vi.SetTimeSliderState(state)
         print("state = ", state) if Visit_projector_1_log_level > 0 else None
 
-        # save window
-        VisIt_image_filename = f"visit_{state:06}"
-        SaveWindowAtts.fileName = VisIt_image_filename
+        # save window as .png image
+        Image_filenames_VisIt_state = f"visit_{state:06}"
+        SaveWindowAtts.fileName = Image_filenames_VisIt_state
         vi.SetSaveWindowAttributes(SaveWindowAtts)
         vi.SaveWindow() 
         print(f"saved image for file {state:06d}\n", end='\r') if Visit_projector_1_log_level > 0 else None
 
         # save properties
+        Image_filenames_VisIt.append(Image_filenames_VisIt_state)
+
         vi.Query("Time")
-        time = vi.GetQueryOutputValue()
-        Times.append(time)
-        VisIt_image_filenames.append(VisIt_image_filename)
+        Time_state = vi.GetQueryOutputValue()
+        Times_VisIt.append(Time_state)
+
+        vi.ChangeActivePlotsVar("R")
+        vi.Query("Average Value")
+        R_Average_state = vi.GetQueryOutputValue()
+        R_Average_VisIt.append(R_Average_state)
+        print(f"saved R_Average_state for file {state:06d}\n", end='\r') if Visit_projector_1_log_level > 0 else None
 
 
     #################################################### save data
 
-    VisIt_data = pd.DataFrame({
-        'Time': Times,
-        'State': State_range,
-        'VisIt_image_filename': VisIt_image_filenames,
+    VisIt_data_df = pd.DataFrame({
+        'Plot': Plots,
+        'Image_filename_VisIt': Image_filenames_VisIt,
+        'State_range_VisIt': State_range,
+        'Time_VisIt': Times_VisIt,
+        'R_Average_VisIt': R_Average_VisIt,
         })
-    print(VisIt_data)
-    VisIt_data.to_pickle(f"{output_dir}/Visit_projector_1_data.pkl")
+    print(VisIt_data_df)
+
+    # save to pickle
+    pkl_filename = f"{output_dir}/Visit_projector_1_data.pkl"
+    VisIt_data_df.to_pickle(pkl_filename)
+    print(f"Saved extracted DataFrame to {pkl_filename}") if Visit_projector_1_log_level >= 1 else None
+
+    # save to csv
+    csv_filename = f"{output_dir}/Visit_projector_1_data.csv"
+    VisIt_data_df.to_csv(csv_filename, sep='\t', index=False)
+    print(f"Saved extracted DataFrame to {csv_filename}") if Visit_projector_1_log_level >= 1 else None
+
 
     # Clean up
     vi.DeleteAllPlots()

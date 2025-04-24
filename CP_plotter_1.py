@@ -206,10 +206,10 @@ def CP_plotter_1(input_dir, # Format_1 requires input_dir
         ax_1_12.plot(range(N_images), CP_extract_df['diameter_median_px'], label=f"{CP_extract_df.iloc[i]['diameter_median_px']:05.2f} = Cell Median Diameter [px]", color='green')
         ax_1_12.plot(range(N_images), CP_extract_df['diameter_training_px'], label=f"{CP_extract_df.iloc[i]['diameter_training_px'] if pd.notna(CP_extract_df.iloc[i]['diameter_training_px']) else 'N/A' :05.2f} = Cellpose Training Diameter [px]", color='violet')
         ax_1_12.plot(range(N_images), CP_extract_df['diameter_estimate_used_px'], label=f"{CP_extract_df.iloc[i]['diameter_estimate_used_px'] if pd.notna(CP_extract_df.iloc[i]['diameter_estimate_used_px']) else 'N/A' :05.2f} = Cellpose Estimate Diameter [px]", color='purple')
-        #S = max(CP_extract_df['diameter_mean_px'].max(), CP_extract_df['diameter_median_px'].max()) / CP_extract_df['D_FB_px'].max()
-        #ax_1_12.plot(range(N_images), CP_extract_df['D_FB_px'] * S, label=f"{(CP_extract_df.iloc[i]['D_FB_px']*S):.2f} = Flame Ball Diameter * {S:.3f}", color='orange')
+        #S = max(CP_extract_df['diameter_mean_px'].max(), CP_extract_df['diameter_median_px'].max()) / CP_extract_df['D_SF_px'].max()
+        #ax_1_12.plot(range(N_images), CP_extract_df['D_SF_px'] * S, label=f"{(CP_extract_df.iloc[i]['D_SF_px']*S):.2f} = Flame Ball Diameter * {S:.3f}", color='orange')
         S2 = 1e-1
-        ax_1_12.plot(range(N_images), CP_extract_df['D_FB_px'] * S2, label=f"{(CP_extract_df.iloc[i]['D_FB_px']*S2):05.2f} = Flame Ball Diameter [px] * {S2:.3f}", color='orange')
+        ax_1_12.plot(range(N_images), CP_extract_df['D_SF_px'] * S2, label=f"{(CP_extract_df.iloc[i]['D_SF_px']*S2):05.2f} = Flame Ball Diameter [px] * {S2:.3f}", color='orange')
         ax_1_12_R.plot(range(N_images), CP_extract_df['N_cells'], label=f"{CP_extract_df.iloc[i]['N_cells']:05.2f} = Number of cells", color='red')
         ax_1_12.axvline(i, color='blue', label=f'{i+1:.2f} = shown image. {CP_extract_df.iloc[i]["image_Nx_px"]:.0f}px_x x {CP_extract_df.iloc[i]["image_Ny_px"]:.0f}px_y', linestyle='dashed', linewidth=3)
 
@@ -218,13 +218,13 @@ def CP_plotter_1(input_dir, # Format_1 requires input_dir
         ax_1_12_RR.spines["right"].set_position(("outward", 60))  # Move third axis further right
         ax_1_12_RR.set_ylabel("CP efficiency $\mu_{CP} = A_{CP}/A_{SF}$")  # Label for third y-axis
         ax_1_12_RR.set_ylim(0, 1)  # Set limits for third y-axis
-        #ax_1_12_RR.plot(range(N_images), CP_extract_df['Ar_px2_FBperimage'], label=f"{CP_extract_df.iloc[i]['Ar_px2_FBperimage']:05.2f}" + ' = $A_{Flame Ball}/A_{Image}$', color='gray', linestyle='dotted')
+        #ax_1_12_RR.plot(range(N_images), CP_extract_df['Ar_px2_SFperimage'], label=f"{CP_extract_df.iloc[i]['Ar_px2_SFperimage']:05.2f}" + ' = $A_{Flame Ball}/A_{Image}$', color='gray', linestyle='dotted')
         #ax_1_12_RR.plot(range(N_images), CP_extract_df['Ar_px2_CP_maskperImage'], label=f"{CP_extract_df.iloc[i]['Ar_px2_CP_maskperImage']:05.2f}" + " = $A_{Cell masks}/A_{Image}$", color='gray', linestyle='dashed')
-        ax_1_12_RR.plot(range(N_images), CP_extract_df['Ar_px2_CP_maskperFB'], label=f"{CP_extract_df.iloc[i]['Ar_px2_CP_maskperFB']:05.2f}" + " = CP efficiency $\mu_{CP} = A_{CP}/A_{SF}$", color='gray')
+        ax_1_12_RR.plot(range(N_images), CP_extract_df['Ar_px2_CP_maskperSF'], label=f"{CP_extract_df.iloc[i]['Ar_px2_CP_maskperSF']:05.2f}" + " = CP efficiency $\mu_{CP} = A_{CP}/A_{SF}$", color='gray')
 
         ax_1_12.set_xlim(0, N_images - 1)
-        #ax_1_12.set_ylim(min(CP_extract_df['diameter_mean_px'].min(), CP_extract_df['diameter_median_px'].min(), CP_extract_df['D_FB_px'].max()*S2), max(CP_extract_df['diameter_mean_px'].max(), CP_extract_df['diameter_median_px'].max(), CP_extract_df['D_FB_px'].max() * S2)*1.05)
-        ax_1_12.set_ylim(0, max(CP_extract_df['diameter_mean_px'].max(), CP_extract_df['diameter_median_px'].max(), CP_extract_df['D_FB_px'].max() * S2)*1.05)
+        #ax_1_12.set_ylim(min(CP_extract_df['diameter_mean_px'].min(), CP_extract_df['diameter_median_px'].min(), CP_extract_df['D_SF_px'].max()*S2), max(CP_extract_df['diameter_mean_px'].max(), CP_extract_df['diameter_median_px'].max(), CP_extract_df['D_SF_px'].max() * S2)*1.05)
+        ax_1_12.set_ylim(0, max(CP_extract_df['diameter_mean_px'].max(), CP_extract_df['diameter_median_px'].max(), CP_extract_df['D_SF_px'].max() * S2)*1.05)
         ax_1_12_R.set_ylim(CP_extract_df['N_cells'].min(), CP_extract_df['N_cells'].max()*1.05)
 
         ax_1_12.set_xticks(range(N_images))  # Keep original ticks

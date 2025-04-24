@@ -179,8 +179,8 @@ def CP_extract_1(
         'flows0', 'flows1', 'flows2', 'flows3', 'flows4',
         'diameter_estimate_used_px', 'diameter_training_px',
         'diameter_mean_px', 'diameter_median_px', 'diameter_distribution_px', 'outlines', 'masks', 'N_cells',
-        'A_image_px2', 'A_empty_px2', 'A_FB_px2', 'Ar_px2_FBperimage', 'D_FB_px', 'R_FB_px',
-        'A_CP_mask_px', 'Ar_px2_CP_maskperImage', 'Ar_px2_CP_maskperFB',
+        'A_image_px2', 'A_empty_px2', 'A_SF_px2', 'Ar_px2_SFperimage', 'D_SF_px', 'R_SF_px',
+        'A_CP_mask_px', 'Ar_px2_CP_maskperImage', 'Ar_px2_CP_maskperSF',
         # Added columns from CP_settings that were previously read but not explicitly added here
         'gpu', 'diameter_estimate_guess_px', 'CP_segment_output_dir_comment', 'flow_threshold',
         'cellprob_threshold', 'resample', 'niter'
@@ -248,14 +248,14 @@ def CP_extract_1(
         image_Ny_px = image_i.shape[1]
         A_image_px2 = image_Nx_px * image_Ny_px
         A_empty_px2 = np.sum(grayscale_image_i == 1)
-        A_FB_px2 = A_image_px2 - A_empty_px2
-        Ar_px2_FBperimage = A_FB_px2 / A_image_px2
-        D_FB_px = math.sqrt(A_FB_px2 * 4 / math.pi)
-        R_FB_px = D_FB_px / 2
+        A_SF_px2 = A_image_px2 - A_empty_px2
+        Ar_px2_SFperimage = A_SF_px2 / A_image_px2
+        D_SF_px = math.sqrt(A_SF_px2 * 4 / math.pi)
+        R_SF_px = D_SF_px / 2
 
         A_CP_mask_px = np.count_nonzero(masks_i != 0)
         Ar_px2_CP_maskperImage = A_CP_mask_px / A_image_px2
-        Ar_px2_CP_maskperFB = A_CP_mask_px / A_FB_px2
+        Ar_px2_CP_maskperSF = A_CP_mask_px / A_SF_px2
         
 
         ### Fill a DataFrame row
@@ -297,13 +297,13 @@ def CP_extract_1(
         extracted_df.at[i, 'N_cells'] = N_cells_i
         extracted_df.at[i, 'A_image_px2'] = A_image_px2
         extracted_df.at[i, 'A_empty_px2'] = A_empty_px2
-        extracted_df.at[i, 'A_FB_px2'] = A_FB_px2
-        extracted_df.at[i, 'Ar_px2_FBperimage'] = Ar_px2_FBperimage
-        extracted_df.at[i, 'D_FB_px'] = D_FB_px
-        extracted_df.at[i, 'R_FB_px'] = R_FB_px
+        extracted_df.at[i, 'A_SF_px2'] = A_SF_px2
+        extracted_df.at[i, 'Ar_px2_SFperimage'] = Ar_px2_SFperimage
+        extracted_df.at[i, 'D_SF_px'] = D_SF_px
+        extracted_df.at[i, 'R_SF_px'] = R_SF_px
         extracted_df.at[i, 'A_CP_mask_px'] = A_CP_mask_px
         extracted_df.at[i, 'Ar_px2_CP_maskperImage'] = Ar_px2_CP_maskperImage
-        extracted_df.at[i, 'Ar_px2_CP_maskperFB'] = Ar_px2_CP_maskperFB
+        extracted_df.at[i, 'Ar_px2_CP_maskperSF'] = Ar_px2_CP_maskperSF
 
 
     # Clean diameter_distribution_px after the loop

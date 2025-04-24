@@ -151,12 +151,12 @@ def CP_plotter_3_CPvsA11_Panel(input_dir, # Format_1 requires input_dir
         ax_1_12.plot(CP_extract_df['time'], CP_extract_df['diameter_mean_nonDim'], label="Cell Mean Diameter", color='green')
         ax_1_12.plot(CP_extract_df['time'], CP_extract_df['diameter_training_nonDim'], label=f"Cellpose Training Diameter", color='aquamarine')
         
-        #S = max(CP_extract_df['diameter_mean_nonDim'].max(), CP_extract_df['diameter_median_nonDim'].max()) / CP_extract_df['D_FB_nonDim'].max()
-        #ax_1_12.plot(range(N_images), CP_extract_df['D_FB_nonDim'] * S, label=f"{(CP_extract_df.iloc[i]['D_FB_nonDim']*S):.2f} = Spherical Flame Diameter * {S:.3f}", color='orange')
+        #S = max(CP_extract_df['diameter_mean_nonDim'].max(), CP_extract_df['diameter_median_nonDim'].max()) / CP_extract_df['D_SF_nonDim'].max()
+        #ax_1_12.plot(range(N_images), CP_extract_df['D_SF_nonDim'] * S, label=f"{(CP_extract_df.iloc[i]['D_SF_nonDim']*S):.2f} = Spherical Flame Diameter * {S:.3f}", color='orange')
             
         
         S2 = 1e-1
-        ax_1_12.plot(CP_extract_df['time'], CP_extract_df['R_FB_nonDim'] * S2, label=f"Image deduced Spherical Flame Radius * {S2:.3f}", color='olive')
+        ax_1_12.plot(CP_extract_df['time'], CP_extract_df['R_SF_nonDim'] * S2, label=f"Image deduced Spherical Flame Radius * {S2:.3f}", color='olive')
         ax_1_12.plot(A11_SF_R_mean['time'], A11_SF_R_mean['R_mean'] * S2, label=f"A11 Spherical Flame Radius * {S2:.3f}", color='olive', linestyle='dashed')
         
         S3 = 1
@@ -168,7 +168,7 @@ def CP_plotter_3_CPvsA11_Panel(input_dir, # Format_1 requires input_dir
         
         # Create a third y-axis for the dotted line plots
         ax_1_12_RR = ax_1_12.twinx()  # Second twin axis
-        ax_1_12_RR.plot(CP_extract_df['time'], CP_extract_df['Ar_px2_CP_maskperFB'], label="$A_{Cell masks}/A_{Spherical Flame}$", color='gray')
+        ax_1_12_RR.plot(CP_extract_df['time'], CP_extract_df['Ar_px2_CP_maskperSF'], label="$A_{Cell masks}/A_{Spherical Flame}$", color='gray')
 
 
 
@@ -239,7 +239,7 @@ def CP_plotter_3_CPvsA11_Panel(input_dir, # Format_1 requires input_dir
         # First plot: Plotting data from CP_extract_df
         
         # Plotting the first set of data
-        ax_1.plot(CP_extract_df['time'], CP_extract_df['R_FB_nonDim'], label="R_FB_nonDim", color='olive', linestyle='solid')
+        ax_1.plot(CP_extract_df['time'], CP_extract_df['R_SF_nonDim'], label="R_SF_nonDim", color='olive', linestyle='solid')
         ax_1.set_xlabel('Time')
         ax_1.set_ylabel('Radius')
         ax_1.set_title('Spherical Flame Radius Comparison')
@@ -251,12 +251,12 @@ def CP_plotter_3_CPvsA11_Panel(input_dir, # Format_1 requires input_dir
 
         # Twin axes 2
         ax_1_twin2 = ax_1.twinx()  # Create a twin axes sharing the same x-axis
-        ax_1_twin2.plot(CP_extract_df['time'], CP_extract_df['D_FB_px'], label="D_FB_px", color='blue', linestyle='dashed')
+        ax_1_twin2.plot(CP_extract_df['time'], CP_extract_df['D_SF_px'], label="D_SF_px", color='blue', linestyle='dashed')
         ax_1_twin2.spines["right"].set_position(("outward", 40))  # Slightly to the right
 
         # Calculate R_mean_interpolated_i
         ax_1_twin3 = ax_1.twinx()  # Create a twin axes sharing the same x-axis
-        CP_extract_df['R_mean_interpolated_i'] = (CP_extract_df['d_T_per_px'] * CP_extract_df['D_FB_px']) / 2
+        CP_extract_df['R_mean_interpolated_i'] = (CP_extract_df['d_T_per_px'] * CP_extract_df['D_SF_px']) / 2
         ax_1_twin3.plot(CP_extract_df['time'], CP_extract_df['R_mean_interpolated_i'], label="R_mean_interpolated_i", color='black', linestyle='solid')
         ax_1_twin3.set_ylabel('R_mean_interpolated_i', color='black')
         ax_1_twin3.tick_params(axis='y', labelcolor='black')
@@ -312,12 +312,12 @@ def CP_plotter_3_CPvsA11_Panel(input_dir, # Format_1 requires input_dir
         ax_0.plot(CP_extract_df['time'], CP_extract_df['diameter_mean_nonDim'], label="Cell Mean Diameter", color='green')
         ax_0.plot(CP_extract_df['time'], CP_extract_df['diameter_training_nonDim'], label=f"Cellpose Training Diameter", color='aquamarine')
         
-        #S = max(CP_extract_df['diameter_mean_nonDim'].max(), CP_extract_df['diameter_median_nonDim'].max()) / CP_extract_df['D_FB_nonDim'].max()
-        #ax_0.plot(range(N_images), CP_extract_df['D_FB_nonDim'] * S, label=f"{(CP_extract_df.iloc[i]['D_FB_nonDim']*S):.2f} = Spherical Flame Diameter * {S:.3f}", color='orange')
+        #S = max(CP_extract_df['diameter_mean_nonDim'].max(), CP_extract_df['diameter_median_nonDim'].max()) / CP_extract_df['D_SF_nonDim'].max()
+        #ax_0.plot(range(N_images), CP_extract_df['D_SF_nonDim'] * S, label=f"{(CP_extract_df.iloc[i]['D_SF_nonDim']*S):.2f} = Spherical Flame Diameter * {S:.3f}", color='orange')
             
         
         S2 = 1e-1
-        ax_0.plot(CP_extract_df['time'], CP_extract_df['R_FB_nonDim'] * S2, label=f"Image deduced Spherical Flame Radius * {S2:.3f}", color='olive')
+        ax_0.plot(CP_extract_df['time'], CP_extract_df['R_SF_nonDim'] * S2, label=f"Image deduced Spherical Flame Radius * {S2:.3f}", color='olive')
         ax_0.plot(A11_SF_R_mean['time'], A11_SF_R_mean['R_mean'] * S2, label=f"A11 Spherical Flame Radius * {S2:.3f}", color='olive', linestyle='dashed')
         
         S3 = 1
@@ -329,7 +329,7 @@ def CP_plotter_3_CPvsA11_Panel(input_dir, # Format_1 requires input_dir
         
         # Create a third y-axis for the dotted line plots
         ax_0_RR = ax_0.twinx()  # Second twin axis
-        ax_0_RR.plot(CP_extract_df['time'], CP_extract_df['Ar_px2_CP_maskperFB'], label="$A_{Cell masks}/A_{Spherical Flame}$", color='gray')
+        ax_0_RR.plot(CP_extract_df['time'], CP_extract_df['Ar_px2_CP_maskperSF'], label="$A_{Cell masks}/A_{Spherical Flame}$", color='gray')
 
 
 
@@ -525,7 +525,7 @@ def CP_plotter_3_CPvsA11_Panel(input_dir, # Format_1 requires input_dir
             ax_R2.set_ylabel("CP Number of cells $N_c$", color='red')
 
             ax_R3 = ax.twinx()
-            ax_R3.plot(CP_extract_df['time'], CP_extract_df['Ar_px2_CP_maskperFB'],
+            ax_R3.plot(CP_extract_df['time'], CP_extract_df['Ar_px2_CP_maskperSF'],
                         label="CP efficiency $\mu_{CP} = A_{CP}/A_{SF}$", color='gray')
             ax_R3.set_ylabel("CP efficiency $\mu_{CP} = A_{CP}/A_{SF}$", color='gray')
 
@@ -560,7 +560,7 @@ def CP_plotter_3_CPvsA11_Panel(input_dir, # Format_1 requires input_dir
                         label="CP Number of cells $N_c$", color='red')
 
             ax_R3 = ax.twinx()
-            ax_R3.plot(CP_extract_df['time'], CP_extract_df['Ar_px2_CP_maskperFB'],
+            ax_R3.plot(CP_extract_df['time'], CP_extract_df['Ar_px2_CP_maskperSF'],
                         label="$\mu_{CP} = A_{CP}/A_{SF}$", color='gray')
 
             # Set Limits

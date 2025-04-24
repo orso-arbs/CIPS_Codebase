@@ -169,10 +169,11 @@ def debug_info(x):
 
 
 
+import winsound
+import time
 
-
-
-
+def ding():
+    winsound.PlaySound(r"C:\Windows\Media\Windows Ding.wav", winsound.SND_FILENAME)
 
 
 

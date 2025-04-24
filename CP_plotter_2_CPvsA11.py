@@ -268,7 +268,7 @@ def CP_plotter_2_CPvsA11(input_dir, # Format_1 requires input_dir
             closest_A11_iHRR = A11_SF_iHRR['iHRR'].iloc[closest_index_iHRR]
         
         S2 = 1e-1
-        #ax_1_12.plot(CP_extract_df['time'], CP_extract_df['R_FB_nonDim'] * S2, label=f"{(CP_extract_df.iloc[i]['R_FB_nonDim']*S2):05.2f} = Image deduced Spherical Flame Radius * {S2:.3f}", color='olive')
+        #ax_1_12.plot(CP_extract_df['time'], CP_extract_df['R_SF_nonDim'] * S2, label=f"{(CP_extract_df.iloc[i]['R_SF_nonDim']*S2):05.2f} = Image deduced Spherical Flame Radius * {S2:.3f}", color='olive')
         line_1_12_3, = ax_1_12.plot(A11_SF_R_mean['time'], A11_SF_R_mean['R_mean'] * S2, label=f"{(closest_A11_r_mean*S2):05.2f} = A11 Spherical Flame Radius * {S2:.3f}", color='olive', linestyle='dashed')
 
         S3 = 1
@@ -283,7 +283,7 @@ def CP_plotter_2_CPvsA11(input_dir, # Format_1 requires input_dir
 
         # Create a third y-axis for the dotted line plots
         ax_1_12_RR = ax_1_12.twinx()  # Second twin axis
-        line_1_12_RR, = ax_1_12_RR.plot(CP_extract_df['time'], CP_extract_df['Ar_px2_CP_maskperFB'], label=f"{CP_extract_df.iloc[i]['Ar_px2_CP_maskperFB']:05.2f}" + " = $CP efficiency $\mu_{CP} = A_{CP}/A_{SF}$", color='gray')
+        line_1_12_RR, = ax_1_12_RR.plot(CP_extract_df['time'], CP_extract_df['Ar_px2_CP_maskperSF'], label=f"{CP_extract_df.iloc[i]['Ar_px2_CP_maskperSF']:05.2f}" + " = $CP efficiency $\mu_{CP} = A_{CP}/A_{SF}$", color='gray')
 
 
         # Set the limits and labels for the axes
