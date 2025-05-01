@@ -99,7 +99,7 @@ def Visit_projector_1(
     print("launched compute engine \n") if Visit_projector_1_log_level > 0 else None
 
     # open database
-    vi.OpenDatabase(Database)
+    vi.OpenDatabase(Database)     #i.e. Database = r"euler.ethz.ch:/cluster/scratch/orsob/MastersThesis/postProc/po_part1/po_s912k_post.nek5000"
     print("Opened Database\n") if Visit_projector_1_log_level > 0 else None
 
     # define Expressions

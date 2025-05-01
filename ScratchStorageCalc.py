@@ -127,3 +127,8 @@ while c <= a:
     print(c, "\t", n)
     c = c + s
     n = n + 1
+
+
+
+
+

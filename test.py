@@ -17,8 +17,7 @@ def test_ax1_and_twin():
     fig, (ax_1, ax_2, ax_3, ax_4) = plt.subplots(4, 1, figsize=(8, 10))
 
     # Subplot 1: R_SF_nonDim and R_SF_px vs time
-    ax_1.plot(dimentionalised_df['Time_VisIt'], dimentionalised_df['R_SF_nonDim'],
-              label="R_SF_nonDim", color='orange', linestyle='solid')
+    ax_1.plot(dimentionalised_df['Time_VisIt'], dimentionalised_df['R_SF_nonDim'], label="R_SF_nonDim", color='orange', linestyle='solid')
     ax_1.set_xlabel('Time')
     ax_1.set_ylabel("R_SF_nonDim", color='orange')
     ax_1.tick_params(axis='y', labelcolor='orange')
