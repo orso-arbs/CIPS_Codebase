@@ -27,15 +27,16 @@ if 1==1:
     # A11 single timedumps #50 (if i remember correctly it's 50)
     #Database = r"euler.ethz.ch:/cluster/scratch/cfrouzak/spher_H2/postProc/fields/po_part2/po_s912k_post.nek5000"
     # A11 fist 20 timedumps
-    Database = r"euler.ethz.ch:/cluster/scratch/orsob/MastersThesis/postProc/po_part1/po_s912k_post.nek5000"
+    #Database = r"euler.ethz.ch:/cluster/scratch/orsob/MastersThesis/postProc/po_part1/po_s912k_post.nek5000"
+    Database = r"euler.ethz.ch:/cluster/scratch/orsob/orsoMT_orsob/A11_states/A11_all_states.visit"
 
     VP1_output_dir = VP1.Visit_projector_1(
         input_dir = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\SF_CP_analysis_pipeline_data", # storage for this script
         Database = Database, State_range_manual = [],
         Plots = ["Pseudocolor-velocity_magnitude Isosurface-temperature colorTableName-CustomBW"],
-        no_annotations = 1, viewNormal = [0,0,-1], viewUp = [1,0,0], imageZoom = 1, parallelScale = 20, perspective = 0,
-        Visit_projector_1_log_level = 1, Visit_projector_1_show_windows = 0,
-        output_dir_manual = "", output_dir_comment = "testing first 20",
+        no_annotations = 1, viewNormal = [0,0,-1], viewUp = [1,0,0], imageZoom = 1, parallelScale = 50, perspective = 0,
+        Visit_projector_1_log_level = 3, Visit_projector_1_show_windows = 0,
+        output_dir_manual = "", output_dir_comment = "testing all A11",
     )
 
     print("Note: Visit window can now be closed. 'VisIt: Error - Can't delete the last window' is now inconsequentioal to the remaining code")
@@ -120,6 +121,10 @@ if 1==1: # Add this block to call the new function
         CP_dimentionalise_log_level = 0,
         output_dir_comment = "", # Add comment if needed
     )
+
+
+# 3D reconstruct
+
 
 
 

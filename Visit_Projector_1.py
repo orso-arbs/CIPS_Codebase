@@ -508,7 +508,7 @@ def Visit_projector_1(
         State_range = range(startSlide, vi.TimeSliderGetNStates(), tstep)
 
     # check timeslider to troubleshoot 
-    if Visit_projector_1_log_level > 1:
+    if Visit_projector_1_log_level >= 2:
         w = vi.GetWindowInformation()
         if len(w.timeSliders) > 0 and 0 <= w.activeTimeSlider < len(w.timeSliders):
             print(f"Active time slider: {w.timeSliders[w.activeTimeSlider]}")
@@ -516,7 +516,8 @@ def Visit_projector_1(
             print("WARNING: No active time slider or sliders not initialized yet.")
             print(f"w.timeSliders = {w.timeSliders}")
             print(f"w.activeTimeSlider = {w.activeTimeSlider}")
-        print("States = ", State_range)
+
+    print("States = ", State_range) if Visit_projector_1_log_level >= 1 else None
 
     Image_filenames_VisIt = []
     Times_VisIt = []
