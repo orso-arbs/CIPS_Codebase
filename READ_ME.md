@@ -6,6 +6,8 @@
 The Visit-Cellpose-Lineage Pipeline provides a quick way of analysing cellular structures in large data using VisIt, Cellpose and [TBD Lineage tree].
 
 Pipeline:
+- CP_main_1 - orchestrates the data pipeline.
+- VisIt_projector_1 - Uses VisIt on the Euler cluster to read a database, plot a pseudocolor on an isovalue and then saves a .png for each state in the database.
 
 
 Note: The code has been checked for functionality only in Windows 11 with Visit 3.4.2 and Cellpose 3.1.1.1

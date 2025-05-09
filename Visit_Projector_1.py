@@ -15,6 +15,8 @@ def Visit_projector_1(
     # VisIt parameters
     Database, State_range_manual = [], # Data
     Plots = ["Pseudocolor-velocity_magnitude Isosurface-temperature3"], # Plots
+    Pseudocolor_Variable = "velocity_magnitude", Pseudocolor_colortable = "hot",
+    Isosurface_ContourValue = 3, Isosurface_Variable = "temperature",
     no_annotations = 1, viewNormal = [0,0,-1], viewUp = [1,0,0], imageZoom = 1, parallelScale = 100, perspective = 1, # View
     Visit_projector_1_show_windows = 0, # Window
 
@@ -64,6 +66,12 @@ def Visit_projector_1(
     -------
     output_dir : str
         Output directory where the images are saved.
+
+
+    Notes
+    -----
+    - If the script gets stuck on a state or if you recieve OOM events (Out of memory) in the .err file, try increasing --mem-per-cpu
+
     """
 
 
@@ -74,7 +82,7 @@ def Visit_projector_1(
     vi.SetDebugLevel("5") if Visit_projector_1_log_level >= 2 else None
     vi.Launch() # loads rest of visit functions
     print("launched visit") if Visit_projector_1_log_level >= 1 else None
-    # import visit as vi # loads rest of visit functions (This is generally not needed as vi.Launch() updates the existing module object)
+    import visit as vi # loads rest of visit functions
     # Enable maximum client-side VisIt debug logging
     if Visit_projector_1_log_level >= 1:
         print("Setting VisIt client debug level to 5")
@@ -98,7 +106,7 @@ def Visit_projector_1(
     #print(p) # uncomment to see the machine profile
     p.userName="orsob"
     p.activeProfile = 1
-    p.GetLaunchProfiles(1).numProcessors = 8
+    p.GetLaunchProfiles(1).numProcessors = 4
     p.GetLaunchProfiles(1).numNodes = 1
     p.GetLaunchProfiles(1).timeLimit = "04:00:00"
     additional_args = f"--mem-per-cpu=4G --tmp=4G --output=/cluster/scratch/orsob/orsoMT_orsob/VisIt_logs_and_error_output/%j_visit.out --error=/cluster/scratch/orsob/orsoMT_orsob/VisIt_logs_and_error_output/%j_visit.err"
@@ -109,42 +117,22 @@ def Visit_projector_1(
     print("launched compute engine \n") if Visit_projector_1_log_level >= 1 else None
 
     # open database
-    vi.OpenDatabase(Database)     #i.e. Database = r"euler.ethz.ch:/cluster/scratch/orsob/MastersThesis/postProc/po_part1/po_s912k_post.nek5000"
-    print("Opened Database\n") if Visit_projector_1_log_level >= 1 else None
+    OpenSuccess = vi.OpenDatabase(Database)     #i.e. Database = r"euler.ethz.ch:/cluster/scratch/orsob/MastersThesis/postProc/po_part1/po_s912k_post.nek5000"
+    print(f"Opened database") if OpenSuccess == 1 and Visit_projector_1_log_level >= 1 else print("Failed to open database")
 
     # define Expressions
     vi.DefineScalarExpression("X", "coord(mesh)[0]")
     vi.DefineScalarExpression("Y", "coord(mesh)[1]")
     vi.DefineScalarExpression("Z", "coord(mesh)[2]")
     vi.DefineScalarExpression("R", "sqrt(X*X + Y*Y + Z*Z)")
+    print("Defined scalar expressions \n")
 
     # define plot
-    #vi.AddPlot("Contour", "temperature", 1, 1) 
-    # MOVED INTO LOOP: if "Pseudocolor-velocity_magnitude Isosurface-temperature" in Plots:
-        print("plotting Pseudocolor-velocity_magnitude Isosurface-temperature\n") if Visit_projector_1_log_level >= 1 else None
+
+    if "Pseudocolor - Isosurface" in Plots:
+        print("plotting Pseudocolor - Isosurface\n") if Visit_projector_1_log_level >= 1 else None
         
-        vi.AddPlot("Pseudocolor", "velocity_magnitude", 1, 1)
-
-        vi.SetActivePlots(0)
-
-        vi.AddOperator("Isosurface", 1)
-        IsosurfaceAtts = vi.IsosurfaceAttributes()
-        IsosurfaceAtts.contourNLevels = 10
-        IsosurfaceAtts.contourValue = (3)
-        IsosurfaceAtts.contourPercent = ()
-        IsosurfaceAtts.contourMethod = IsosurfaceAtts.Value  # Level, Value, Percent
-        IsosurfaceAtts.minFlag = 0
-        IsosurfaceAtts.min = 0
-        IsosurfaceAtts.maxFlag = 0
-        IsosurfaceAtts.max = 1
-        IsosurfaceAtts.scaling = IsosurfaceAtts.Linear  # Linear, Log
-        IsosurfaceAtts.variable = "temperature"
-        # MOVED INTO LOOP: vi.SetOperatorOptions(IsosurfaceAtts, 0, 1)
-
-    # MOVED INTO LOOP: if "Pseudocolor-velocity_magnitude Isosurface-temperature colorTableName-CustomBW" in Plots:
-        print("plotting Pseudocolor-velocity_magnitude Isosurface-temperature colorTableName-CustomBW\n") if Visit_projector_1_log_level >= 1 else None
-        
-        vi.AddPlot("Pseudocolor", "velocity_magnitude", 1, 1)
+        vi.AddPlot("Pseudocolor", Pseudocolor_Variable, 1, 1)
 
         vi.SetActivePlots(0)
 
@@ -153,7 +141,7 @@ def Visit_projector_1(
         vi.AddOperator("Isosurface", 1)
         IsosurfaceAtts = vi.IsosurfaceAttributes()
         IsosurfaceAtts.contourNLevels = 10
-        IsosurfaceAtts.contourValue = (3)
+        IsosurfaceAtts.contourValue = (Isosurface_ContourValue)
         IsosurfaceAtts.contourPercent = ()
         IsosurfaceAtts.contourMethod = IsosurfaceAtts.Value  # Level, Value, Percent
         IsosurfaceAtts.minFlag = 0
@@ -161,34 +149,35 @@ def Visit_projector_1(
         IsosurfaceAtts.maxFlag = 0
         IsosurfaceAtts.max = 1
         IsosurfaceAtts.scaling = IsosurfaceAtts.Linear  # Linear, Log
-        IsosurfaceAtts.variable = "temperature"
+        IsosurfaceAtts.variable = Isosurface_Variable
 
 
-        ### create color table
-        # Create a color control point list
-        ccpl = vi.ColorControlPointList()
-        # Point 1: white at 0.0 (fade from white)
-        p1 = vi.ColorControlPoint()
-        p1.colors = (255, 255, 255, 255)
-        p1.position = 0.0
-        ccpl.AddControlPoints(p1)
-        # Point 2: white at 0.5
-        p2 = vi.ColorControlPoint()
-        p2.colors = (255, 255, 255, 255)
-        p2.position = 0.4
-        ccpl.AddControlPoints(p2)
-        # Point 3: black at 0.8
-        p3 = vi.ColorControlPoint()
-        p3.colors = (0, 0, 0, 255)
-        p3.position = 0.6
-        ccpl.AddControlPoints(p3)
-        # Point 4: black at 1.0 (fade to black)
-        p4 = vi.ColorControlPoint()
-        p4.colors = (0, 0, 0, 255)
-        p4.position = 1.0
-        ccpl.AddControlPoints(p4)
-        # Add the color table to VisIt
-        vi.AddColorTable("CustomBW", ccpl)
+        if Pseudocolor_colortable == "CustomBW":
+            ### create color table
+            # Create a color control point list
+            ccpl = vi.ColorControlPointList()
+            # Point 1: white at 0.0 (fade from white)
+            p1 = vi.ColorControlPoint()
+            p1.colors = (255, 255, 255, 255)
+            p1.position = 0.0
+            ccpl.AddControlPoints(p1)
+            # Point 2: white at 0.5
+            p2 = vi.ColorControlPoint()
+            p2.colors = (255, 255, 255, 255)
+            p2.position = 0.4
+            ccpl.AddControlPoints(p2)
+            # Point 3: black at 0.8
+            p3 = vi.ColorControlPoint()
+            p3.colors = (0, 0, 0, 255)
+            p3.position = 0.6
+            ccpl.AddControlPoints(p3)
+            # Point 4: black at 1.0 (fade to black)
+            p4 = vi.ColorControlPoint()
+            p4.colors = (0, 0, 0, 255)
+            p4.position = 1.0
+            ccpl.AddControlPoints(p4)
+            # Add the color table to VisIt
+            vi.AddColorTable("CustomBW", ccpl)
 
 
         vi.SetOperatorOptions(IsosurfaceAtts, 0, 1)
@@ -205,7 +194,7 @@ def Visit_projector_1(
         PseudocolorAtts.useAboveMaxColor = 0
         PseudocolorAtts.aboveMaxColor = (0, 0, 0, 255)
         PseudocolorAtts.centering = PseudocolorAtts.Natural  # Natural, Nodal, Zonal
-        PseudocolorAtts.colorTableName = "CustomBW"
+        PseudocolorAtts.colorTableName = Pseudocolor_colortable # color table
         PseudocolorAtts.invertColorTable = 0
         PseudocolorAtts.opacityType = PseudocolorAtts.FullyOpaque  # ColorTable, FullyOpaque, Constant, Ramp, VariableRange
         PseudocolorAtts.opacityVariable = ""
@@ -246,18 +235,18 @@ def Visit_projector_1(
         PseudocolorAtts.lightingFlag = 1
         PseudocolorAtts.wireframeColor = (0, 0, 0, 0)
         PseudocolorAtts.pointColor = (0, 0, 0, 0)
-        # MOVED INTO LOOP: vi.SetPlotOptions(PseudocolorAtts)
+        vi.SetPlotOptions(PseudocolorAtts)
 
 
 
 
 
-    # print("Added plot\n") if Visit_projector_1_log_level >= 1 else None # MOVED INTO LOOP
+    print("Added plot\n") if Visit_projector_1_log_level >= 1 else None
 
 
     # calculate plot
-    # vi.DrawPlots() # MOVED INTO LOOP
-    # print("Drawed Plots\n") if Visit_projector_1_log_level >= 1 else None # MOVED INTO LOOP
+    vi.DrawPlots()
+    print("Drawed Plots\n") if Visit_projector_1_log_level >= 1 else None
 
     # set view
     View3DAtts = vi.View3DAttributes()
@@ -550,13 +539,10 @@ def Visit_projector_1(
         # save window as .png image
         Image_filenames_VisIt_state = f"visit_{state:06}"
         print(f"Done: Image_filenames_VisIt_state {Image_filenames_VisIt_state}") if Visit_projector_1_log_level >= 2 else None
-
         SaveWindowAtts.fileName = Image_filenames_VisIt_state
         print(f"Done: SaveWindowAtts.fileName = Image_filenames_VisIt_state") if Visit_projector_1_log_level >= 2 else None
-        
         vi.SetSaveWindowAttributes(SaveWindowAtts)
         print(f"Done: vi.SetSaveWindowAttributes(SaveWindowAtts)") if Visit_projector_1_log_level >= 2 else None
-
         vi.SaveWindow() 
         print(f"saved image for state {state:06d}\n", end='\r') if Visit_projector_1_log_level >= 1 else None
 
@@ -577,7 +563,7 @@ def Visit_projector_1(
         if Visit_projector_1_log_level >= 1:
             print(f"Clearing VisIt cache for state {state}")
         try:
-            vi.ClearCache("all")
+            vi.ClearCacheForAllEngines()
             if Visit_projector_1_log_level >= 1:
                 print(f"Done clearing VisIt cache for state {state}")
         except Exception as e:
@@ -615,8 +601,10 @@ def Visit_projector_1(
 
     # Clean up
     vi.DeleteAllPlots()
-    vi.CloseDatabase(Database) # Corrected to use the Database variable
-
+    vi.CloseDatabase(Database)
+    vi.CloseComputeEngine("euler.ethz.ch")
+    vi.Close() # Close the VisIt viewer 
+    print("VisIt is now closed.")
 
     #################################################### return
 

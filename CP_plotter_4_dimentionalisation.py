@@ -163,10 +163,10 @@ def CP_plotter_4_dimentionalisation(input_dir, # Format_1 requires input_dir
         
         # Subplot 1: R_SF_nonDim and R_SF_px vs time
         ax_1.plot(dimentionalised_df['Time_VisIt'], dimentionalised_df['R_SF_nonDim'], label="R_SF_nonDim", color='orange', linestyle='solid')
-        ax_1.set_xlabel('Time')
+        ax_1.set_xlabel(r'Time [$\tau$]')
         ax_1.set_ylabel("R_SF_nonDim")
-        ax_1.set_title('Spherical Flame Radius')
-
+        ax_1.text(0.5, 0.95, 'Spherical Flame Radius', transform=ax_1.transAxes, ha='center', va='top', fontsize='medium', fontweight='bold')
+        
         ax_1_twin = ax_1.twinx()  # Create a twin axes sharing the same x-axis
         ax_1_twin.plot(dimentionalised_df['Time_VisIt'], dimentionalised_df['R_SF_px'], label="R_SF_px", color='orange', linestyle='dashed')
         ax_1_twin.set_ylabel("R_SF_px")
@@ -183,11 +183,11 @@ def CP_plotter_4_dimentionalisation(input_dir, # Format_1 requires input_dir
         ax_2.plot(dimentionalised_df['Time_VisIt'], dimentionalised_df['diameter_mean_nonDim'], label="diameter_mean_nonDim", color='blue', linestyle='solid')
         ax_2.set_xlabel('Time')
         ax_2.set_ylabel("R_SF_nonDim")
-        ax_2.set_title('Spherical Flame Radius\n------------------------')
+        ax_2.text(0.5, 0.95, 'cell diameters', transform=ax_2.transAxes, ha='center', va='top', fontsize='medium', fontweight='bold')
 
         ax_2_twin = ax_2.twinx()  # Create a twin axes sharing the same x-axis
         ax_2_twin.plot(dimentionalised_df['Time_VisIt'], dimentionalised_df['diameter_mean_px'], label="diameter_mean_px", color='green', linestyle='solid')
-        ax_1_twin.set_ylabel("diameter_mean_px")
+        ax_2_twin.set_ylabel("diameter_mean_px")
         ax_2_twin.spines["right"].set_position(("outward", 0))  # Slightly to the right
 
         lines1, labels1 = ax_2.get_legend_handles_labels()
@@ -198,9 +198,8 @@ def CP_plotter_4_dimentionalisation(input_dir, # Format_1 requires input_dir
         # Subplot 3: d_T_per_px vs time
         ax_3.plot(dimentionalised_df['Time_VisIt'], dimentionalised_df['d_T_per_px'], label="d_T_per_px", color='black', linestyle='solid')
         ax_3.set_xlabel('Time')
-        ax_3.set_ylabel("d_T_per_px")
-        ax_3.set_title('Spherical Flame Radius')
-        #ax_3.xaxis.set_major_formatter(ticker.ScalarFormatter())
+        ax_3.set_ylabel("dimentionalisation factor")
+        ax_3.text(0.5, 0.95, 'pixel to', transform=ax_3.transAxes, ha='center', va='top', fontsize='medium', fontweight='bold')        #ax_3.xaxis.set_major_formatter(ticker.ScalarFormatter())
         #ax_3.ticklabel_format(style='sci', axis='y', scilimits=(0, 0))  # Enable scientific notation
 
         ax_3.legend(loc='upper left')

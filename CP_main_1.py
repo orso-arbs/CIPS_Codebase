@@ -32,8 +32,10 @@ if 1==1:
 
     VP1_output_dir = VP1.Visit_projector_1(
         input_dir = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\SF_CP_analysis_pipeline_data", # storage for this script
-        Database = Database, State_range_manual = [],
-        Plots = ["Pseudocolor-velocity_magnitude Isosurface-temperature colorTableName-CustomBW"],
+        Database = Database, State_range_manual = [1,2],
+        Plots = ["Pseudocolor - Isosurface"],
+        Pseudocolor_colortable = "hot",
+        Isosurface_ContourValue = 3, Isosurface_Variable = "temperature",
         no_annotations = 1, viewNormal = [0,0,-1], viewUp = [1,0,0], imageZoom = 1, parallelScale = 50, perspective = 0,
         Visit_projector_1_log_level = 3, Visit_projector_1_show_windows = 1,
         output_dir_manual = "", output_dir_comment = "testing all A11",
@@ -134,7 +136,7 @@ if 1==1: # Add this block to call the new function
 
 
 
-if 1==0: # video to evaluate CP segmentation settings and extracted results
+if 1==1: # video to evaluate CP segmentation settings and extracted results
     # \BW 134 ball flame - Crop
     #CPe1_output_dir = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\FB images\Visit_projections_initial_test\BW 134 ball flame - Crop\CP_segment_1_2025-03-12_13-42-11\CP_extract_1_2025-03-12_13-48-48"
     
