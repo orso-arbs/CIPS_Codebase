@@ -1,6 +1,7 @@
 import os
 import sys
 import pandas as pd
+import time
 
 import Format_1 as F_1
 
@@ -69,11 +70,15 @@ def Visit_projector_1(
     # visit import and launch
     sys.path.append(r"C:\Users\obs\LLNL\VisIt3.4.2\lib\site-packages")
     import visit as vi
-    vi.AddArgument("-nowin") if Visit_projector_1_show_windows == 1 else None #-gui
+    vi.AddArgument("-nowin") if Visit_projector_1_show_windows == 0 else None #-gui
+    vi.SetDebugLevel("5") if Visit_projector_1_log_level >= 2 else None
     vi.Launch() # loads rest of visit functions
-    print("launched visit") if Visit_projector_1_log_level > 0 else None
-    import visit as vi # loads rest of visit functions
-    print("imported visit \n") if Visit_projector_1_log_level > 0 else None
+    print("launched visit") if Visit_projector_1_log_level >= 1 else None
+    # import visit as vi # loads rest of visit functions (This is generally not needed as vi.Launch() updates the existing module object)
+    # Enable maximum client-side VisIt debug logging
+    if Visit_projector_1_log_level >= 1:
+        print("Setting VisIt client debug level to 5")
+    print("imported visit \n") if Visit_projector_1_log_level >= 1 else None
 
     #################################################### I/O
     output_dir = F_1.F_out_dir(input_dir, __file__, output_dir_comment = output_dir_comment) # Format_1 required definition of output directory
@@ -87,20 +92,25 @@ def Visit_projector_1(
     "If prompted, please provide Euler password\n" \
     "Then wait for Euler to allocate resources for the job\n" \
     "DO NOT close the appearing terminal and visit window\n"
-    ) if Visit_projector_1_log_level > 0 else None
+    ) if Visit_projector_1_log_level >= 1 else None
+
     p = vi.GetMachineProfile("euler.ethz.ch")
     #print(p) # uncomment to see the machine profile
     p.userName="orsob"
     p.activeProfile = 1
-    p.GetLaunchProfiles(1).numProcessors = 4
+    p.GetLaunchProfiles(1).numProcessors = 8
     p.GetLaunchProfiles(1).numNodes = 1
-    p.GetLaunchProfiles(1).timeLimit = "02:00:00"
+    p.GetLaunchProfiles(1).timeLimit = "04:00:00"
+    additional_args = f"--mem-per-cpu=4G --tmp=4G --output=/cluster/scratch/orsob/orsoMT_orsob/VisIt_logs_and_error_output/%j_visit.out --error=/cluster/scratch/orsob/orsoMT_orsob/VisIt_logs_and_error_output/%j_visit.err"
+    p.GetLaunchProfiles(1).launchArgs = additional_args
+    print(f"Updated launchArgs: {p.GetLaunchProfiles(1).launchArgs}") if Visit_projector_1_log_level >=1 else None
+    
     vi.OpenComputeEngine(p)
-    print("launched compute engine \n") if Visit_projector_1_log_level > 0 else None
+    print("launched compute engine \n") if Visit_projector_1_log_level >= 1 else None
 
     # open database
     vi.OpenDatabase(Database)     #i.e. Database = r"euler.ethz.ch:/cluster/scratch/orsob/MastersThesis/postProc/po_part1/po_s912k_post.nek5000"
-    print("Opened Database\n") if Visit_projector_1_log_level > 0 else None
+    print("Opened Database\n") if Visit_projector_1_log_level >= 1 else None
 
     # define Expressions
     vi.DefineScalarExpression("X", "coord(mesh)[0]")
@@ -110,8 +120,8 @@ def Visit_projector_1(
 
     # define plot
     #vi.AddPlot("Contour", "temperature", 1, 1) 
-    if "Pseudocolor-velocity_magnitude Isosurface-temperature" in Plots:
-        print("plotting Pseudocolor-velocity_magnitude Isosurface-temperature\n") if Visit_projector_1_log_level > 0 else None
+    # MOVED INTO LOOP: if "Pseudocolor-velocity_magnitude Isosurface-temperature" in Plots:
+        print("plotting Pseudocolor-velocity_magnitude Isosurface-temperature\n") if Visit_projector_1_log_level >= 1 else None
         
         vi.AddPlot("Pseudocolor", "velocity_magnitude", 1, 1)
 
@@ -129,10 +139,10 @@ def Visit_projector_1(
         IsosurfaceAtts.max = 1
         IsosurfaceAtts.scaling = IsosurfaceAtts.Linear  # Linear, Log
         IsosurfaceAtts.variable = "temperature"
-        vi.SetOperatorOptions(IsosurfaceAtts, 0, 1)
+        # MOVED INTO LOOP: vi.SetOperatorOptions(IsosurfaceAtts, 0, 1)
 
-    if "Pseudocolor-velocity_magnitude Isosurface-temperature colorTableName-CustomBW" in Plots:
-        print("plotting Pseudocolor-velocity_magnitude Isosurface-temperature colorTableName-CustomBW\n") if Visit_projector_1_log_level > 0 else None
+    # MOVED INTO LOOP: if "Pseudocolor-velocity_magnitude Isosurface-temperature colorTableName-CustomBW" in Plots:
+        print("plotting Pseudocolor-velocity_magnitude Isosurface-temperature colorTableName-CustomBW\n") if Visit_projector_1_log_level >= 1 else None
         
         vi.AddPlot("Pseudocolor", "velocity_magnitude", 1, 1)
 
@@ -236,18 +246,18 @@ def Visit_projector_1(
         PseudocolorAtts.lightingFlag = 1
         PseudocolorAtts.wireframeColor = (0, 0, 0, 0)
         PseudocolorAtts.pointColor = (0, 0, 0, 0)
-        vi.SetPlotOptions(PseudocolorAtts)
+        # MOVED INTO LOOP: vi.SetPlotOptions(PseudocolorAtts)
 
 
 
 
 
-    print("Added plot\n") if Visit_projector_1_log_level > 0 else None
+    # print("Added plot\n") if Visit_projector_1_log_level >= 1 else None # MOVED INTO LOOP
 
 
     # calculate plot
-    vi.DrawPlots()
-    print("Drawed Plots\n") if Visit_projector_1_log_level > 0 else None
+    # vi.DrawPlots() # MOVED INTO LOOP
+    # print("Drawed Plots\n") if Visit_projector_1_log_level >= 1 else None # MOVED INTO LOOP
 
     # set view
     View3DAtts = vi.View3DAttributes()
@@ -269,7 +279,7 @@ def Visit_projector_1(
     View3DAtts.shear = (0, 0, 1)                              # used to support oblique projections (like cabinet or cavalier); default disables shear
     View3DAtts.windowValid = 1
     vi.SetView3D(View3DAtts)
-    print("view set\n") if Visit_projector_1_log_level > 0 else None
+    print("view set\n") if Visit_projector_1_log_level >= 1 else None
 
 
     # no annotations
@@ -494,7 +504,7 @@ def Visit_projector_1(
     SaveWindowAtts.height = 1024
     SaveWindowAtts.quality = 80
     vi.SetSaveWindowAttributes(SaveWindowAtts)
-    print("window set\n") if Visit_projector_1_log_level > 0 else None
+    print("window set\n") if Visit_projector_1_log_level >= 1 else None
 
 
 
@@ -523,19 +533,32 @@ def Visit_projector_1(
     Times_VisIt = []
     R_SF_Average_VisIt = []
 
+
+    start_time_loop = time.time() if Visit_projector_1_log_level >= 2 else None
+
     # Loop once through all states (t's)
     for state in State_range: 
-        print("state = ", state) if Visit_projector_1_log_level > 0 else None
+        start_time_state = time.time() if Visit_projector_1_log_level >= 2 else None
+        print("state = ", state) if Visit_projector_1_log_level >= 1 else None
         
         # set state
+        print(f"Attempting: vi.SetTimeSliderState({state})") if Visit_projector_1_log_level >= 0 else None # Always print this
         vi.SetTimeSliderState(state)
+        print(f"Completed: vi.SetTimeSliderState({state})") if Visit_projector_1_log_level >= 0 else None # Always print this
+        print(f"Done: vi.SetTimeSliderState(state)") if Visit_projector_1_log_level >= 2 else None # Original log line
 
         # save window as .png image
         Image_filenames_VisIt_state = f"visit_{state:06}"
+        print(f"Done: Image_filenames_VisIt_state {Image_filenames_VisIt_state}") if Visit_projector_1_log_level >= 2 else None
+
         SaveWindowAtts.fileName = Image_filenames_VisIt_state
+        print(f"Done: SaveWindowAtts.fileName = Image_filenames_VisIt_state") if Visit_projector_1_log_level >= 2 else None
+        
         vi.SetSaveWindowAttributes(SaveWindowAtts)
+        print(f"Done: vi.SetSaveWindowAttributes(SaveWindowAtts)") if Visit_projector_1_log_level >= 2 else None
+
         vi.SaveWindow() 
-        print(f"saved image for file {state:06d}\n", end='\r') if Visit_projector_1_log_level > 0 else None
+        print(f"saved image for state {state:06d}\n", end='\r') if Visit_projector_1_log_level >= 1 else None
 
         # save properties
         Image_filenames_VisIt.append(Image_filenames_VisIt_state)
@@ -548,8 +571,25 @@ def Visit_projector_1(
         vi.Query("Average Value")
         R_SF_Average_state = vi.GetQueryOutputValue()
         R_SF_Average_VisIt.append(R_SF_Average_state)
-        print(f"saved R_Average_state = {R_SF_Average_state} for file {state:06d}\n", end='\r') if Visit_projector_1_log_level > 0 else None
+        print(f"saved R_Average_state = {R_SF_Average_state} for file {state:06d}\n", end='\r') if Visit_projector_1_log_level >= 1 else None
 
+        # Attempt to clear VisIt's cache to free memory
+        if Visit_projector_1_log_level >= 1:
+            print(f"Clearing VisIt cache for state {state}")
+        try:
+            vi.ClearCache("all")
+            if Visit_projector_1_log_level >= 1:
+                print(f"Done clearing VisIt cache for state {state}")
+        except Exception as e:
+            if Visit_projector_1_log_level >= 0: # Always print error for this
+                print(f"Error clearing VisIt cache for state {state}: {e}")
+
+
+        elapsed_time_loop = time.time() - start_time_loop
+        elapsed_time_state = time.time() - start_time_state
+
+        print(f"Loop Elapsed time: {elapsed_time_loop:.2f} s") if Visit_projector_1_log_level >= 2 else None
+        print(f"State Elapsed time: {elapsed_time_state:.2f} s") if Visit_projector_1_log_level >= 2 else None
 
     #################################################### save data
 
@@ -575,7 +615,7 @@ def Visit_projector_1(
 
     # Clean up
     vi.DeleteAllPlots()
-    vi.CloseDatabase(r"euler.ethz.ch:/cluster/scratch/cfrouzak/spher_H2/postProc/fields/po_part2/po_s912k_post.nek5000")
+    vi.CloseDatabase(Database) # Corrected to use the Database variable
 
 
     #################################################### return

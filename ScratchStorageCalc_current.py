@@ -127,25 +127,56 @@ print("\n\n")
 
 # Paste your `ll` output below as a multiline string
 ll_output = """
--rwxrwxrwx 1 orsob    orsob-group    72818423567 May  5 16:39 po_Sphere_mid0.f00001.gz
--rwxr-xr-x 1 cfrouzak cfrouzak-group 73107665928 May  6 10:16 po_Sphere_mid0.f00002.gz
--rwxr-xr-x 1 cfrouzak cfrouzak-group 73390334605 May  6 10:29 po_Sphere_mid0.f00003.gz
--rwxr-xr-x 1 cfrouzak cfrouzak-group 73711360437 May  6 10:41 po_Sphere_mid0.f00004.gz
--rwxr-xr-x 1 cfrouzak cfrouzak-group 73983736536 May  6 12:04 po_Sphere_mid0.f00005.gz
--rwxr-xr-x 1 cfrouzak cfrouzak-group 74258825716 May  6 12:16 po_Sphere_mid0.f00006.gz
--rwxr-xr-x 1 cfrouzak cfrouzak-group 74505300895 May  6 12:29 po_Sphere_mid0.f00007.gz
--rwxr-xr-x 1 cfrouzak cfrouzak-group 74723810520 May  6 12:43 po_Sphere_mid0.f00008.gz
--rwxr-xr-x 1 cfrouzak cfrouzak-group 74904826535 May  6 12:57 po_Sphere_mid0.f00009.gz
--rwxr-xr-x 1 cfrouzak cfrouzak-group 75088494532 May  6 13:28 po_Sphere_mid0.f00010.gz
--rwxr-xr-x 1 cfrouzak cfrouzak-group 75254556187 May  6 13:41 po_Sphere_mid0.f00011.gz
--rwxr-xr-x 1 cfrouzak cfrouzak-group 75410979661 May  6 13:55 po_Sphere_mid0.f00012.gz
--rwxr-xr-x 1 cfrouzak cfrouzak-group 75567721020 May  6 14:09 po_Sphere_mid0.f00013.gz
--rwxr-xr-x 1 cfrouzak cfrouzak-group 75721098198 May  6 14:23 po_Sphere_mid0.f00014.gz
--rwxr-xr-x 1 cfrouzak cfrouzak-group 75809166498 May  6 14:38 po_Sphere_mid0.f00015.gz
--rwxr-xr-x 1 cfrouzak cfrouzak-group 75963580190 May  6 14:52 po_Sphere_mid0.f00016.gz
--rwxr-xr-x 1 cfrouzak cfrouzak-group 76104686713 May  6 15:06 po_Sphere_mid0.f00017.gz
--rwxr-xr-x 1 cfrouzak cfrouzak-group 76243050275 May  6 15:21 po_Sphere_mid0.f00018.gz
--rwxr-xr-x 1 cfrouzak cfrouzak-group 13312720896 May  6 15:23 po_Sphere_mid0.f00019.gz
+-rwxrwxrwx 1 doancea doancea-group 56255808136 May  7 10:32 po_s912k_post0.f00001
+-rwxrwxrwx 1 doancea doancea-group 56255808136 May  7 10:32 po_s912k_post0.f00002
+-rwxrwxrwx 1 doancea doancea-group 56255808136 May  7 10:32 po_s912k_post0.f00003
+-rwxrwxrwx 1 doancea doancea-group 56255808136 May  7 10:32 po_s912k_post0.f00004
+-rwxrwxrwx 1 doancea doancea-group 56255808136 May  7 10:32 po_s912k_post0.f00005
+-rwxrwxrwx 1 doancea doancea-group 56255808136 May  7 10:32 po_s912k_post0.f00006
+-rwxrwxrwx 1 doancea doancea-group 56255808136 May  7 10:32 po_s912k_post0.f00007
+-rwxrwxrwx 1 doancea doancea-group 56255808136 May  7 10:32 po_s912k_post0.f00008
+-rwxrwxrwx 1 doancea doancea-group 56255808136 May  7 10:32 po_s912k_post0.f00009
+-rwxrwxrwx 1 doancea doancea-group 56255808136 May  7 10:32 po_s912k_post0.f00010
+-rwxrwxrwx 1 doancea doancea-group 56255808136 May  7 10:32 po_s912k_post0.f00011
+-rwxrwxrwx 1 doancea doancea-group 56255808136 May  7 10:32 po_s912k_post0.f00012
+-rwxrwxrwx 1 doancea doancea-group 56255808136 May  7 10:32 po_s912k_post0.f00013
+-rwxrwxrwx 1 doancea doancea-group 56255808136 May  7 10:32 po_s912k_post0.f00014
+-rwxrwxrwx 1 doancea doancea-group 56255808136 May  7 10:32 po_s912k_post0.f00015
+-rwxrwxrwx 1 doancea doancea-group 56255808136 May  7 10:32 po_s912k_post0.f00016
+-rwxrwxrwx 1 doancea doancea-group 56255808136 May  7 10:32 po_s912k_post0.f00017
+-rwxrwxrwx 1 doancea doancea-group 56255808136 May  7 10:32 po_s912k_post0.f00018
+-rwxrwxrwx 1 doancea doancea-group 56255808136 May  7 10:32 po_s912k_post0.f00019
+-rwxrwxrwx 1 doancea doancea-group 56255808136 May  7 10:32 po_s912k_post0.f00020
+-rwxrwxrwx 1 doancea doancea-group 56255808136 May  7 10:32 po_s912k_post0.f00021
+-rwxrwxrwx 1 doancea doancea-group 56255808136 May  7 10:32 po_s912k_post0.f00022
+-rwxrwxrwx 1 doancea doancea-group 56255808136 May  7 10:32 po_s912k_post0.f00023
+-rwxrwxrwx 1 doancea doancea-group 56255808136 May  7 10:32 po_s912k_post0.f00024
+-rwxrwxrwx 1 doancea doancea-group 56255808136 May  7 10:32 po_s912k_post0.f00025
+-rwxrwxrwx 1 doancea doancea-group 56255808136 May  7 10:32 po_s912k_post0.f00026
+-rwxrwxrwx 1 doancea doancea-group 56255808136 May  7 10:32 po_s912k_post0.f00027
+-rwxrwxrwx 1 doancea doancea-group 56255808136 May  7 10:32 po_s912k_post0.f00028
+-rwxrwxrwx 1 doancea doancea-group 56255808136 May  7 10:32 po_s912k_post0.f00029
+-rwxrwxrwx 1 doancea doancea-group 56255808136 May  7 10:32 po_s912k_post0.f00030
+-rwxrwxrwx 1 doancea doancea-group 56255808136 May  5 14:24 po_s912k_post0.f00031
+-rwxrwxrwx 1 doancea doancea-group 56255808136 May  5 14:28 po_s912k_post0.f00032
+-rwxrwxrwx 1 doancea doancea-group 56255808136 May  5 14:33 po_s912k_post0.f00033
+-rwxrwxrwx 1 doancea doancea-group 56255808136 May  5 14:38 po_s912k_post0.f00034
+-rwxrwxrwx 1 doancea doancea-group 56255808136 May  5 14:42 po_s912k_post0.f00035
+-rwxrwxrwx 1 doancea doancea-group 56255808136 May  5 14:47 po_s912k_post0.f00036
+-rwxrwxrwx 1 doancea doancea-group 56255808136 May  5 14:52 po_s912k_post0.f00037
+-rwxrwxrwx 1 doancea doancea-group 56255808136 May  5 14:57 po_s912k_post0.f00038
+-rwxrwxrwx 1 doancea doancea-group 56255808136 May  5 15:02 po_s912k_post0.f00039
+-rwxrwxrwx 1 doancea doancea-group 56255808136 May  5 15:33 po_s912k_post0.f00040
+-rwxrwxrwx 1 doancea doancea-group 56255808136 May  5 15:12 po_s912k_post0.f00041
+-rwxrwxrwx 1 doancea doancea-group 56255808136 May  5 15:18 po_s912k_post0.f00042
+-rwxrwxrwx 1 doancea doancea-group 56255808136 May  5 15:23 po_s912k_post0.f00043
+-rwxrwxrwx 1 doancea doancea-group 56255808136 May  5 15:28 po_s912k_post0.f00044
+-rwxrwxrwx 1 doancea doancea-group 56255808136 May  7 10:32 po_s912k_post0.f00045
+-rwxrwxrwx 1 doancea doancea-group 56255808136 May  7 10:32 po_s912k_post0.f00046
+-rwxrwxrwx 1 scleon  scleon-group  56255808136 May  7 10:32 po_s912k_post0.f00047
+-rwxrwxrwx 1 scleon  scleon-group  56255808136 May  7 10:32 po_s912k_post0.f00048
+-rwxrwxrwx 1 scleon  scleon-group  56255808136 May  7 10:32 po_s912k_post0.f00049
+-rwxrwxrwx 1 scleon  scleon-group  56255808136 May  7 10:32 po_s912k_post0.f00050
 """
 
 # Extract file sizes using a regular expression
@@ -154,7 +185,7 @@ sizes = [int(m.group(1)) for m in re.finditer(r"\s(\d+)\s+May", ll_output)]
 print(len(sizes))
 for i in range(len(sizes)+1):
 
-    print(i, "\t", 1.47+ sum(sizes[0:i]) / 1024**4)
+    print(i, "\t", sum(sizes[0:i]) / 1024**4)
 
 
 # Compute total size

@@ -35,7 +35,7 @@ if 1==1:
         Database = Database, State_range_manual = [],
         Plots = ["Pseudocolor-velocity_magnitude Isosurface-temperature colorTableName-CustomBW"],
         no_annotations = 1, viewNormal = [0,0,-1], viewUp = [1,0,0], imageZoom = 1, parallelScale = 50, perspective = 0,
-        Visit_projector_1_log_level = 3, Visit_projector_1_show_windows = 0,
+        Visit_projector_1_log_level = 3, Visit_projector_1_show_windows = 1,
         output_dir_manual = "", output_dir_comment = "testing all A11",
     )
 
