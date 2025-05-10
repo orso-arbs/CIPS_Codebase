@@ -26,7 +26,7 @@ if 1==1:
         Pseudocolor_Variable = "velocity_magnitude", Pseudocolor_colortable = "hot", invertColorTable = 0,
         Isosurface_Variable = "temperature", Isosurface_ContourValue = 3,
         no_annotations = 1, viewNormal = [0,0,-1], viewUp = [1,0,0], imageZoom = 1, parallelScale = 80, perspective = 0,
-        Visit_projector_1_log_level = 2, Visit_projector_1_show_windows = 0,
+        Visit_projector_1_log_level = 1, Visit_projector_1_show_windows = 0,
         output_dir_manual = "", output_dir_comment = "A11_3_states",
     )
 
