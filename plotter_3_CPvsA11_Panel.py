@@ -15,7 +15,7 @@ import video_maker_1 as vm1
 
 
 @F_1.ParameterLog(max_size = 1024 * 10) # 10KB 
-def CP_plotter_3_CPvsA11_Panel(input_dir, # Format_1 requires input_dir
+def plotter_3_CPvsA11_Panel(input_dir, # Format_1 requires input_dir
     CP_extract_df = None, # if None a .pkl file has to be in the input_dir. otherwise no CP_extract data is provided.
     output_dir_manual = "", output_dir_comment = "",
     video = 1, show_plot = 1,

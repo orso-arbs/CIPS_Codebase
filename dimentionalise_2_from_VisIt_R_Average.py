@@ -9,7 +9,7 @@ from cellpose import utils # Needed for utils.diameters
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
 @F_1.ParameterLog(max_size = 1024 * 10, log_level = 0)
-def CP_dimentionalise_1_from_manual_A11(
+def dimentionalise_2_from_VisIt_R_Average(
     # input
     input_dir, # Should be the output directory of CP_extract_1
 
@@ -17,64 +17,16 @@ def CP_dimentionalise_1_from_manual_A11(
     CP_dimentionalise_log_level = 0,
     output_dir_manual = "", output_dir_comment = "",
     ):
+
     """
-    WARNING: might be wrong! Use at own risk
-
-    Loads extracted segmentation data, non-dimensionalizes metrics using A11 data as taken manually from the Altantzis PHD thesis
-    and saves the results to a pandas DataFrame.
-
-    This function reads the DataFrame produced by CP_extract_1 (expected to be
-    'extracted_DataFrame.pkl' in the input_dir). It then loads external A11
-    simulation data which was manually gathered from the thesis .pdf,
-    calculates a time mapping based on image numbers, interpolates
-    A11 flame radius data (R_mean) to determine a scaling factor (d_T_per_px)
-    for each image/time step. Using this scaling factor, it calculates
-    non-dimensional versions of various metrics (diameters, areas) and appends
-    these as new columns to the DataFrame. Finally, the dimensionalized DataFrame
-    is saved in CSV, Pickle, and Excel formats.
-
-    Parameters
-    ----------
-    input_dir : str
-        Path to the directory containing the output from CP_extract_1, specifically
-        the 'extracted_DataFrame.pkl' file.
-    CP_dimentionalise_log_level : int, optional
-        Controls the verbosity of logging messages printed to the console.
-        0: Minimal logging.
-        1: Basic processing steps.
-        Defaults to 0.
-    output_dir_manual : str, optional
-        If provided, specifies the exact output directory path. Overrides the
-        default naming convention managed by `Format_1.F_out_dir`. Defaults to "".
-    output_dir_comment : str, optional
-        A comment to append to the default output directory name if `output_dir_manual`
-        is not provided. Defaults to "".
-
-    Returns
-    -------
-    output_dir : str
-        The path to the directory where the output DataFrame files
-        (`dimentionalised_DataFrame.csv`, `dimentionalised_DataFrame.pkl`,
-        `dimentionalised_DataFrame.xlsx`) and logs (`_log.json`) are saved.
-        This is always the first return value as required by Format_1.
-
-    Notes
-    -----
-    - This function relies on `Format_1.py` for output directory creation (`F_out_dir`)
-      and parameter logging (`@F_1.ParameterLog`).
-    - Requires external data files containing A11 simulation results located at
-      fixed paths (e.g., "C:\\Users\\obs\\OneDrive\\ETH\\ETH_MSc\\Masters Thesis\\Data\\A11_manual_extraction\\...").
-    - Assumes the input DataFrame contains necessary columns like 'image_number',
-      'R_SF_px', 'diameter_training_px', 'diameter_estimate_used_px', etc.
-    - The non-dimensionalization process maps image sequence numbers linearly to a
-      simulation time range [0, t_A11_max=6.81] and uses interpolated A11 data (specifically
-      `A11_SF_R_mean`) to determine the scaling factor `d_T_per_px`.
     """
+    
     #################################################### I/O
     # Use the input_dir (output of CP_extract) as the base for the new output dir
     output_dir = F_1.F_out_dir(input_dir, __file__, output_dir_comment = output_dir_comment) # Format_1 required definition of output directory
 
     #################################################### Load Extracted Data
+
     extracted_data_path = os.path.join(input_dir, 'extracted_DataFrame.pkl')
     print(f"\n Loading extracted data from: {extracted_data_path} \n") if CP_dimentionalise_log_level >= 1 else None
     try:
@@ -83,31 +35,12 @@ def CP_dimentionalise_1_from_manual_A11(
         print(f"Error: Could not find extracted data file at {extracted_data_path}")
         print("Ensure CP_extract_1 ran successfully and produced 'extracted_DataFrame.pkl' in the specified input directory.")
         return None # Or raise an error
+    
+    # Get number of images/rows from loaded data
+    N_images = len(extracted_df)
 
-    N_images = len(extracted_df) # Get number of images/rows from loaded data
 
-    #################################################### Images and A11 data
-
-    print("\n Non Dimentionalising and matching CP and A11 data \n") if CP_dimentionalise_log_level >= 1 else None
-
-    # Load A11 data (Consider making these paths configurable or relative if possible)
-    a11_base_path = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\Data\A11_manual_extraction"
-    try:
-        A11_SF_K_mean = pd.read_csv(os.path.join(a11_base_path, "A11_SF_K_mean_as_mean_stretch_rate_vs_time_manual_extraction.txt"))
-        A11_SF_N_c = pd.read_csv(os.path.join(a11_base_path, "A11_SF_N_c_as_number_of_cells_vs_time_manual_extraction.txt"))
-        A11_SF_R_mean = pd.read_csv(os.path.join(a11_base_path, "A11_SF_R_mean_as_average_radius_of_the_wrinkled_flame_fron_vs_time_manual_extraction.txt"))
-        A11_SF_R_mean_dot = pd.read_csv(os.path.join(a11_base_path, "A11_SF_R_mean_dot_as_first_time_derivative_of_the_average_radius_of_the_wrinkled_flame_front_vs_time_manual_extraction.txt"))
-        A11_SF_s_a = pd.read_csv(os.path.join(a11_base_path, "A11_SF_s_a_as_average_normal_component_of_the_absolute_propagation_velocity_vs_time_manual_extraction.txt"))
-        A11_SF_s_d = pd.read_csv(os.path.join(a11_base_path, "A11_SF_s_d_as_average_density_weighted_displacement_speed_vs_time_manual_extraction.txt"))
-        A11_SF_A = pd.read_csv(os.path.join(a11_base_path, "A11_SF_A_as_flame_surface_area_of_the_wrinkled_spherical_front_vs_time_manual_extraction.txt"))
-        A11_SF_a_t = pd.read_csv(os.path.join(a11_base_path, "A11_SF_a_t_as_average_total_aerodynamic_strain_vs_time_manual_extraction.txt"))
-        A11_SF_iHRR = pd.read_csv(os.path.join(a11_base_path, "A11_SF_iHRR_as_integral_heat_release_rate_vs_time_manual_extraction.txt"))
-        A11_SF_K_geom = pd.read_csv(os.path.join(a11_base_path, "A11_SF_K_geom_as_geometric_stretch_rate_vs_time_manual_extraction.txt"))
-    except FileNotFoundError as e:
-        print(f"Error loading A11 data file: {e}")
-        print("Please ensure A11 data files are present at the expected location:", a11_base_path)
-        return None # Or raise an error
-
+    #################################################### Reference Values
 
     # reference values
     ''' A11 p.36
@@ -122,15 +55,20 @@ def CP_dimentionalise_1_from_manual_A11(
 
     t_ref = d_T/S_L # flame time scale [s]
 
-    t_A11_init = 0.0 # initial time [-]
-    t_A11_max = 6.81 # max time estimated from plots [-]
-    R0 = 10 * d_T # initial Spherical flame radius [m]
 
-
-#################################################### Non-Dimensionalization from A11 manually extracted data
+    #################################################### Non-Dimensionalization from A11 manually extracted data
 
     # length -> length / flame thickness
     # speed -> speed / flame speed
+
+
+
+
+
+
+
+
+
 
     #################### Initialise DataFrame for non-dimensionalisation
 
@@ -142,58 +80,22 @@ def CP_dimentionalise_1_from_manual_A11(
         'diameter_mean_nonDim', 'diameter_median_nonDim', 'diameter_distribution_nonDim',
         'A_image_nonDim2', 'A_empty_nonDim2', 'A_SF_nonDim2', 'D_SF_nonDim', 'R_SF_nonDim', 'A_CP_mask_nonDim',
     ]
-
-    #################### Match time values for each DataFrame row to the manually extracted A11 data
-
-    dimentionalised_df['time'] = np.nan # initialize time collumn filled with nan
-    min_image_num = dimentionalised_df["image_number"].min()
-    max_image_num = dimentionalised_df["image_number"].max()
-    if pd.isna(min_image_num) or pd.isna(max_image_num):
-         print("Warning: Cannot calculate time mapping due to missing image numbers.")
-         # Handle this case appropriately, maybe skip time calculation or fill with a default
-    elif min_image_num == max_image_num:
-        dimentionalised_df["time"] = 0  # Assign 0 to all if there's no range
-        print("Warning in dimensionalisation: min_image_num == max_image_num. Setting time to 0.")
-    else:
-        # Linear mapping from [min_image_num, max_image_num] to [0, t_A11_max]
-        dimentionalised_df["time"] = (dimentionalised_df["image_number"] - min_image_num) / (max_image_num - min_image_num) * t_A11_max
-        print("dimentionalised_df['time']:", dimentionalised_df["time"].to_string()) if CP_dimentionalise_log_level >= 1 else None
-
-
-    # Add these columns to the existing DataFrame
     for col in nonDim_columns:
         dimentionalised_df[col] = np.nan  # Initialize them with NaN
 
-    # Ensure 'diameter_distribution_nonDim' column exists and has dtype 'object'
-    if 'diameter_distribution_nonDim' not in dimentionalised_df.columns:
-        dimentionalised_df['diameter_distribution_nonDim'] = pd.Series(dtype="object")
-    else:
-        # Ensure existing column can hold lists/arrays if it wasn't already object type
-        if dimentionalised_df['diameter_distribution_nonDim'].dtype != 'object':
-             dimentionalised_df['diameter_distribution_nonDim'] = dimentionalised_df['diameter_distribution_nonDim'].astype(object)
+    #################### Calculate ratio of nonDimensionalised length per pixel (d_T_per_px)
 
-
-    #### Calculate pixel to nonDimensionalised length scaling (d_T_per_px)
-
-    # Sort both dataframes by time for interpolation
-    A11_SF_R_mean = A11_SF_R_mean.sort_values(by='time')
-    dimentionalised_df = dimentionalised_df.sort_values(by='time')
-
-    # Interpolate 'R_mean' from A11 data at the 'time' values in dimentionalised_df
-    # Ensure times are within the range of A11 data or handle extrapolation if needed
-    dimentionalised_df['R_mean_interpolated_nonDim'] = np.interp(
-        dimentionalised_df['time'],
-        A11_SF_R_mean['time'],
-        A11_SF_R_mean['R_mean'] # Assuming A11 R_mean is already non-dimensionalized by d_T
-    )
-
-    # Calculate d_T_per_px = (R_mean_nonDim * d_T) / R_SF_px
-    # Or if R_mean in A11 is dimensional: d_T_per_px = R_mean_interpolated_dim / R_SF_px
-    # Assuming A11 R_mean is non-dimensionalized by d_T as per typical flame analysis
-    dimentionalised_df['d_T_per_px'] = (dimentionalised_df['R_mean_interpolated_nonDim'] * d_T) / dimentionalised_df['R_SF_px']
+    print("NOTE: assuming VisIt data is in nonDImentionalised scaling d_T to calculate ratio of nonDimensionalised length per pixel (d_T_per_px)")
+    # d_T_per_px = (R_mean_nonDim * d_T) / R_SF_px
+    dimentionalised_df['d_T_per_px'] = (dimentionalised_df['R_SF_Average_VisIt'] * d_T) / dimentionalised_df['R_SF_px']
     print("Calculated d_T_per_px:", dimentionalised_df['d_T_per_px'].to_string()) if CP_dimentionalise_log_level >= 1 else None
 
-    # Calculate non-dimensionalised values row by row (vectorization might be faster if needed)
+
+
+
+    #################### Calculate non-dimensionalised values 
+
+    # row by row (by Image) (vectorization might be faster if needed)
     for i in dimentionalised_df.index: # Use index after sorting
         print("Processing row index =", i) if CP_dimentionalise_log_level >= 2 else None
 
@@ -218,6 +120,13 @@ def CP_dimentionalise_1_from_manual_A11(
         diameter_median_nonDim_i = diameter_median_px_i * d_T_per_px_i if pd.notna(diameter_median_px_i) else np.nan
         diameter_mean_nonDim_i = diameter_mean_px_i * d_T_per_px_i if pd.notna(diameter_mean_px_i) else np.nan
 
+        # Ensure 'diameter_distribution_nonDim' column exists and has dtype 'object'
+        if 'diameter_distribution_nonDim' not in dimentionalised_df.columns:
+            dimentionalised_df['diameter_distribution_nonDim'] = pd.Series(dtype="object")
+        else:
+            # Ensure existing column can hold lists/arrays if it wasn't already object type
+            if dimentionalised_df['diameter_distribution_nonDim'].dtype != 'object':
+                dimentionalised_df['diameter_distribution_nonDim'] = dimentionalised_df['diameter_distribution_nonDim'].astype(object)
         # Handle potential issues with diameter_distribution_px (e.g., if it's NaN or not an array)
         if isinstance(diameter_distribution_px_i, np.ndarray):
             diameter_distribution_nonDim_i = diameter_distribution_px_i * d_T_per_px_i
@@ -253,7 +162,7 @@ def CP_dimentionalise_1_from_manual_A11(
     # Clean diameter_distribution_nonDim again after loop if necessary (e.g., ensure arrays)
     # This might not be needed if handled correctly within the loop
     dimentionalised_df['diameter_distribution_nonDim'] = dimentionalised_df['diameter_distribution_nonDim'].apply(
-         lambda x: np.array([x]) if isinstance(x, np.ndarray) and x.ndim == 0 else x
+        lambda x: np.array([x]) if isinstance(x, np.ndarray) and x.ndim == 0 else x
     )
 
 
