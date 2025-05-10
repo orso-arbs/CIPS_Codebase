@@ -71,6 +71,10 @@ def Visit_projector_1(
     Notes
     -----
     - If the script gets stuck on a state or if you recieve OOM events (Out of memory) in the .err file, try increasing --mem-per-cpu
+    - Pseudocolor_colortable: 
+        - CustomBW: threshold between white and black. Low values are almost but not quite perfect white to have a contrast with the perfect white background to estimate the SF radius in pixels
+        - 
+    
 
     """
 

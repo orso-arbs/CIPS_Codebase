@@ -36,9 +36,9 @@ if 1==1:
         Plots = ["Pseudocolor - Isosurface"],
         Pseudocolor_colortable = "hot",
         Isosurface_ContourValue = 3, Isosurface_Variable = "temperature",
-        no_annotations = 1, viewNormal = [0,0,-1], viewUp = [1,0,0], imageZoom = 1, parallelScale = 50, perspective = 0,
+        no_annotations = 1, viewNormal = [0,0,-1], viewUp = [1,0,0], imageZoom = 1, parallelScale = 80, perspective = 0,
         Visit_projector_1_log_level = 3, Visit_projector_1_show_windows = 1,
-        output_dir_manual = "", output_dir_comment = "testing all A11",
+        output_dir_manual = "", output_dir_comment = "A11_T-3_VM-hot",
     )
 
     print("Note: Visit window can now be closed. 'VisIt: Error - Can't delete the last window' is now inconsequentioal to the remaining code")
@@ -169,7 +169,7 @@ if 1==1: # plots to evaluate non dimentionalisation quality
         )
 
 
-if 1==0: # video comparing CP A11
+if 1==1: # video comparing CP A11
     #CPe1_output_dir = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\FB images\Visit_projections_initial_test\BW 134 ball flame - Crop\CP_segment_1_2025-03-12_13-42-11\CP_extract_1_2025-03-12_13-48-48"
 
     CPp2_output_dir = CPp2.CP_plotter_2_CPvsA11(
@@ -179,7 +179,7 @@ if 1==0: # video comparing CP A11
         )
 
 
-if 1==0: # panel comparing CP A11
+if 1==1: # panel comparing CP A11
     # \BW 134 ball flame - Crop
     #CPe1_output_dir = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\FB images\Visit_projections_initial_test\BW 134 ball flame - Crop\CP_segment_1_2025-03-12_13-42-11\CP_extract_1_2025-03-12_13-48-48"
 
