@@ -111,6 +111,13 @@ def CP_plotter_2_CPvsA11(input_dir, # Format_1 requires input_dir
     else:
         raise ValueError("Loading CP_extract data disambiguation failed. Check CP_extract_df and CP_extract_df_pkl")
 
+    if CP_extract_df['Time_VisIt'] is not None:
+        print("Time_VisIt column found in CP_extract_df. Using it as time.")
+        CP_extract_df['time'] = CP_extract_df['Time_VisIt']
+    else: 
+        print("No Time_VisIt column found in CP_extract_df. Using index as time.")
+        CP_extract_df['time'] = CP_extract_df.index
+
 
 
     # Load A11 data
@@ -178,7 +185,7 @@ def CP_plotter_2_CPvsA11(input_dir, # Format_1 requires input_dir
     
     print(f"\nPlotting data for image:")
     for i in range(N_images): # Plot the data for each row
-        print(f"\r{os.path.basename(CP_extract_df.loc[i, 'image_file_name'])} \t {i+1}/{N_images}", end='', flush=True)
+        print(f"\r{os.path.basename(CP_extract_df.loc[i, 'image_file_path'])} \t {i+1}/{N_images}", end='', flush=True)
 
 
         # Create the figure with a custom GridSpec layout
@@ -186,7 +193,7 @@ def CP_plotter_2_CPvsA11(input_dir, # Format_1 requires input_dir
         gs = gridspec.GridSpec(2, 3, figure=fig)
 
         # Get the image, outlines, and masks for the current row
-        image = color.rgb2gray(sk_io.imread(CP_extract_df.loc[i, 'image_file_name'])[..., :3]) # grayscale
+        image = color.rgb2gray(sk_io.imread(CP_extract_df.loc[i, 'image_file_path'])[..., :3]) # grayscale
         outlines = CP_extract_df.loc[i, 'outlines']
         masks = CP_extract_df.loc[i, 'masks']
 

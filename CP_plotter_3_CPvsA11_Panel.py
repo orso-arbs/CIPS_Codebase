@@ -105,6 +105,12 @@ def CP_plotter_3_CPvsA11_Panel(input_dir, # Format_1 requires input_dir
     else:
         raise ValueError("Loading CP_extract data disambiguation failed. Check CP_extract_df and CP_extract_df_pkl")
 
+    if CP_extract_df['Time_VisIt'] is not None:
+        print("Time_VisIt column found in CP_extract_df. Using it as time.")
+        CP_extract_df['time'] = CP_extract_df['Time_VisIt']
+    else: 
+        print("No Time_VisIt column found in CP_extract_df. Using index as time.")
+        CP_extract_df['time'] = CP_extract_df.index
 
 
     # Load A11 data

@@ -18,3 +18,16 @@ for lst in lists:
 # Display results
 for i, pos in enumerate(global_positions):
     print(f"List {i+1} global positions: {pos}")
+
+
+
+
+
+a = 1
+b = 2
+
+c = a + b 
+
+b = 1
+
+c = a + b 

@@ -188,7 +188,7 @@ def Visit_projector_1(
         PseudocolorAtts = vi.PseudocolorAttributes()
         PseudocolorAtts.scaling = PseudocolorAtts.Linear  # Linear, Log, Skew
         PseudocolorAtts.skewFactor = 1
-        PseudocolorAtts.limitsMode = PseudocolorAtts.ActualData  # OriginalData, ActualData
+        PseudocolorAtts.limitsMode = PseudocolorAtts.ActualData  # OriginalData (total state), ActualData (subselection i.e. after isocontour) to set color table limits.
         PseudocolorAtts.minFlag = 0
         PseudocolorAtts.min = 0
         PseudocolorAtts.useBelowMinColor = 0
@@ -574,12 +574,11 @@ def Visit_projector_1(
             if Visit_projector_1_log_level >= 0: # Always print error for this
                 print(f"Error clearing VisIt cache for state {state}: {e}")
 
-
-        elapsed_time_loop = time.time() - start_time_loop
-        elapsed_time_state = time.time() - start_time_state
-
-        print(f"Loop Elapsed time: {elapsed_time_loop:.2f} s") if Visit_projector_1_log_level >= 2 else None
-        print(f"State Elapsed time: {elapsed_time_state:.2f} s") if Visit_projector_1_log_level >= 2 else None
+        if Visit_projector_1_log_level >= 2:
+            elapsed_time_loop = time.time() - start_time_loop
+            elapsed_time_state = time.time() - start_time_state
+            print(f"Loop Elapsed time: {elapsed_time_loop:.2f} s")
+            print(f"State Elapsed time: {elapsed_time_state:.2f} s")
 
     #################################################### save data
 
@@ -607,7 +606,7 @@ def Visit_projector_1(
     vi.DeleteAllPlots()
     vi.CloseDatabase(Database)
     vi.CloseComputeEngine("euler.ethz.ch")
-    vi.Close() # Close the VisIt viewer 
+    #vi.Close() # Close the VisIt viewer 
     print("VisIt is now closed.")
 
     #################################################### return
