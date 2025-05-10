@@ -21,12 +21,12 @@ if 1==1:
 
     VP1_output_dir = VP1.Visit_projector_1(
         input_dir = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\SF_CP_analysis_pipeline_data", # storage for this script
-        Database = Database, State_range_manual = [1,50,130],
+        Database = Database, State_range_manual = [],
         Plots = ["Pseudocolor - Isosurface"],
-        Pseudocolor_colortable = "hot",
-        Isosurface_ContourValue = 3, Isosurface_Variable = "temperature",
+        Pseudocolor_Variable = "velocity_magnitude", Pseudocolor_colortable = "hot", invertColorTable = 0,
+        Isosurface_Variable = "temperature", Isosurface_ContourValue = 3,
         no_annotations = 1, viewNormal = [0,0,-1], viewUp = [1,0,0], imageZoom = 1, parallelScale = 80, perspective = 0,
-        Visit_projector_1_log_level = 1, Visit_projector_1_show_windows = 1,
+        Visit_projector_1_log_level = 2, Visit_projector_1_show_windows = 0,
         output_dir_manual = "", output_dir_comment = "A11_3_states",
     )
 
@@ -100,7 +100,7 @@ if 1==1:
         input_dir = CPs1_output_dir,
         #masks = masks, flows = flows, styles = styles, diameter_estimate_used = diameter_estimate_used, CP_model_type = CP_model_type,
         CP_extract_log_level = 0,
-        diameter_training_px = 30, # define for custom model
+        #diameter_training_px = 30, # define for custom model
         )
 
 

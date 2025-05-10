@@ -15,8 +15,8 @@ def Visit_projector_1(
     # VisIt parameters
     Database, State_range_manual = [], # Data
     Plots = ["Pseudocolor-velocity_magnitude Isosurface-temperature3"], # Plots
-    Pseudocolor_Variable = "velocity_magnitude", Pseudocolor_colortable = "hot",
-    Isosurface_ContourValue = 3, Isosurface_Variable = "temperature",
+    Pseudocolor_Variable = "velocity_magnitude", Pseudocolor_colortable = "hot", invertColorTable = 0,
+    Isosurface_Variable = "temperature", Isosurface_ContourValue = 3,
     no_annotations = 1, viewNormal = [0,0,-1], viewUp = [1,0,0], imageZoom = 1, parallelScale = 100, perspective = 1, # View
     Visit_projector_1_show_windows = 0, # Window
 
@@ -82,14 +82,13 @@ def Visit_projector_1(
     # visit import and launch
     sys.path.append(r"C:\Users\obs\LLNL\VisIt3.4.2\lib\site-packages")
     import visit as vi
-    vi.AddArgument("-nowin") if Visit_projector_1_show_windows == 0 else None #-gui
-    vi.SetDebugLevel("5") if Visit_projector_1_log_level >= 2 else None
+    vi.AddArgument("-nowin") if Visit_projector_1_show_windows == 0 else None # show plots as they are generated. Also creates a manual confirmation window to launch the compute engine on Euler. Note: Requires there to be no other Visit windows open to work.
+    if Visit_projector_1_log_level >= 2:
+        print("Setting VisIt client debug level to 5")
+        vi.SetDebugLevel("5")
     vi.Launch() # loads rest of visit functions
     print("launched visit") if Visit_projector_1_log_level >= 1 else None
     import visit as vi # loads rest of visit functions
-    # Enable maximum client-side VisIt debug logging
-    if Visit_projector_1_log_level >= 1:
-        print("Setting VisIt client debug level to 5")
     print("imported visit \n") if Visit_projector_1_log_level >= 1 else None
 
     #################################################### I/O
@@ -199,7 +198,7 @@ def Visit_projector_1(
         PseudocolorAtts.aboveMaxColor = (0, 0, 0, 255)
         PseudocolorAtts.centering = PseudocolorAtts.Natural  # Natural, Nodal, Zonal
         PseudocolorAtts.colorTableName = Pseudocolor_colortable # color table
-        PseudocolorAtts.invertColorTable = 0
+        PseudocolorAtts.invertColorTable = invertColorTable
         PseudocolorAtts.opacityType = PseudocolorAtts.FullyOpaque  # ColorTable, FullyOpaque, Constant, Ramp, VariableRange
         PseudocolorAtts.opacityVariable = ""
         PseudocolorAtts.opacity = 1
