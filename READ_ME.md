@@ -27,8 +27,13 @@ Note: The code has been checked for functionality only in Windows 11 with Visit 
    - Note: Cellpose was found to work with numpy in python 3.9.
    - Note: This installs torch for CUDA GPU acceleration. If you don't run with an NVIDIA GPU, this won't help your speed. 
 1. Install VisIt 3.4.2 December 2024 both on your mashine and on your Euler /cluster/home/username:
-   1. [Visit releases](https://visit-dav.github.io/visit-website/releases-as-tables/#series-34)
-   2. [Installation guide and Starting VisIt](https://visit-sphinx-github-user-manual.readthedocs.io/en/v3.3.3/getting_started/Installing_VisIt.html)
+   1. [Visit releases](https://visit-dav.github.io/visit-website/releases-as-tables/#series-34).
+   2. [Installation guide and Starting VisIt](https://visit-sphinx-github-user-manual.readthedocs.io/en/v3.3.3/getting_started/Installing_VisIt.html).
+2. Access Euler
+   1. Make sure you have accessed Euler at least once to unlock it. Here is the [Euler wiki](https://scicomp.ethz.ch/wiki/Tutorials#Cluster_tutorials).
+   2. To not have to enter the EUler password every time visit is lanched, you need to setup a passwordless login with an SSH key. [Here](https://www.ssh.com/academy/ssh/putty/windows/puttygen) are tutorial videos.
+      1. PuTTYgen to generate key.
+      2. PuTTY Pagent for passwordless login .
 
 
 ## Usage

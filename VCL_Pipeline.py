@@ -37,7 +37,7 @@ def VCL_pipeline(
     vp_parallelScale=80,
     vp_perspective=0,
     vp_Visit_projector_1_log_level=1,
-    vp_Visit_projector_1_show_windows=1,
+    vp_Visit_projector_1_show_windows=0,
     vp_output_dir_manual="",
     vp_output_dir_comment="",
 
@@ -93,7 +93,18 @@ def VCL_pipeline(
     run_plotter_1=True,
     run_plotter_4=True,
     run_plotter_2=True,
-    run_plotter_3_panel=True
+    run_plotter_3_panel=True,
+
+    # run_cp_segment=False,
+    # run_cp_extract=False,
+    # run_dimentionalise=False,
+    # run_plotter_1=False,
+    # run_plotter_4=False,
+    # run_plotter_2=False,
+    # run_plotter_3_panel=False
+
+
+
 ):
     """
     Runs the VCL (VisIt-Cellpose-Lineage-Tree) pipeline with configurable parameters.
@@ -118,7 +129,7 @@ def VCL_pipeline(
 
     #########################################        Visit
 
-    if vp_input_dir is not None:
+    if not vp_input_dir:
         vp_input_dir = vcl_pipeline_output_dir # to put the Visit output in the pipeline folder if the VisIt output folder is not specified
 
     if run_visit_projector:
@@ -127,7 +138,7 @@ def VCL_pipeline(
         # to ensure outputs go into the correct variation folder.
         # vp_output_dir_comment will be specific to the variation.
         VP1_output_dir = VP1.Visit_projector_1(
-            input_dir=vcl_pipeline_output_dir,
+            input_dir=vp_input_dir,
             Database=vp_Database, State_range_manual=vp_State_range_manual,
             Plots=vp_Plots,
             Pseudocolor_Variable=vp_Pseudocolor_Variable, Pseudocolor_colortable=vp_Pseudocolor_colortable, invertColorTable=vp_invertColorTable,
@@ -137,7 +148,7 @@ def VCL_pipeline(
             output_dir_manual=vp_output_dir_manual, # This is key for variations
             output_dir_comment=vp_output_dir_comment,
         )
-        print(f"Visit_Projector_1 output: {VP1_output_dir}")
+        # print(f"Visit_Projector_1 output: {VP1_output_dir}")
         print("Note: Visit window can now be closed. 'VisIt: Error - Can't delete the last window' is now inconsequential to the remaining code")
     else:
         print("--- Skipping Visit_Projector_1 ---")
@@ -157,7 +168,7 @@ def VCL_pipeline(
                 output_dir_comment=cps_output_dir_comment,
                 CP_segment_log_level=cps_CP_segment_log_level,
             )
-            print(f"CP_segment_1 output: {CPs1_output_dir}")
+            # print(f"CP_segment_1 output: {CPs1_output_dir}")
         else:
             print("--- Skipping CP_segment_1 (missing Visit_Projector_1 output) ---")
     else:
@@ -172,7 +183,7 @@ def VCL_pipeline(
                 CP_extract_log_level=cpe_CP_extract_log_level,
                 # diameter_training_px=cpe_diameter_training_px, # if added as arg
             )
-            print(f"CP_extract_1 output: {CPe1_output_dir}")
+            # print(f"CP_extract_1 output: {CPe1_output_dir}")
         else:
             print("--- Skipping CP_extract_1 (missing CP_segment_1 output) ---")
     else:
@@ -186,7 +197,7 @@ def VCL_pipeline(
                 CP_dimentionalise_log_level=d2_CP_dimentionalise_log_level,
                 output_dir_comment=d2_output_dir_comment,
             )
-            print(f"dimentionalise_2_from_VisIt_R_Average output: {d2_output_dir}")
+            # print(f"dimentionalise_2_from_VisIt_R_Average output: {d2_output_dir}")
         else:
             print("--- Skipping dimentionalise_2_from_VisIt_R_Average (missing CP_extract_1 output) ---")
     else:
@@ -206,7 +217,7 @@ def VCL_pipeline(
                 output_dir_comment=p1_output_dir_comment,
                 video=p1_video
             )
-            print(f"plotter_1 output: {p1_output_dir}")
+            # print(f"plotter_1 output: {p1_output_dir}")
         else:
             print("--- Skipping plotter_1 (missing dimentionalisation output) ---")
     else:
@@ -223,7 +234,7 @@ def VCL_pipeline(
                 Panel_1_A11=p4_Panel_1_A11, A11_manual_data_base_dir=p4_A11_manual_data_base_dir,
                 Panel_2_Dimentionalised_from_VisIt=p4_Panel_2_Dimentionalised_from_VisIt,
             )
-            print(f"plotter_4_dimentionalisation output: {p4_output_dir}")
+            # print(f"plotter_4_dimentionalisation output: {p4_output_dir}")
         else:
             print("--- Skipping plotter_4_dimentionalisation (missing dimentionalisation output) ---")
     else:
@@ -238,7 +249,7 @@ def VCL_pipeline(
                 output_dir_comment=p2_output_dir_comment,
                 video=p2_video
             )
-            print(f"plotter_2_CPvsA11 output: {p2_output_dir}")
+            # print(f"plotter_2_CPvsA11 output: {p2_output_dir}")
         else:
             print("--- Skipping plotter_2_CPvsA11 (missing dimentionalisation output) ---")
     else:
@@ -257,7 +268,7 @@ def VCL_pipeline(
                 Panel_3=p3_Panel_3,
                 Panel_4=p3_Panel_4,
             )
-            print(f"plotter_3_CPvsA11_Panel output: {p3_out_dir}")
+            # print(f"plotter_3_CPvsA11_Panel output: {p3_out_dir}")
         else:
             print("--- Skipping plotter_3_CPvsA11_Panel (missing dimentionalisation output) ---")
     else:

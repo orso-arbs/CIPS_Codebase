@@ -12,10 +12,8 @@ def VCL_variation_1(
     vcl_variation_output_dir_comment="", 
 ):
     #################################################### I/O
-    start_time, current_date = F_1.start_inform(__file__)
-
-    vcl_variations_1_output_dir = F_1.F_out_dir(input_dir = input_dir, script_path = __file__, output_dir_comment = vcl_variation_output_dir_manual, output_dir_manual = vcl_variation_output_dir_comment) # Format_1 required definition of output directory
-
+    vcl_variations_1_output_dir = F_1.F_out_dir(input_dir = input_dir, script_path = __file__, output_dir_comment = vcl_variation_output_dir_comment, output_dir_manual = vcl_variation_output_dir_manual) # Format_1 required definition of output directory
+    print(f"VCL_variations_1_output_dir: {vcl_variations_1_output_dir}")
 
     ####################################################
 
@@ -28,17 +26,64 @@ def VCL_variation_1(
     variations = [
         {
             "vcl_pipeline_output_dir_comment": "PsCol_CustomBW_invC_0",
-            "vp_output_dir_comment": "PsCol_CustomBW_invC_0", # For folder and comment
+            "vp_output_dir_comment": "PsCol_CustomBW_invC_0",
             "vp_Pseudocolor_colortable": "CustomBW",
-            "vp_invertColorTable": 0, # Default, but explicit for clarity in variation name
+            "vp_invertColorTable": 0, # Assuming default
         },
         {
             "vcl_pipeline_output_dir_comment": "PsCol_orangehot_invC_1",
-            "vp_output_dir_comment": "PsCol_orangehot_invC_1", # For folder and comment
+            "vp_output_dir_comment": "PsCol_orangehot_invC_1",
             "vp_Pseudocolor_colortable": "orangehot",
             "vp_invertColorTable": 1,
         },
-        # Add more variations here as needed
+        {
+            "vcl_pipeline_output_dir_comment": "PsCol_Purples_invC_default",
+            "vp_output_dir_comment": "PsCol_Purples_invC_default",
+            "vp_Pseudocolor_colortable": "Purples",
+            "vp_invertColorTable": 0, # Assuming default
+        },
+        {
+            "vcl_pipeline_output_dir_comment": "PsCol_hot_and_cold_invC_default",
+            "vp_output_dir_comment": "PsCol_hot_and_cold_invC_default",
+            "vp_Pseudocolor_colortable": "hot_and_cold",
+            "vp_invertColorTable": 0, # Assuming default
+        },
+        {
+            "vcl_pipeline_output_dir_comment": "PsCol_BrBG_invC_default",
+            "vp_output_dir_comment": "PsCol_BrBG_invC_default",
+            "vp_Pseudocolor_colortable": "BrBG",
+            "vp_invertColorTable": 0, # Assuming default
+        },
+        {
+            "vcl_pipeline_output_dir_comment": "PsCol_difference_invC_default",
+            "vp_output_dir_comment": "PsCol_difference_invC_default",
+            "vp_Pseudocolor_colortable": "difference",
+            "vp_invertColorTable": 0, # Assuming default
+        },
+        {
+            "vcl_pipeline_output_dir_comment": "PsCol_plasma_invC_default",
+            "vp_output_dir_comment": "PsCol_plasma_invC_default",
+            "vp_Pseudocolor_colortable": "plasma",
+            "vp_invertColorTable": 0, # Assuming default
+        },
+        {
+            "vcl_pipeline_output_dir_comment": "PsCol_turbo_invC_default",
+            "vp_output_dir_comment": "PsCol_turbo_invC_default",
+            "vp_Pseudocolor_colortable": "turbo",
+            "vp_invertColorTable": 0, # Assuming default
+        },
+        {
+            "vcl_pipeline_output_dir_comment": "PsCol_hot_invC_default",
+            "vp_output_dir_comment": "PsCol_hot_invC_default",
+            "vp_Pseudocolor_colortable": "hot",
+            "vp_invertColorTable": 0, # Assuming default
+        },
+        {
+            "vcl_pipeline_output_dir_comment": "PsCol_Accent_invC_default",
+            "vp_output_dir_comment": "PsCol_Accent_invC_default",
+            "vp_Pseudocolor_colortable": "Accent",
+            "vp_invertColorTable": 0, # Assuming default
+        },
     ]
     # run variations
     for i, var_params in enumerate(variations):
@@ -46,33 +91,29 @@ def VCL_variation_1(
 
         # Prepare arguments for VCL_pipeline
         pipeline_args = {
+            'input_dir': vcl_variations_1_output_dir, # set the directory for the pipeline
             "vcl_pipeline_output_dir_comment": var_params["vcl_pipeline_output_dir_comment"], # For overall pipeline logging
 
-            # Visit_Projector_1 specific arguments
-            "vp_input_dir": vcl_variations_1_output_dir, # Directs VP1 output into this folder
+            # Visit_Projector_1 arguments
+            #"vp_input_dir": vcl_variations_1_output_dir, # Directs VP1 output into this folder
             "vp_output_dir_comment": var_params["vp_output_dir_comment"], # VP1 uses this for its own subfolder name
             "vp_Pseudocolor_colortable": var_params["vp_Pseudocolor_colortable"],
             "vp_invertColorTable": var_params["vp_invertColorTable"],
-            
-            # Add other vp_* parameters if they are part of the sweep
-            # Otherwise, they will use defaults from VCL_pipeline
 
-            # Potentially other parameters for other pipeline stages if varied
-            # "cps_CP_model_type": "new_model", # Example
         }
 
         try:
             VCL_pipeline(**pipeline_args)
             print(f"--- Variation {var_params['vcl_pipeline_output_dir_comment']} completed successfully. ---")
 
-        except Exception as e:
+        except Exception as e: # log an error if it occurs
             print(f"!!! ERROR during variation: {var_params['vcl_pipeline_output_dir_comment']} !!!")
             error_timestamp = datetime.datetime.now().isoformat()
             error_details = (
                 f"Timestamp: {error_timestamp}\n"
                 f"Variation Index: {i}\n"
                 f"Variation Name: {var_params['vcl_pipeline_output_dir_comment']}\n"
-                f"Parameters Used: {pipeline_args}\n" # Log the actual args passed
+                f"Parameters Used: {pipeline_args}\n"
                 f"Error Type: {type(e).__name__}\n"
                 f"Error Message: {str(e)}\n"
                 f"Traceback:\n{traceback.format_exc()}\n"
@@ -83,14 +124,10 @@ def VCL_variation_1(
             print(f"Error details logged to {error_log_file}")
             print(f"--- Continuing to next variation. ---")
 
-    print("\nAll variations attempted.")
+    print("\nAll variations attempted.\n")
+    print("\nEncountered Error: \n")
     F_1.ding() # Notify completion of all sweeps
 
 if __name__ == "__main__":
-    # General script start info
-    script_start_time, script_current_date = F_1.start_inform(__file__)
-    
+    # General script start info    
     VCL_variation_1()
-    
-    # General script end info
-    F_1.end_inform(__file__, script_start_time)
