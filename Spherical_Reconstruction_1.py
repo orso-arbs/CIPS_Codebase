@@ -18,7 +18,7 @@ def Spherical_Reconstruction_1(
 
     #################################################### I/O
     # Use the input_dir (output of CP_extract) as the base for the new output dir
-    output_dir = F_1.F_out_dir(input_dir, __file__, output_dir_comment = output_dir_comment) # Format_1 required definition of output directory
+    output_dir = F_1.F_out_dir(input_dir, __file__, output_dir_comment = output_dir_comment, output_dir_manual = output_dir_manual) # Format_1 required definition of output directory
 
     #################################################### Load Extracted Data
 
