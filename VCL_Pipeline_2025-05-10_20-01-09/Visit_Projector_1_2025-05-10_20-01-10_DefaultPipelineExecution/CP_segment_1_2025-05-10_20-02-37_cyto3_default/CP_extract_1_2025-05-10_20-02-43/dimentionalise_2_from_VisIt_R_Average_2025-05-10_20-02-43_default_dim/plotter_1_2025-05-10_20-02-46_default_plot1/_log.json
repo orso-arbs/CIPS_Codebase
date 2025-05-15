@@ -1,0 +1,348 @@
+{
+    "plotter_1": {
+        "function_name": "plotter_1",
+        "execution_time": "2025-05-10_20-02-46",
+        "comment": "default_plot1",
+        "script_location": "c:\\Users\\obs\\OneDrive\\ETH\\ETH_MSc\\Masters Thesis\\Python Code\\msc python cellpose\\plotter_1.py",
+        "script_name": "plotter_1",
+        "output_dir": "VCL_Pipeline_2025-05-10_20-01-09\\Visit_Projector_1_2025-05-10_20-01-10_DefaultPipelineExecution\\CP_segment_1_2025-05-10_20-02-37_cyto3_default\\CP_extract_1_2025-05-10_20-02-43\\dimentionalise_2_from_VisIt_R_Average_2025-05-10_20-02-43_default_dim\\plotter_1_2025-05-10_20-02-46_default_plot1",
+        "arguments": [
+            {
+                "name": "input_dir",
+                "value": "VCL_Pipeline_2025-05-10_20-01-09\\Visit_Projector_1_2025-05-10_20-01-10_DefaultPipelineExecution\\CP_segment_1_2025-05-10_20-02-37_cyto3_default\\CP_extract_1_2025-05-10_20-02-43\\dimentionalise_2_from_VisIt_R_Average_2025-05-10_20-02-43_default_dim",
+                "type": "str",
+                "size": 786,
+                "length": 245
+            },
+            {
+                "name": "output_dir_manual",
+                "value": "",
+                "type": "str",
+                "size": 51,
+                "length": 0
+            },
+            {
+                "name": "output_dir_comment",
+                "value": "default_plot1",
+                "type": "str",
+                "size": 62,
+                "length": 13
+            },
+            {
+                "name": "video",
+                "value": "1",
+                "type": "int",
+                "size": 28,
+                "length": null
+            }
+        ],
+        "returned_values": [
+            {
+                "name": "returned_value1",
+                "value": "VCL_Pipeline_2025-05-10_20-01-09\\Visit_Projector_1_2025-05-10_20-01-10_DefaultPipelineExecution\\CP_segment_1_2025-05-10_20-02-37_cyto3_default\\CP_extract_1_2025-05-10_20-02-43\\dimentionalise_2_from_VisIt_R_Average_2025-05-10_20-02-43_default_dim\\plotter_1_2025-05-10_20-02-46_default_plot1",
+                "type": "str",
+                "size": 918,
+                "length": 289
+            }
+        ]
+    },
+    "dimentionalise_2_from_VisIt_R_Average": {
+        "function_name": "dimentionalise_2_from_VisIt_R_Average",
+        "execution_time": "2025-05-10_20-02-43",
+        "comment": "default_dim",
+        "script_location": "c:\\Users\\obs\\OneDrive\\ETH\\ETH_MSc\\Masters Thesis\\Python Code\\msc python cellpose\\dimentionalise_2_from_VisIt_R_Average.py",
+        "script_name": "dimentionalise_2_from_VisIt_R_Average",
+        "output_dir": "VCL_Pipeline_2025-05-10_20-01-09\\Visit_Projector_1_2025-05-10_20-01-10_DefaultPipelineExecution\\CP_segment_1_2025-05-10_20-02-37_cyto3_default\\CP_extract_1_2025-05-10_20-02-43\\dimentionalise_2_from_VisIt_R_Average_2025-05-10_20-02-43_default_dim",
+        "arguments": [
+            {
+                "name": "input_dir",
+                "value": "VCL_Pipeline_2025-05-10_20-01-09\\Visit_Projector_1_2025-05-10_20-01-10_DefaultPipelineExecution\\CP_segment_1_2025-05-10_20-02-37_cyto3_default\\CP_extract_1_2025-05-10_20-02-43",
+                "type": "str",
+                "size": 576,
+                "length": 175
+            },
+            {
+                "name": "CP_dimentionalise_log_level",
+                "value": "0",
+                "type": "int",
+                "size": 24,
+                "length": null
+            },
+            {
+                "name": "output_dir_comment",
+                "value": "default_dim",
+                "type": "str",
+                "size": 60,
+                "length": 11
+            }
+        ],
+        "returned_values": [
+            {
+                "name": "returned_value1",
+                "value": "VCL_Pipeline_2025-05-10_20-01-09\\Visit_Projector_1_2025-05-10_20-01-10_DefaultPipelineExecution\\CP_segment_1_2025-05-10_20-02-37_cyto3_default\\CP_extract_1_2025-05-10_20-02-43\\dimentionalise_2_from_VisIt_R_Average_2025-05-10_20-02-43_default_dim",
+                "type": "str",
+                "size": 786,
+                "length": 245
+            }
+        ]
+    },
+    "CP_extract_1": {
+        "function_name": "CP_extract_1",
+        "execution_time": "2025-05-10_20-02-43",
+        "comment": null,
+        "script_location": "c:\\Users\\obs\\OneDrive\\ETH\\ETH_MSc\\Masters Thesis\\Python Code\\msc python cellpose\\CP_extract_1.py",
+        "script_name": "CP_extract_1",
+        "output_dir": "VCL_Pipeline_2025-05-10_20-01-09\\Visit_Projector_1_2025-05-10_20-01-10_DefaultPipelineExecution\\CP_segment_1_2025-05-10_20-02-37_cyto3_default\\CP_extract_1_2025-05-10_20-02-43",
+        "arguments": [
+            {
+                "name": "input_dir",
+                "value": "VCL_Pipeline_2025-05-10_20-01-09\\Visit_Projector_1_2025-05-10_20-01-10_DefaultPipelineExecution\\CP_segment_1_2025-05-10_20-02-37_cyto3_default",
+                "type": "str",
+                "size": 477,
+                "length": 142
+            },
+            {
+                "name": "CP_extract_log_level",
+                "value": "0",
+                "type": "int",
+                "size": 24,
+                "length": null
+            }
+        ],
+        "returned_values": [
+            {
+                "name": "returned_value1",
+                "value": "VCL_Pipeline_2025-05-10_20-01-09\\Visit_Projector_1_2025-05-10_20-01-10_DefaultPipelineExecution\\CP_segment_1_2025-05-10_20-02-37_cyto3_default\\CP_extract_1_2025-05-10_20-02-43",
+                "type": "str",
+                "size": 576,
+                "length": 175
+            }
+        ]
+    },
+    "CP_segment_1": {
+        "function_name": "CP_segment_1",
+        "execution_time": "2025-05-10_20-02-37",
+        "comment": "cyto3_default",
+        "script_location": "c:\\Users\\obs\\OneDrive\\ETH\\ETH_MSc\\Masters Thesis\\Python Code\\msc python cellpose\\CP_segment_1.py",
+        "script_name": "CP_segment_1",
+        "output_dir": "VCL_Pipeline_2025-05-10_20-01-09\\Visit_Projector_1_2025-05-10_20-01-10_DefaultPipelineExecution\\CP_segment_1_2025-05-10_20-02-37_cyto3_default",
+        "arguments": [
+            {
+                "name": "input_dir",
+                "value": "VCL_Pipeline_2025-05-10_20-01-09\\Visit_Projector_1_2025-05-10_20-01-10_DefaultPipelineExecution",
+                "type": "str",
+                "size": 336,
+                "length": 95
+            },
+            {
+                "name": "CP_model_type",
+                "value": "cyto3",
+                "type": "str",
+                "size": 54,
+                "length": 5
+            },
+            {
+                "name": "gpu",
+                "value": "True",
+                "type": "bool",
+                "size": 28,
+                "length": null
+            },
+            {
+                "name": "diameter_estimate_guess_px",
+                "value": "None",
+                "type": "NoneType",
+                "size": 16,
+                "length": null
+            },
+            {
+                "name": "output_dir_comment",
+                "value": "cyto3_default",
+                "type": "str",
+                "size": 62,
+                "length": 13
+            },
+            {
+                "name": "CP_segment_log_level",
+                "value": "1",
+                "type": "int",
+                "size": 28,
+                "length": null
+            }
+        ],
+        "returned_values": [
+            {
+                "name": "returned_value1",
+                "value": "VCL_Pipeline_2025-05-10_20-01-09\\Visit_Projector_1_2025-05-10_20-01-10_DefaultPipelineExecution\\CP_segment_1_2025-05-10_20-02-37_cyto3_default",
+                "type": "str",
+                "size": 477,
+                "length": 142
+            }
+        ]
+    },
+    "Visit_projector_1": {
+        "function_name": "Visit_projector_1",
+        "execution_time": "2025-05-10_20-01-10",
+        "comment": "DefaultPipelineExecution",
+        "script_location": "c:\\Users\\obs\\OneDrive\\ETH\\ETH_MSc\\Masters Thesis\\Python Code\\msc python cellpose\\Visit_Projector_1.py",
+        "script_name": "Visit_Projector_1",
+        "output_dir": "VCL_Pipeline_2025-05-10_20-01-09\\Visit_Projector_1_2025-05-10_20-01-10_DefaultPipelineExecution",
+        "arguments": [
+            {
+                "name": "input_dir",
+                "value": "VCL_Pipeline_2025-05-10_20-01-09",
+                "type": "str",
+                "size": 147,
+                "length": 32
+            },
+            {
+                "name": "Database",
+                "value": "euler.ethz.ch:/cluster/scratch/orsob/orsoMT_orsob/A11_states/A11_all_states.visit",
+                "type": "str",
+                "size": 130,
+                "length": 81
+            },
+            {
+                "name": "State_range_manual",
+                "value": [
+                    "1",
+                    "50"
+                ],
+                "type": "list",
+                "size": 72,
+                "length": 2
+            },
+            {
+                "name": "Plots",
+                "value": [
+                    "Pseudocolor - Isosurface"
+                ],
+                "type": "list",
+                "size": 64,
+                "length": 1
+            },
+            {
+                "name": "Pseudocolor_Variable",
+                "value": "velocity_magnitude",
+                "type": "str",
+                "size": 67,
+                "length": 18
+            },
+            {
+                "name": "Pseudocolor_colortable",
+                "value": "hot",
+                "type": "str",
+                "size": 52,
+                "length": 3
+            },
+            {
+                "name": "invertColorTable",
+                "value": "0",
+                "type": "int",
+                "size": 24,
+                "length": null
+            },
+            {
+                "name": "Isosurface_Variable",
+                "value": "temperature",
+                "type": "str",
+                "size": 60,
+                "length": 11
+            },
+            {
+                "name": "Isosurface_ContourValue",
+                "value": "3",
+                "type": "int",
+                "size": 28,
+                "length": null
+            },
+            {
+                "name": "no_annotations",
+                "value": "1",
+                "type": "int",
+                "size": 28,
+                "length": null
+            },
+            {
+                "name": "viewNormal",
+                "value": [
+                    "0",
+                    "0",
+                    "-1"
+                ],
+                "type": "list",
+                "size": 120,
+                "length": 3
+            },
+            {
+                "name": "viewUp",
+                "value": [
+                    "1",
+                    "0",
+                    "0"
+                ],
+                "type": "list",
+                "size": 120,
+                "length": 3
+            },
+            {
+                "name": "imageZoom",
+                "value": "1",
+                "type": "int",
+                "size": 28,
+                "length": null
+            },
+            {
+                "name": "parallelScale",
+                "value": "80",
+                "type": "int",
+                "size": 28,
+                "length": null
+            },
+            {
+                "name": "perspective",
+                "value": "0",
+                "type": "int",
+                "size": 24,
+                "length": null
+            },
+            {
+                "name": "Visit_projector_1_log_level",
+                "value": "1",
+                "type": "int",
+                "size": 28,
+                "length": null
+            },
+            {
+                "name": "Visit_projector_1_show_windows",
+                "value": "0",
+                "type": "int",
+                "size": 24,
+                "length": null
+            },
+            {
+                "name": "output_dir_manual",
+                "value": "C:\\Users\\obs\\OneDrive\\ETH\\ETH_MSc\\Masters Thesis\\SF_CP_analysis_pipeline_data\\VCL_Pipeline_DefaultRun",
+                "type": "str",
+                "size": 150,
+                "length": 101
+            },
+            {
+                "name": "output_dir_comment",
+                "value": "DefaultPipelineExecution",
+                "type": "str",
+                "size": 73,
+                "length": 24
+            }
+        ],
+        "returned_values": [
+            {
+                "name": "returned_value1",
+                "value": "VCL_Pipeline_2025-05-10_20-01-09\\Visit_Projector_1_2025-05-10_20-01-10_DefaultPipelineExecution",
+                "type": "str",
+                "size": 336,
+                "length": 95
+            }
+        ]
+    }
+}
