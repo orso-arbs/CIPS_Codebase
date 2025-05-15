@@ -70,29 +70,41 @@ def Visit_projector_1(
 
     Notes
     -----
-    - If the script gets stuck on a state or if you recieve OOM events (Out of memory) in the .err file, try increasing --mem-per-cpu
     - Pseudocolor_colortable: 
         - CustomBW: threshold between white and black. Low values are almost but not quite perfect white to have a contrast with the perfect white background to estimate the SF radius in pixels
-        - 
-    
+
+    Troubleshooting
+    -----
+    - If the script gets stuck on a state or if you recieve OOM events (Out of memory) in the .err file, try increasing --mem-per-cpu
+    - Ensure Internet connection and ETHz VPN connection are active.
+    - Restart your computer.
 
     """
 
 
-    # visit import and launch
-    sys.path.append(r"C:\Users\obs\LLNL\VisIt3.4.2\lib\site-packages")
-    import visit as vi
-    vi.AddArgument("-nowin") if Visit_projector_1_show_windows == 0 else None # show plots as they are generated. Also creates a manual confirmation window to launch the compute engine on Euler. Note: Requires there to be no other Visit windows open to work.
-    if Visit_projector_1_log_level >= 2:
-        print("Setting VisIt client debug level to 5")
-        vi.SetDebugLevel("5")
-    vi.Launch() # loads rest of visit functions
-    print("launched visit") if Visit_projector_1_log_level >= 1 else None
+    # _VISIT_INITIALIZED to launch visit only once in the case that multiple runs of the pipeline with VisIt are needed.
+    global _VISIT_INITIALIZED
+    if '_VISIT_INITIALIZED' not in globals():
+        _VISIT_INITIALIZED = False
+    if not _VISIT_INITIALIZED:
+        _VISIT_INITIALIZED = True
+
+        # visit import and launch on the first run
+        sys.path.append(r"C:\Users\obs\LLNL\VisIt3.4.2\lib\site-packages")
+        import visit as vi
+        vi.AddArgument("-nowin") if Visit_projector_1_show_windows == 0 else None
+        vi.Launch() # loads rest of visit functions
+        print("launched visit") if Visit_projector_1_log_level >= 1 else None
+        print("imported visit \n") if Visit_projector_1_log_level >= 1 else None
+        if Visit_projector_1_log_level >= 2:
+            print("Setting VisIt client debug level to 5")
+            vi.SetDebugLevel("5")
+
     import visit as vi # loads rest of visit functions
-    print("imported visit \n") if Visit_projector_1_log_level >= 1 else None
+
 
     #################################################### I/O
-    output_dir = F_1.F_out_dir(input_dir, __file__, output_dir_comment = output_dir_comment) # Format_1 required definition of output directory
+    output_dir = F_1.F_out_dir(input_dir, __file__, output_dir_comment = output_dir_comment, output_dir_manual = output_dir_manual) # Format_1 required definition of output directory
 
 
     #################################################### VisIt
@@ -605,8 +617,9 @@ def Visit_projector_1(
     vi.DeleteAllPlots()
     vi.CloseDatabase(Database)
     vi.CloseComputeEngine("euler.ethz.ch")
+    print("Closed all plots and database and compute engine") if Visit_projector_1_log_level >= 1 else None
     #vi.Close() # Close the VisIt viewer 
-    print("VisIt is now closed.")
+    #print("Closed VisIt viewer") if Visit_projector_1_log_level >= 1 else None
 
     #################################################### return
 

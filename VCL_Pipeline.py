@@ -14,16 +14,16 @@ import plotter_4_dimentionalisation as p4
 
 
 @F_1.ParameterLog(max_size = 1024 * 10) # 10KB 
-def run_vcl_pipeline(
+def VCL_pipeline(
     # General control
-    input_dir='', # leave empty to start pipeline with visit folder
+    input_dir=r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\SF_CP_analysis_pipeline_data", # leave empty to start pipeline with visit folder
     vcl_pipeline_output_dir_manual="", # leave empty to start pipeline with visit folder
     vcl_pipeline_output_dir_comment="", 
 
     # Visit_projector_1 args
-    vp_input_dir=r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\SF_CP_analysis_pipeline_data",
+    vp_input_dir="",
     vp_Database=r"euler.ethz.ch:/cluster/scratch/orsob/orsoMT_orsob/A11_states/A11_all_states.visit",
-    vp_State_range_manual=[1, 50],
+    vp_State_range_manual=[],
     vp_Plots=["Pseudocolor - Isosurface"],
     vp_Pseudocolor_Variable="velocity_magnitude",
     vp_Pseudocolor_colortable="hot",
@@ -39,13 +39,13 @@ def run_vcl_pipeline(
     vp_Visit_projector_1_log_level=1,
     vp_Visit_projector_1_show_windows=0,
     vp_output_dir_manual="",
-    vp_output_dir_comment="A11_default_run",
+    vp_output_dir_comment="",
 
     # CP_segment_1 args
     cps_CP_model_type="cyto3",
     cps_gpu=True,
     cps_diameter_estimate_guess_px=None,
-    cps_output_dir_comment="cyto3_default", # Base comment
+    cps_output_dir_comment="", # Base comment
     cps_CP_segment_log_level=1,
 
     # CP_extract_1 args
@@ -54,16 +54,16 @@ def run_vcl_pipeline(
 
     # dimentionalise_2_from_VisIt_R_Average args
     d2_CP_dimentionalise_log_level=0,
-    d2_output_dir_comment="default_dim", # Base comment
+    d2_output_dir_comment="", # Base comment
 
     # plotter_1 args
     p1_output_dir_manual="",
-    p1_output_dir_comment="default_plot1",
+    p1_output_dir_comment="",
     p1_video=1,
 
     # plotter_4_dimentionalisation args
     p4_output_dir_manual="",
-    p4_output_dir_comment="default_plot4",
+    p4_output_dir_comment="",
     p4_show_plot=0,
     p4_Plot_log_level=0,
     p4_Panel_1_A11=0,
@@ -72,12 +72,12 @@ def run_vcl_pipeline(
 
     # plotter_2_CPvsA11 args
     p2_output_dir_manual="",
-    p2_output_dir_comment="default_plot2",
+    p2_output_dir_comment="",
     p2_video=1,
 
     # plotter_3_CPvsA11_Panel args
     p3_output_dir_manual="",
-    p3_output_dir_comment="default_plot3_panel",
+    p3_output_dir_comment="",
     p3_video=0,
     p3_show_plot=0,
     p3_Panel_1=0,
@@ -93,7 +93,18 @@ def run_vcl_pipeline(
     run_plotter_1=True,
     run_plotter_4=True,
     run_plotter_2=True,
-    run_plotter_3_panel=True
+    run_plotter_3_panel=True,
+
+    # run_cp_segment=False,
+    # run_cp_extract=False,
+    # run_dimentionalise=False,
+    # run_plotter_1=False,
+    # run_plotter_4=False,
+    # run_plotter_2=False,
+    # run_plotter_3_panel=False
+
+
+
 ):
     """
     Runs the VCL (VisIt-Cellpose-Lineage-Tree) pipeline with configurable parameters.
@@ -118,7 +129,7 @@ def run_vcl_pipeline(
 
     #########################################        Visit
 
-    if vp_input_dir is not None:
+    if not vp_input_dir:
         vp_input_dir = vcl_pipeline_output_dir # to put the Visit output in the pipeline folder if the VisIt output folder is not specified
 
     if run_visit_projector:
@@ -127,7 +138,7 @@ def run_vcl_pipeline(
         # to ensure outputs go into the correct variation folder.
         # vp_output_dir_comment will be specific to the variation.
         VP1_output_dir = VP1.Visit_projector_1(
-            input_dir=vcl_pipeline_output_dir,
+            input_dir=vp_input_dir,
             Database=vp_Database, State_range_manual=vp_State_range_manual,
             Plots=vp_Plots,
             Pseudocolor_Variable=vp_Pseudocolor_Variable, Pseudocolor_colortable=vp_Pseudocolor_colortable, invertColorTable=vp_invertColorTable,
@@ -137,7 +148,7 @@ def run_vcl_pipeline(
             output_dir_manual=vp_output_dir_manual, # This is key for variations
             output_dir_comment=vp_output_dir_comment,
         )
-        print(f"Visit_Projector_1 output: {VP1_output_dir}")
+        # print(f"Visit_Projector_1 output: {VP1_output_dir}")
         print("Note: Visit window can now be closed. 'VisIt: Error - Can't delete the last window' is now inconsequential to the remaining code")
     else:
         print("--- Skipping Visit_Projector_1 ---")
@@ -157,7 +168,7 @@ def run_vcl_pipeline(
                 output_dir_comment=cps_output_dir_comment,
                 CP_segment_log_level=cps_CP_segment_log_level,
             )
-            print(f"CP_segment_1 output: {CPs1_output_dir}")
+            # print(f"CP_segment_1 output: {CPs1_output_dir}")
         else:
             print("--- Skipping CP_segment_1 (missing Visit_Projector_1 output) ---")
     else:
@@ -172,7 +183,7 @@ def run_vcl_pipeline(
                 CP_extract_log_level=cpe_CP_extract_log_level,
                 # diameter_training_px=cpe_diameter_training_px, # if added as arg
             )
-            print(f"CP_extract_1 output: {CPe1_output_dir}")
+            # print(f"CP_extract_1 output: {CPe1_output_dir}")
         else:
             print("--- Skipping CP_extract_1 (missing CP_segment_1 output) ---")
     else:
@@ -186,7 +197,7 @@ def run_vcl_pipeline(
                 CP_dimentionalise_log_level=d2_CP_dimentionalise_log_level,
                 output_dir_comment=d2_output_dir_comment,
             )
-            print(f"dimentionalise_2_from_VisIt_R_Average output: {d2_output_dir}")
+            # print(f"dimentionalise_2_from_VisIt_R_Average output: {d2_output_dir}")
         else:
             print("--- Skipping dimentionalise_2_from_VisIt_R_Average (missing CP_extract_1 output) ---")
     else:
@@ -206,7 +217,7 @@ def run_vcl_pipeline(
                 output_dir_comment=p1_output_dir_comment,
                 video=p1_video
             )
-            print(f"plotter_1 output: {p1_output_dir}")
+            # print(f"plotter_1 output: {p1_output_dir}")
         else:
             print("--- Skipping plotter_1 (missing dimentionalisation output) ---")
     else:
@@ -223,7 +234,7 @@ def run_vcl_pipeline(
                 Panel_1_A11=p4_Panel_1_A11, A11_manual_data_base_dir=p4_A11_manual_data_base_dir,
                 Panel_2_Dimentionalised_from_VisIt=p4_Panel_2_Dimentionalised_from_VisIt,
             )
-            print(f"plotter_4_dimentionalisation output: {p4_output_dir}")
+            # print(f"plotter_4_dimentionalisation output: {p4_output_dir}")
         else:
             print("--- Skipping plotter_4_dimentionalisation (missing dimentionalisation output) ---")
     else:
@@ -238,7 +249,7 @@ def run_vcl_pipeline(
                 output_dir_comment=p2_output_dir_comment,
                 video=p2_video
             )
-            print(f"plotter_2_CPvsA11 output: {p2_output_dir}")
+            # print(f"plotter_2_CPvsA11 output: {p2_output_dir}")
         else:
             print("--- Skipping plotter_2_CPvsA11 (missing dimentionalisation output) ---")
     else:
@@ -257,7 +268,7 @@ def run_vcl_pipeline(
                 Panel_3=p3_Panel_3,
                 Panel_4=p3_Panel_4,
             )
-            print(f"plotter_3_CPvsA11_Panel output: {p3_out_dir}")
+            # print(f"plotter_3_CPvsA11_Panel output: {p3_out_dir}")
         else:
             print("--- Skipping plotter_3_CPvsA11_Panel (missing dimentionalisation output) ---")
     else:
@@ -277,21 +288,15 @@ def run_vcl_pipeline(
         "plot_input_dir": plot_input_dir
     }
 
+
+
+
+# Example of how to run the pipeline with default settings
 if __name__ == "__main__":
-    # Example of how to run the pipeline with default settings
     print("Running VCL-Pipeline with default settings as a standalone script example.")
-    # This will create outputs based on default vp_output_dir_comment in the vp_input_dir,
-    # unless vp_output_dir_manual is specified to redirect the base.
-    # For actual parameter sweeps, the variations script will call run_vcl_pipeline with specific arguments.
     
-    # To make it behave like the original standalone script for a default run,
-    # Visit_Projector_1 needs its output_dir_manual to be empty so it creates
-    # its folder inside its input_dir (SF_CP_analysis_pipeline_data).
-    # The variations script will set output_dir_manual for Visit_Projector_1
-    # to C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\VCL-Pipeline_Variaitons\Variation_X
-    
-    run_vcl_pipeline(
-        vp_output_dir_manual=r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\SF_CP_analysis_pipeline_data\VCL_Pipeline_DefaultRun", # Example: specify a unique folder for this default run
-        vp_output_dir_comment="DefaultPipelineExecution"
+    VCL_pipeline(
+        input_dir=r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\SF_CP_analysis_pipeline_data", # directory to place outputs
+        vcl_pipeline_output_dir_comment="Test00"
     )
     print("Default pipeline run finished.")

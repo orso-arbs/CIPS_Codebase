@@ -2,81 +2,118 @@ import os
 import datetime
 import traceback
 import Format_1 as F_1 # Assuming Format_1.py is in the Python path or same directory
-from VCL_Pipeline import run_vcl_pipeline # Assuming VCL-Pipeline.py is in the Python path or same directory
+from VCL_Pipeline import VCL_pipeline # Assuming VCL-Pipeline.py is in the Python path or same directory
 
-def run_parameter_sweeps():
-    # Base directory for all variation outputs
-    variations_base_dir = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\VCL-Pipeline_Variaitons"
-    os.makedirs(variations_base_dir, exist_ok=True)
+@F_1.ParameterLog(max_size = 1024 * 10) # 10KB 
+def VCL_variation_1(
+    # General control
+    input_dir=r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\VCL_variations",
+    vcl_variation_output_dir_manual="",
+    vcl_variation_output_dir_comment="", 
+):
+    #################################################### I/O
+    vcl_variations_1_output_dir = F_1.F_out_dir(input_dir = input_dir, script_path = __file__, output_dir_comment = vcl_variation_output_dir_comment, output_dir_manual = vcl_variation_output_dir_manual) # Format_1 required definition of output directory
+    print(f"VCL_variations_1_output_dir: {vcl_variations_1_output_dir}")
 
-    # Error log file
-    error_log_file = os.path.join(variations_base_dir, "variation_errors.txt")
+    ####################################################
+
+    # create Error log file
+    error_log_file = os.path.join(vcl_variations_1_output_dir, "variation_errors.txt")
 
     # Define parameter variations
-    # Each dict contains parameters to override in run_vcl_pipeline
-    # Specifically, these will affect Visit_Projector_1 via vp_* arguments
+    # Each dict contains parameters to override in VCL_pipeline
+    # Specifically, these will affect Visit_Projector_1 via vp_* argumentss
     variations = [
         {
+            "vcl_pipeline_output_dir_comment": "PsCol_CustomBW_invC_0",
+            "vp_output_dir_comment": "PsCol_CustomBW_invC_0",
             "vp_Pseudocolor_colortable": "CustomBW",
-            "vp_invertColorTable": 0, # Default, but explicit for clarity in variation name
-            "variation_name": "PsCol_CustomBW_invC_0" # For folder and comment
+            "vp_invertColorTable": 0, # Assuming default
         },
         {
+            "vcl_pipeline_output_dir_comment": "PsCol_orangehot_invC_1",
+            "vp_output_dir_comment": "PsCol_orangehot_invC_1",
             "vp_Pseudocolor_colortable": "orangehot",
             "vp_invertColorTable": 1,
-            "variation_name": "PsCol_orangehot_invC_1" # For folder and comment
         },
-        # Add more variations here as needed
+        {
+            "vcl_pipeline_output_dir_comment": "PsCol_Purples_invC_default",
+            "vp_output_dir_comment": "PsCol_Purples_invC_default",
+            "vp_Pseudocolor_colortable": "Purples",
+            "vp_invertColorTable": 0, # Assuming default
+        },
+        {
+            "vcl_pipeline_output_dir_comment": "PsCol_hot_and_cold_invC_default",
+            "vp_output_dir_comment": "PsCol_hot_and_cold_invC_default",
+            "vp_Pseudocolor_colortable": "hot_and_cold",
+            "vp_invertColorTable": 0, # Assuming default
+        },
+        {
+            "vcl_pipeline_output_dir_comment": "PsCol_BrBG_invC_default",
+            "vp_output_dir_comment": "PsCol_BrBG_invC_default",
+            "vp_Pseudocolor_colortable": "BrBG",
+            "vp_invertColorTable": 0, # Assuming default
+        },
+        {
+            "vcl_pipeline_output_dir_comment": "PsCol_difference_invC_default",
+            "vp_output_dir_comment": "PsCol_difference_invC_default",
+            "vp_Pseudocolor_colortable": "difference",
+            "vp_invertColorTable": 0, # Assuming default
+        },
+        {
+            "vcl_pipeline_output_dir_comment": "PsCol_plasma_invC_default",
+            "vp_output_dir_comment": "PsCol_plasma_invC_default",
+            "vp_Pseudocolor_colortable": "plasma",
+            "vp_invertColorTable": 0, # Assuming default
+        },
+        {
+            "vcl_pipeline_output_dir_comment": "PsCol_turbo_invC_default",
+            "vp_output_dir_comment": "PsCol_turbo_invC_default",
+            "vp_Pseudocolor_colortable": "turbo",
+            "vp_invertColorTable": 0, # Assuming default
+        },
+        {
+            "vcl_pipeline_output_dir_comment": "PsCol_hot_invC_default",
+            "vp_output_dir_comment": "PsCol_hot_invC_default",
+            "vp_Pseudocolor_colortable": "hot",
+            "vp_invertColorTable": 0, # Assuming default
+        },
+        {
+            "vcl_pipeline_output_dir_comment": "PsCol_Accent_invC_default",
+            "vp_output_dir_comment": "PsCol_Accent_invC_default",
+            "vp_Pseudocolor_colortable": "Accent",
+            "vp_invertColorTable": 0, # Assuming default
+        },
     ]
-
-    # Input directory for Visit_Projector_1 (where it reads data from)
-    visit_projector_input_data_dir = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\SF_CP_analysis_pipeline_data"
-
+    # run variations
     for i, var_params in enumerate(variations):
-        print(f"\n--- Starting Variation {i+1}/{len(variations)}: {var_params['variation_name']} ---")
+        print(f"\n--- Starting Variation {i+1}/{len(variations)}: {var_params['vp_output_dir_comment']} ---")
 
-        # Create a unique output directory for this specific variation run using Format_1 logic
-        # This directory will be passed as vp_output_dir_manual to run_vcl_pipeline,
-        # so Visit_Projector_1 (and subsequent steps if they also use such a pattern)
-        # will create their outputs within this variation-specific folder.
-        variation_run_base_path = F_1.create_output_dir(
-            output_dir_manual="", # Let Format_1 create it in the default base
-            output_dir_default_base=variations_base_dir,
-            output_dir_comment=var_params["variation_name"], # Comment for the main variation folder
-            script_name="VCL_Variation_Run" # Script name for the main variation folder
-        )
-        print(f"Variation output base directory: {variation_run_base_path}")
-
-        # Prepare arguments for run_vcl_pipeline
+        # Prepare arguments for VCL_pipeline
         pipeline_args = {
-            "pipeline_run_comment_suffix": var_params["variation_name"], # For overall pipeline logging
+            'input_dir': vcl_variations_1_output_dir, # set the directory for the pipeline
+            "vcl_pipeline_output_dir_comment": var_params["vcl_pipeline_output_dir_comment"], # For overall pipeline logging
 
-            # Visit_Projector_1 specific arguments
-            "vp_input_dir": visit_projector_input_data_dir,
-            "vp_output_dir_manual": variation_run_base_path, # Directs VP1 output into this folder
-            "vp_output_dir_comment": var_params["variation_name"], # VP1 uses this for its own subfolder name
+            # Visit_Projector_1 arguments
+            #"vp_input_dir": vcl_variations_1_output_dir, # Directs VP1 output into this folder
+            "vp_output_dir_comment": var_params["vp_output_dir_comment"], # VP1 uses this for its own subfolder name
             "vp_Pseudocolor_colortable": var_params["vp_Pseudocolor_colortable"],
             "vp_invertColorTable": var_params["vp_invertColorTable"],
-            
-            # Add other vp_* parameters if they are part of the sweep
-            # Otherwise, they will use defaults from run_vcl_pipeline
 
-            # Potentially other parameters for other pipeline stages if varied
-            # "cps_CP_model_type": "new_model", # Example
         }
 
         try:
-            run_vcl_pipeline(**pipeline_args)
-            print(f"--- Variation {var_params['variation_name']} completed successfully. ---")
+            VCL_pipeline(**pipeline_args)
+            print(f"--- Variation {var_params['vcl_pipeline_output_dir_comment']} completed successfully. ---")
 
-        except Exception as e:
-            print(f"!!! ERROR during variation: {var_params['variation_name']} !!!")
+        except Exception as e: # log an error if it occurs
+            print(f"!!! ERROR during variation: {var_params['vcl_pipeline_output_dir_comment']} !!!")
             error_timestamp = datetime.datetime.now().isoformat()
             error_details = (
                 f"Timestamp: {error_timestamp}\n"
                 f"Variation Index: {i}\n"
-                f"Variation Name: {var_params['variation_name']}\n"
-                f"Parameters Used: {pipeline_args}\n" # Log the actual args passed
+                f"Variation Name: {var_params['vcl_pipeline_output_dir_comment']}\n"
+                f"Parameters Used: {pipeline_args}\n"
                 f"Error Type: {type(e).__name__}\n"
                 f"Error Message: {str(e)}\n"
                 f"Traceback:\n{traceback.format_exc()}\n"
@@ -87,14 +124,10 @@ def run_parameter_sweeps():
             print(f"Error details logged to {error_log_file}")
             print(f"--- Continuing to next variation. ---")
 
-    print("\nAll variations attempted.")
+    print("\nAll variations attempted.\n")
+    print("\nEncountered Error: \n")
     F_1.ding() # Notify completion of all sweeps
 
 if __name__ == "__main__":
-    # General script start info
-    script_start_time, script_current_date = F_1.start_inform(__file__)
-    
-    run_parameter_sweeps()
-    
-    # General script end info
-    F_1.end_inform(__file__, script_start_time)
+    # General script start info    
+    VCL_variation_1()

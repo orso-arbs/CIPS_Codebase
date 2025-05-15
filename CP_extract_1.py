@@ -28,6 +28,7 @@ def CP_extract_1(
 
     # extraction parameters
     CP_model_type = None, diameter_training_px = None,
+    save_flows = 0, # 0: don't save flows, 1: save flows
 
     # output and logging 
     CP_extract_log_level = 0,
@@ -216,7 +217,10 @@ def CP_extract_1(
         # read seg
         masks_i = seg_i['masks']
         outlines_i = seg_i['outlines']
-        flow_i = seg_i['flows']
+        if save_flows == 1: # to save storage space don't save flows values.
+            flow_i = seg_i['flows']
+        else:
+            flow_i = [None] * 5
         diameter_estimate_used_px_i = seg_i["diameter"]
         channels = seg_i["chan_choose"]
         ismanual = seg_i['ismanual']
