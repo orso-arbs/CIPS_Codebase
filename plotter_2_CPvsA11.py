@@ -84,7 +84,7 @@ def plotter_2_CPvsA11(input_dir, # Format_1 requires input_dir
     """
     #################################################### I/O
     #
-    output_dir = F_1.F_out_dir(input_dir, __file__, output_dir_comment = output_dir_comment) # Format_1 required definition of output directory
+    output_dir = F_1.F_out_dir(input_dir, __file__, output_dir_comment = output_dir_comment, output_dir_manual = output_dir_manual) # Format_1 required definition of output directory
 
 
     #################################################### Load data

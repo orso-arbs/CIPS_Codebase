@@ -1,9 +1,9 @@
-x=2
-l = 8
+import Format_1 as F_1
 
+input_dir = ""
+output_dir_comment = ""
 
-for i in range(l):
-    print(x**i)
+output_dir = F_1.F_out_dir(input_dir, __file__, output_dir_comment = output_dir_comment,
+    output_dir_manual=r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\SF_CP_analysis_pipeline_data\test") # Format_1 required definition of output directory
 
-print()
-print(65*5)
+print(output_dir)

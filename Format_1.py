@@ -102,7 +102,9 @@ def F_out_dir(input_dir, script_path,
                 create_output_dir = 1,
                 ):
     if output_dir_manual:
-        output_dir = output_dir_manual
+        Comment = f"_{output_dir_comment.replace(' ', '_')}" if output_dir_comment else ""
+        output_dir = output_dir_manual + Comment
+        os.makedirs(output_dir, exist_ok=True) if create_output_dir==1 else None
     else:
         current_date = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         script_name = os.path.splitext(os.path.basename(script_path))[0]
