@@ -5,10 +5,10 @@ import Format_1 as F_1
 import Visit_Projector_1 as VP1
 import CP_segment_1 as CPs1
 import CP_extract_1 as CPe1
-import dimentionalise_1_from_manual_A11 as d1
-import dimentionalise_2_from_VisIt_R_Average as d2
+import dim1_manual_1 as d1
+import dim2_VisIt_R_1 as d2
 import plot1 as p1
-import plotter_2_CPvsA11 as p2
+import plot2_CPvsA11 as p2
 import plot3_CPvsA11_Panel as p3_panel
 import plot4_dimentions as p4
 
@@ -23,7 +23,7 @@ def VCL_pipeline(
     # Visit_projector_1 args
     vp_input_dir="",
     vp_Database=r"euler.ethz.ch:/cluster/scratch/orsob/orsoMT_orsob/A11_states/A11_all_states.visit",
-    vp_State_range_manual=[],
+    vp_State_range_manual=[1],
     vp_Plots=["Pseudocolor - Isosurface"],
     vp_Pseudocolor_Variable="velocity_magnitude",
     vp_Pseudocolor_colortable="hot",

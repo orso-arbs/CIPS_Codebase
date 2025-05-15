@@ -31,7 +31,7 @@ Note: The code has been checked for functionality only in Windows 11 with Visit 
    2. [Installation guide and Starting VisIt](https://visit-sphinx-github-user-manual.readthedocs.io/en/v3.3.3/getting_started/Installing_VisIt.html).
 2. Access Euler
    1. Make sure you have accessed Euler at least once to unlock it. Here is the [Euler wiki](https://scicomp.ethz.ch/wiki/Tutorials#Cluster_tutorials).
-   2. To not have to enter the EUler password every time visit is lanched, you need to setup a passwordless login with an SSH key. [Here](https://www.ssh.com/academy/ssh/putty/windows/puttygen) are tutorial videos.
+   2. (Optional) To not have to enter the Euler password every time visit is lanched, you can setup a passwordless login with an SSH key. [Here](https://www.ssh.com/academy/ssh/putty/windows/puttygen) are tutorial videos.
       1. PuTTYgen to generate key.
       2. PuTTY Pagent for passwordless login .
 
