@@ -77,12 +77,12 @@ def Visit_projector_1(
     -----
     - If the script gets stuck on a state or if you recieve OOM events (Out of memory) in the .err file, try increasing --mem-per-cpu
     - Ensure Internet connection and ETHz VPN connection are active.
-    - Restart your computer.
+    - Restart your computer. Somehow that often helps.
 
     """
 
 
-    # _VISIT_INITIALIZED to launch visit only once in the case that multiple runs of the pipeline with VisIt are needed.
+    # _VISIT_INITIALIZED used to launch visit only once in the case that multiple runs of the pipeline with VisIt are needed. This avoids errors.
     global _VISIT_INITIALIZED
     if '_VISIT_INITIALIZED' not in globals():
         _VISIT_INITIALIZED = False

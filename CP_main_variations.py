@@ -4,9 +4,9 @@ import Format_1 as F_1
 
 import CP_segment_1 as CPs1
 import CP_extract_1 as CPe1
-import plotter_1 as CPp1
+import plot1 as CPp1
 import plotter_2_CPvsA11 as CPp2
-import plotter_3_CPvsA11_Panel as CPp3_panel
+import plot3_CPvsA11_Panel as CPp3_panel
 
 
 start_time, current_date = F_1.start_inform(__file__)
