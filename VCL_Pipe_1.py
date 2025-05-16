@@ -26,6 +26,15 @@ def VCL_pipeline(
     vp_State_range_manual=[],
     vp_Plots=["Pseudocolor - Isosurface"],
     vp_Pseudocolor_Variable="s6",
+                            # s1 :  H2      s10: HRR            s19: omega_x  
+                            # s2 :  O2      s11: stretch        s20: omega_y     
+                            # s3 :  H2O     s12: curvature      s21: omega_z     
+                            # s4 :  H       s13: atot
+                            # s5 :  O       s14: an
+                            # s6 :  OH      s15: at
+                            # s7 :  HO2     s16: Sd
+                            # s8 :  H2O2    s17: Sdd
+                            # s9 :  N2      s18: Sa 
     vp_Pseudocolor_colortable="hot",
     vp_invertColorTable=0,
     vp_Isosurface_Variable="temperature",
@@ -117,8 +126,6 @@ def VCL_pipeline(
     """
 
     #################################################### I/O
-    start_time, current_date = F_1.start_inform(__file__)
-
     vcl_pipeline_output_dir = F_1.F_out_dir(input_dir = input_dir, script_path = __file__, output_dir_comment = vcl_pipeline_output_dir_comment, output_dir_manual = vcl_pipeline_output_dir_manual) # Format_1 required definition of output directory
 
     # Initialize output directory variables
@@ -275,7 +282,6 @@ def VCL_pipeline(
         print("--- Skipping plotter_3_CPvsA11_Panel ---")
 
     ######################################################## end
-    F_1.end_inform(__file__, start_time)
     F_1.ding()
 
     # Return the path of the final data directory (e.g., dimentionalisation output)

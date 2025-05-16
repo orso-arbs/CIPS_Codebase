@@ -34,10 +34,11 @@ import os
 import datetime
 import time
 
-def start_inform(script_location: str = __file__):
+def start_inform(script_location: str = __file__, print_inform: bool = True):
     start_time = time.time()
     current_date = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    print(f"{os.path.basename(script_location)}:", datetime.datetime.now())
+    if print_inform:
+        print(f"{os.path.basename(script_location)}:", datetime.datetime.now())
     return start_time, current_date
 
 """
@@ -63,16 +64,18 @@ import os
 import datetime
 import time
 
-def end_inform(script_location: str = __file__, start_time: float = 0):
+def end_inform(script_location: str = __file__, start_time: float = 0, print_inform: bool = True):
     end_time = time.time()
     if start_time == 0:
-        print(f"{os.path.basename(script_location)}: Completely Executed")
-        print(f"NB: No Execution duration since no start_time was provided")
+        if print_inform:
+            print(f"{os.path.basename(script_location)}: Completely Executed")
+            print(f"NB: No Execution duration since no start_time was provided")
         return end_time, elapsed_time
     else:
         elapsed_time = end_time - start_time
         minutes, seconds = divmod(elapsed_time, 60)
-        print(f"{os.path.basename(script_location)}: Completely Executed in {int(minutes)} min {seconds:.2f} sec")
+        if print_inform:
+            print(f"{os.path.basename(script_location)}: Completely Executed in {int(minutes)} min {seconds:.2f} sec")
         return end_time, elapsed_time
 
 

@@ -92,15 +92,16 @@ def Visit_projector_1(
         # visit import and launch on the first run
         sys.path.append(r"C:\Users\obs\LLNL\VisIt3.4.2\lib\site-packages")
         import visit as vi
+        print("imported visit \n") if Visit_projector_1_log_level >= 2 else None
         vi.AddArgument("-nowin") if Visit_projector_1_show_windows == 0 else None
         vi.Launch() # loads rest of visit functions
         print("launched visit") if Visit_projector_1_log_level >= 1 else None
-        print("imported visit \n") if Visit_projector_1_log_level >= 1 else None
-        if Visit_projector_1_log_level >= 2:
+        if Visit_projector_1_log_level >= 3:
             print("Setting VisIt client debug level to 5")
             vi.SetDebugLevel("5")
 
     import visit as vi # loads rest of visit functions
+    print("imported visit \n") if Visit_projector_1_log_level >= 2 else None
 
 
     #################################################### I/O
@@ -115,7 +116,7 @@ def Visit_projector_1(
     "If prompted, please provide Euler password\n" \
     "Then wait for Euler to allocate resources for the job\n" \
     "DO NOT close the appearing terminal and visit window\n"
-    ) if Visit_projector_1_log_level >= 1 else None
+    ) if Visit_projector_1_log_level >= 2 else None
 
     p = vi.GetMachineProfile("euler.ethz.ch")
     #print(p) # uncomment to see the machine profile
@@ -126,14 +127,14 @@ def Visit_projector_1(
     p.GetLaunchProfiles(1).timeLimit = "04:00:00"
     additional_args = f"--mem-per-cpu=4G --tmp=4G --output=/cluster/scratch/orsob/orsoMT_orsob/VisIt_logs_and_error_output/%j_visit.out --error=/cluster/scratch/orsob/orsoMT_orsob/VisIt_logs_and_error_output/%j_visit.err"
     p.GetLaunchProfiles(1).launchArgs = additional_args
-    print(f"Updated launchArgs: {p.GetLaunchProfiles(1).launchArgs}") if Visit_projector_1_log_level >=1 else None
+    print(f"Updated launchArgs: {p.GetLaunchProfiles(1).launchArgs}") if Visit_projector_1_log_level >= 2 else None
     
     vi.OpenComputeEngine(p)
-    print("launched compute engine \n") if Visit_projector_1_log_level >= 1 else None
+    print("launched compute engine \n") if Visit_projector_1_log_level >= 2 else None
 
     # open database
     OpenSuccess = vi.OpenDatabase(Database)     #i.e. Database = r"euler.ethz.ch:/cluster/scratch/orsob/MastersThesis/postProc/po_part1/po_s912k_post.nek5000"
-    print(f"Opened database") if OpenSuccess == 1 and Visit_projector_1_log_level >= 1 else print("Failed to open database")
+    print(f"Opened database") if OpenSuccess == 1 and Visit_projector_1_log_level >= 2 else print("Failed to open database")
 
     # define Expressions
     vi.DefineScalarExpression("X", "coord(mesh)[0]")
@@ -145,7 +146,7 @@ def Visit_projector_1(
     # define plot
 
     if "Pseudocolor - Isosurface" in Plots:
-        print("plotting Pseudocolor - Isosurface\n") if Visit_projector_1_log_level >= 1 else None
+        print("plotting Pseudocolor - Isosurface\n") if Visit_projector_1_log_level >= 2 else None
         
         vi.AddPlot("Pseudocolor", Pseudocolor_Variable, 1, 1)
 
@@ -256,12 +257,12 @@ def Visit_projector_1(
 
 
 
-    print("Added plot\n") if Visit_projector_1_log_level >= 1 else None
+    print("Added plot\n") if Visit_projector_1_log_level >= 2 else None
 
 
     # calculate plot
     vi.DrawPlots()
-    print("Drawed Plots\n") if Visit_projector_1_log_level >= 1 else None
+    print("Drawed Plots\n") if Visit_projector_1_log_level >= 2 else None
 
     # set view
     View3DAtts = vi.View3DAttributes()
@@ -283,7 +284,7 @@ def Visit_projector_1(
     View3DAtts.shear = (0, 0, 1)                              # used to support oblique projections (like cabinet or cavalier); default disables shear
     View3DAtts.windowValid = 1
     vi.SetView3D(View3DAtts)
-    print("view set\n") if Visit_projector_1_log_level >= 1 else None
+    print("view set\n") if Visit_projector_1_log_level >= 2 else None
 
 
     # no annotations
@@ -508,7 +509,7 @@ def Visit_projector_1(
     SaveWindowAtts.height = 1024
     SaveWindowAtts.quality = 80
     vi.SetSaveWindowAttributes(SaveWindowAtts)
-    print("window set\n") if Visit_projector_1_log_level >= 1 else None
+    print("window set\n") if Visit_projector_1_log_level >= 2 else None
 
 
 
@@ -542,22 +543,21 @@ def Visit_projector_1(
 
     # Loop once through all states (t's)
     for state in State_range: 
-        start_time_state = time.time() if Visit_projector_1_log_level >= 2 else None
-        print("state = ", state) if Visit_projector_1_log_level >= 1 else None
+        start_time_state = time.time() if Visit_projector_1_log_level >= 1 else None
+        print(f"Working on state {state:06d}") if Visit_projector_1_log_level >= 1 else None
         
         # set state
-        print(f"Attempting: vi.SetTimeSliderState({state})") if Visit_projector_1_log_level >= 0 else None # Always print this
+        print(f"Attempting: vi.SetTimeSliderState({state})") if Visit_projector_1_log_level >= 3 else None
         vi.SetTimeSliderState(state)
-        print(f"Completed: vi.SetTimeSliderState({state})") if Visit_projector_1_log_level >= 0 else None # Always print this
-        print(f"Done: vi.SetTimeSliderState(state)") if Visit_projector_1_log_level >= 2 else None # Original log line
+        print(f"Done: vi.SetTimeSliderState(state) with state = {state}") if Visit_projector_1_log_level >= 3 else None
 
         # save window as .png image
         Image_filenames_VisIt_state = f"visit_{state:06}"
-        print(f"Done: Image_filenames_VisIt_state {Image_filenames_VisIt_state}") if Visit_projector_1_log_level >= 2 else None
+        print(f"Done: Image_filenames_VisIt_state {Image_filenames_VisIt_state}") if Visit_projector_1_log_level >= 3 else None
         SaveWindowAtts.fileName = Image_filenames_VisIt_state
-        print(f"Done: SaveWindowAtts.fileName = Image_filenames_VisIt_state") if Visit_projector_1_log_level >= 2 else None
+        print(f"Done: SaveWindowAtts.fileName = Image_filenames_VisIt_state") if Visit_projector_1_log_level >= 3 else None
         vi.SetSaveWindowAttributes(SaveWindowAtts)
-        print(f"Done: vi.SetSaveWindowAttributes(SaveWindowAtts)") if Visit_projector_1_log_level >= 2 else None
+        print(f"Done: vi.SetSaveWindowAttributes(SaveWindowAtts)") if Visit_projector_1_log_level >= 3 else None
         vi.SaveWindow() 
         print(f"saved image for state {state:06d}\n", end='\r') if Visit_projector_1_log_level >= 1 else None
 
@@ -574,18 +574,18 @@ def Visit_projector_1(
         R_SF_Average_VisIt.append(R_SF_Average_state)
         print(f"saved R_Average_state = {R_SF_Average_state} for file {state:06d}\n", end='\r') if Visit_projector_1_log_level >= 1 else None
 
-        # Attempt to clear VisIt's cache to free memory
-        if Visit_projector_1_log_level >= 1:
+        # Attempt to clear VisIt's cache to free memory. This is necessary if many states are run.
+        if Visit_projector_1_log_level >= 2:
             print(f"Clearing VisIt cache for state {state}")
         try:
             vi.ClearCacheForAllEngines()
-            if Visit_projector_1_log_level >= 1:
+            if Visit_projector_1_log_level >= 2:
                 print(f"Done clearing VisIt cache for state {state}")
         except Exception as e:
             if Visit_projector_1_log_level >= 0: # Always print error for this
                 print(f"Error clearing VisIt cache for state {state}: {e}")
 
-        if Visit_projector_1_log_level >= 2:
+        if Visit_projector_1_log_level >= 1:
             elapsed_time_loop = time.time() - start_time_loop
             elapsed_time_state = time.time() - start_time_state
             print(f"Loop Elapsed time: {elapsed_time_loop:.2f} s")
@@ -605,12 +605,12 @@ def Visit_projector_1(
     # save to pickle
     pkl_filename = f"{output_dir}/Visit_projector_1_data.pkl"
     VisIt_data_df.to_pickle(pkl_filename)
-    print(f"Saved extracted DataFrame to {pkl_filename}") if Visit_projector_1_log_level >= 1 else None
+    print(f"Saved extracted DataFrame to {pkl_filename}") if Visit_projector_1_log_level >= 2 else None
 
     # save to csv
     csv_filename = f"{output_dir}/Visit_projector_1_data.csv"
     VisIt_data_df.to_csv(csv_filename, sep='\t', index=False)
-    print(f"Saved extracted DataFrame to {csv_filename}") if Visit_projector_1_log_level >= 1 else None
+    print(f"Saved extracted DataFrame to {csv_filename}") if Visit_projector_1_log_level >= 2 else None
 
 
     # Clean up
@@ -618,8 +618,6 @@ def Visit_projector_1(
     vi.CloseDatabase(Database)
     vi.CloseComputeEngine("euler.ethz.ch")
     print("Closed all plots and database and compute engine") if Visit_projector_1_log_level >= 1 else None
-    #vi.Close() # Close the VisIt viewer 
-    #print("Closed VisIt viewer") if Visit_projector_1_log_level >= 1 else None
 
     #################################################### return
 
