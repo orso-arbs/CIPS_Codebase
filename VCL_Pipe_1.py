@@ -23,9 +23,9 @@ def VCL_pipeline(
     # Visit_projector_1 args
     vp_input_dir="",
     vp_Database=r"euler.ethz.ch:/cluster/scratch/orsob/orsoMT_orsob/A11_states/A11_all_states.visit",
-    vp_State_range_manual=[1],
+    vp_State_range_manual=[],
     vp_Plots=["Pseudocolor - Isosurface"],
-    vp_Pseudocolor_Variable="velocity_magnitude",
+    vp_Pseudocolor_Variable="s10",
     vp_Pseudocolor_colortable="hot",
     vp_invertColorTable=0,
     vp_Isosurface_Variable="temperature",
