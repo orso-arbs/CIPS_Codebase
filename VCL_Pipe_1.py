@@ -25,7 +25,7 @@ def VCL_pipeline(
     vp_Database=r"euler.ethz.ch:/cluster/scratch/orsob/orsoMT_orsob/A11_states/A11_all_states.visit",
     vp_State_range_manual=[],
     vp_Plots=["Pseudocolor - Isosurface"],
-    vp_Pseudocolor_Variable="s10",
+    vp_Pseudocolor_Variable="s6",
     vp_Pseudocolor_colortable="hot",
     vp_invertColorTable=0,
     vp_Isosurface_Variable="temperature",
@@ -281,6 +281,7 @@ def VCL_pipeline(
     # Return the path of the final data directory (e.g., dimentionalisation output)
     # or a dictionary of key output paths if needed by the calling script.
     return {
+        "vcl_pipeline_output_dir": vcl_pipeline_output_dir,
         "VP1_output_dir": VP1_output_dir,
         "CPs1_output_dir": CPs1_output_dir,
         "CPe1_output_dir": CPe1_output_dir,

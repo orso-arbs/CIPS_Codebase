@@ -68,7 +68,7 @@ def end_inform(script_location: str = __file__, start_time: float = 0):
     if start_time == 0:
         print(f"{os.path.basename(script_location)}: Completely Executed")
         print(f"NB: No Execution duration since no start_time was provided")
-        return end_time
+        return end_time, elapsed_time
     else:
         elapsed_time = end_time - start_time
         minutes, seconds = divmod(elapsed_time, 60)
@@ -512,7 +512,7 @@ def ParameterLog(max_size=MAX_SIZE, log_level = 0):  # Allow user to specify max
             result = func(*args, **kwargs)
 
             # end inform
-            end_inform(script_location, start_time)
+            end_time, elapsed_time = end_inform(script_location, start_time)
 
 
 
@@ -556,6 +556,7 @@ def ParameterLog(max_size=MAX_SIZE, log_level = 0):  # Allow user to specify max
                 "script_location": script_location,
                 "script_name": script_name,
                 "output_dir": output_dir,
+                "elapsed_time_in_seconds": elapsed_time,
                 "arguments": args_details,
                 "returned_values": return_details
             }

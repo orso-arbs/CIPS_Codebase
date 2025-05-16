@@ -20,7 +20,7 @@ Note: The code has been checked for functionality only in Windows 11 with Visit 
 
 
 ## Installation
-1. Clone the repository:
+1. Clone the GitHub repository:
 2. Install python dependencies:
    1. Assuming you have Conda installed, use your Terminal to run:
     ``conda env create --name envname --file=cellpose_env_2.yml`` - [TBD]
@@ -48,3 +48,6 @@ Note: The code has been checked for functionality only in Windows 11 with Visit 
    1. Either use an ETH WIFI
    2. [Or connect via VPN](https://unlimited.ethz.ch/spaces/itkb/pages/21125994/VPN)
 4. Run Pipeline
+   1. Select Visit Database in []
+      1. either a .visit file or  
+      2. 
