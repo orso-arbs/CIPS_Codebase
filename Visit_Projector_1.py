@@ -21,17 +21,16 @@ def Visit_projector_1(
     Pseudocolor_Variable = "velocity_magnitude", 
     Pseudocolor_colortable = "hot", # Can be "hot", "CustomBW1", "CustomBW2", "PeriodicBW", etc.
     invertColorTable = 0,
+    # Parameters for the periodic black and white color table
+    Pseudocolor_periodic_num_periods = 2, # periods of w-w-b-b points (4 points)
+    distance_ww = 2.0,  # Relative length of solid white
+    distance_wb = 1.0,  # Relative length of white-to-black gradient
+    distance_bb = 2.0,  # Relative length of solid black
+    distance_bw = 1.0,  # Relative length of black-to-white gradient
+
     Isosurface_Variable = "temperature", Isosurface_ContourValue = 3,
     no_annotations = 1, viewNormal = [0,0,-1], viewUp = [1,0,0], imageZoom = 1, parallelScale = 100, perspective = 1, # View
     Visit_projector_1_show_windows = 0, # Window
-
-    # Parameters for the new periodic black and white color table
-    Pseudocolor_periodic_name = "PeriodicBW", # Name to use if Pseudocolor_colortable is set to this
-    Pseudocolor_periodic_num_periods = 2,
-    Pseudocolor_periodic_ww = 2.0,  # Relative length of solid white
-    Pseudocolor_periodic_wb = 1.0,  # Relative length of white-to-black gradient
-    Pseudocolor_periodic_bb = 2.0,  # Relative length of solid black
-    Pseudocolor_periodic_bw = 1.0,  # Relative length of black-to-white gradient
 
     # output and logging
     Visit_projector_1_log_level = 0,
@@ -82,13 +81,13 @@ def Visit_projector_1(
         If `Pseudocolor_colortable` is set to this value, this table will be generated. Default is "PeriodicBW".
     Pseudocolor_periodic_num_periods : int, optional
         Number of periods for the periodic black and white color table. Default is 2.
-    Pseudocolor_periodic_ww : float, optional
+    distance_ww : float, optional
         Relative length of the solid white segment in the periodic color table. Default is 2.0.
-    Pseudocolor_periodic_wb : float, optional
+    distance_wb : float, optional
         Relative length of the white-to-black gradient in the periodic color table. Default is 1.0.
-    Pseudocolor_periodic_bb : float, optional
+    distance_bb : float, optional
         Relative length of the solid black segment in the periodic color table. Default is 2.0.
-    Pseudocolor_periodic_bw : float, optional
+    distance_bw : float, optional
         Relative length of the black-to-white gradient in the periodic color table. Default is 1.0.
     Visit_projector_1_log_level : int, optional
         Log level for the function. Default is 0.
@@ -106,7 +105,7 @@ def Visit_projector_1(
     -----
     - Pseudocolor_colortable: 
         - CustomBW: threshold between white and black. Low values are almost but not quite perfect white to have a contrast with the perfect white background to estimate the SF radius in pixels
-        - "PeriodicBW" (or the value of `Pseudocolor_periodic_name`): triggers generation of the custom periodic black and white table.
+        - PeriodicBW: triggers generation of the custom periodic black and white table.
     """
 
     # _VISIT_INITIALIZED used to launch visit only once in the case that multiple runs of the pipeline with VisIt are needed. This avoids errors.
@@ -217,17 +216,19 @@ def Visit_projector_1(
             p3 = vi.ColorControlPoint(); p3.colors = (0, 0, 0, 255); p3.position = 0.6; ccpl.AddControlPoints(p3)
             p4 = vi.ColorControlPoint(); p4.colors = (0, 0, 0, 255); p4.position = 1.0; ccpl.AddControlPoints(p4)
             vi.AddColorTable("CustomBW2", ccpl)
-        elif Pseudocolor_colortable == Pseudocolor_periodic_name: # Check if it's the periodic one
-            print(f"Creating {Pseudocolor_periodic_name} color table") if Visit_projector_1_log_level >= 1 else None
+        elif Pseudocolor_colortable == "PeriodicBW": # Check if it's the periodic one
+            print(f"Creating PeriodicBW color table") if Visit_projector_1_log_level >= 1 else None
+            # Create a subdirectory for color tables
+            colortable_storage_dir = os.path.join(output_dir, "colortables")
             VPBWCT.create_periodic_bw_color_table(
-                Pseudocolor_periodic_name,
                 Pseudocolor_periodic_num_periods,
-                Pseudocolor_periodic_ww,
-                Pseudocolor_periodic_wb,
-                Pseudocolor_periodic_bb,
-                Pseudocolor_periodic_bw,
-                vi  # Pass the visit module reference
-            )
+                distance_ww,
+                distance_wb,
+                distance_bb,
+                distance_bw,
+                visit_module_ref=vi,
+                colortable_output_dir=colortable_storage_dir
+                )
         # --- End Custom Color Table Logic ---
 
         PseudocolorAtts = vi.PseudocolorAttributes()

@@ -11,7 +11,7 @@ def VCL_variation_1(
     # General control
     input_dir=r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\VCL_variations",
     vcl_variation_output_dir_manual="",
-    vcl_variation_output_dir_comment="s6", 
+    vcl_variation_output_dir_comment="test", 
 ):
     #################################################### I/O
     vcl_variations_1_output_dir = F_1.F_out_dir(input_dir = input_dir, script_path = __file__, output_dir_comment = vcl_variation_output_dir_comment, output_dir_manual = vcl_variation_output_dir_manual) # Format_1 required definition of output directory
