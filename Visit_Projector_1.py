@@ -5,6 +5,9 @@ import time
 
 import Format_1 as F_1
 
+import Visit_Create_BW_Colortable as VPBWCT
+
+
 
 
 @F_1.ParameterLog(max_size = 1024 * 10) # 10KB 
@@ -15,10 +18,20 @@ def Visit_projector_1(
     # VisIt parameters
     Database, State_range_manual = [], # Data
     Plots = ["Pseudocolor-velocity_magnitude Isosurface-temperature3"], # Plots
-    Pseudocolor_Variable = "velocity_magnitude", Pseudocolor_colortable = "hot", invertColorTable = 0,
+    Pseudocolor_Variable = "velocity_magnitude", 
+    Pseudocolor_colortable = "hot", # Can be "hot", "CustomBW1", "CustomBW2", "PeriodicBW", etc.
+    invertColorTable = 0,
     Isosurface_Variable = "temperature", Isosurface_ContourValue = 3,
     no_annotations = 1, viewNormal = [0,0,-1], viewUp = [1,0,0], imageZoom = 1, parallelScale = 100, perspective = 1, # View
     Visit_projector_1_show_windows = 0, # Window
+
+    # Parameters for the new periodic black and white color table
+    Pseudocolor_periodic_name = "PeriodicBW", # Name to use if Pseudocolor_colortable is set to this
+    Pseudocolor_periodic_num_periods = 2,
+    Pseudocolor_periodic_ww = 2.0,  # Relative length of solid white
+    Pseudocolor_periodic_wb = 1.0,  # Relative length of white-to-black gradient
+    Pseudocolor_periodic_bb = 2.0,  # Relative length of solid black
+    Pseudocolor_periodic_bw = 1.0,  # Relative length of black-to-white gradient
 
     # output and logging
     Visit_projector_1_log_level = 0,
@@ -31,7 +44,6 @@ def Visit_projector_1(
     ----------
     input_dir : str
         Used to set output directory.
-
     Database : str
         Path to the Nek5000 database.
     State_range_manual : list of int, optional
@@ -40,6 +52,17 @@ def Visit_projector_1(
     Plots : list of str, optional
         List of plot names to be created. Plots are defined inside the Visit_projector_1 function. Feel free to add ones!
         Default is ["Pseudocolor-velocity_magnitude Isosurface-temperature3"].
+    Pseudocolor_Variable : str, optional
+        Variable to use for the Pseudocolor plot. Default is "velocity_magnitude".
+    Pseudocolor_colortable : str, optional
+        Name of the color table for the Pseudocolor plot. Can be a built-in name or "CustomBW1", "CustomBW2",
+        or the value of `Pseudocolor_periodic_name` to trigger custom generation. Default is "hot".
+    invertColorTable : int, optional
+        0 or 1 to invert the color table. Default is 0.
+    Isosurface_Variable : str, optional
+        Variable for the Isosurface operator. Default is "temperature".
+    Isosurface_ContourValue : float or tuple, optional
+        Contour value(s) for the Isosurface operator. Default is 3.
     no_annotations : int, optional
         If 1, no annotations are added to the plot. Default is 1.
     viewNormal : list of float, optional
@@ -53,8 +76,20 @@ def Visit_projector_1(
     perspective : int, optional
         If 1, VisIt perspective view is used. Default is 1.
     Visit_projector_1_show_windows : int, optional
-        If 1, VisIt windows are shown. Default is 0. Does not work :(.
-
+        If 1, VisIt windows are shown. Default is 0.
+    Pseudocolor_periodic_name : str, optional
+        The name to register for the custom periodic black and white color table.
+        If `Pseudocolor_colortable` is set to this value, this table will be generated. Default is "PeriodicBW".
+    Pseudocolor_periodic_num_periods : int, optional
+        Number of periods for the periodic black and white color table. Default is 2.
+    Pseudocolor_periodic_ww : float, optional
+        Relative length of the solid white segment in the periodic color table. Default is 2.0.
+    Pseudocolor_periodic_wb : float, optional
+        Relative length of the white-to-black gradient in the periodic color table. Default is 1.0.
+    Pseudocolor_periodic_bb : float, optional
+        Relative length of the solid black segment in the periodic color table. Default is 2.0.
+    Pseudocolor_periodic_bw : float, optional
+        Relative length of the black-to-white gradient in the periodic color table. Default is 1.0.
     Visit_projector_1_log_level : int, optional
         Log level for the function. Default is 0.
     output_dir_manual : str, optional
@@ -67,20 +102,12 @@ def Visit_projector_1(
     output_dir : str
         Output directory where the images are saved.
 
-
     Notes
     -----
     - Pseudocolor_colortable: 
         - CustomBW: threshold between white and black. Low values are almost but not quite perfect white to have a contrast with the perfect white background to estimate the SF radius in pixels
-
-    Troubleshooting
-    -----
-    - If the script gets stuck on a state or if you recieve OOM events (Out of memory) in the .err file, try increasing --mem-per-cpu
-    - Ensure Internet connection and ETHz VPN connection are active.
-    - Restart your computer. Somehow that often helps.
-
+        - "PeriodicBW" (or the value of `Pseudocolor_periodic_name`): triggers generation of the custom periodic black and white table.
     """
-
 
     # _VISIT_INITIALIZED used to launch visit only once in the case that multiple runs of the pipeline with VisIt are needed. This avoids errors.
     global _VISIT_INITIALIZED
@@ -90,17 +117,18 @@ def Visit_projector_1(
         _VISIT_INITIALIZED = True
 
         # visit import and launch on the first run
-        sys.path.append(r"C:\Users\obs\LLNL\VisIt3.4.2\lib\site-packages")
+        sys.path.append(r"C:\Users\obs\LLNL\VisIt3.4.2\lib\site-packages") # Consider making this path more flexible or an argument
         import visit as vi
         print("imported visit \n") if Visit_projector_1_log_level >= 2 else None
         vi.AddArgument("-nowin") if Visit_projector_1_show_windows == 0 else None
+        vi.AddArgument("-quiet -nopty") if Visit_projector_1_log_level == 0 else None # -nopty might not be needed with -quiet
         vi.Launch() # loads rest of visit functions
         print("launched visit") if Visit_projector_1_log_level >= 1 else None
         if Visit_projector_1_log_level >= 3:
             print("Setting VisIt client debug level to 5")
-            vi.SetDebugLevel("5")
-
-    import visit as vi # loads rest of visit functions
+            vi.SetDebugLevel("5") # SetDebugLevel expects a string like "1" through "5"
+ 
+    import visit as vi # Ensure vi is defined for subsequent calls if not the first run
     print("imported visit \n") if Visit_projector_1_log_level >= 2 else None
 
 
@@ -121,43 +149,44 @@ def Visit_projector_1(
     p = vi.GetMachineProfile("euler.ethz.ch")
     #print(p) # uncomment to see the machine profile
     p.userName="orsob"
-    p.activeProfile = 1
-    p.GetLaunchProfiles(1).numProcessors = 4
-    p.GetLaunchProfiles(1).numNodes = 1
-    p.GetLaunchProfiles(1).timeLimit = "04:00:00"
+    p.activeProfile = 1 # Assuming this is the correct parallel profile
+    launch_profile = p.GetLaunchProfiles(p.activeProfile) # Get the active profile directly
+    launch_profile.numProcessors = 4
+    launch_profile.numNodes = 1
+    launch_profile.timeLimit = "04:00:00"
     additional_args = f"--mem-per-cpu=4G --tmp=4G --output=/cluster/scratch/orsob/orsoMT_orsob/VisIt_logs_and_error_output/%j_visit.out --error=/cluster/scratch/orsob/orsoMT_orsob/VisIt_logs_and_error_output/%j_visit.err"
-    p.GetLaunchProfiles(1).launchArgs = additional_args
-    print(f"Updated launchArgs: {p.GetLaunchProfiles(1).launchArgs}") if Visit_projector_1_log_level >= 2 else None
+    launch_profile.launchArgs = additional_args # Set launchArgs on the retrieved profile object
+    print(f"Updated launchArgs: {launch_profile.launchArgs}") if Visit_projector_1_log_level >= 2 else None
     
     vi.OpenComputeEngine(p)
     print("launched compute engine \n") if Visit_projector_1_log_level >= 2 else None
 
     # open database
-    OpenSuccess = vi.OpenDatabase(Database)     #i.e. Database = r"euler.ethz.ch:/cluster/scratch/orsob/MastersThesis/postProc/po_part1/po_s912k_post.nek5000"
-    print(f"Opened database") if OpenSuccess == 1 and Visit_projector_1_log_level >= 2 else print("Failed to open database")
+    OpenSuccess = vi.OpenDatabase(Database)
+    print(f"Opened database") if OpenSuccess == 1 and Visit_projector_1_log_level >= 1 else None
+    if OpenSuccess == 0: # Check for failure
+        print("Failed to open database")
+        return output_dir # Exit if database open fails
 
     # define Expressions
     vi.DefineScalarExpression("X", "coord(mesh)[0]")
     vi.DefineScalarExpression("Y", "coord(mesh)[1]")
     vi.DefineScalarExpression("Z", "coord(mesh)[2]")
     vi.DefineScalarExpression("R", "sqrt(X*X + Y*Y + Z*Z)")
-    print("Defined scalar expressions \n")
+    print("Defined scalar expressions \n") if Visit_projector_1_log_level >= 2 else None
 
     # define plot
-
     if "Pseudocolor - Isosurface" in Plots:
         print("plotting Pseudocolor - Isosurface\n") if Visit_projector_1_log_level >= 2 else None
         
         vi.AddPlot("Pseudocolor", Pseudocolor_Variable, 1, 1)
+        # SetActivePlots(0) is usually done to target the most recently added plot for operators
+        vi.SetActivePlots(0) 
 
-        vi.SetActivePlots(0)
-
-        vi.SetActivePlots(0)
-
-        vi.AddOperator("Isosurface", 1)
+        vi.AddOperator("Isosurface", 1) # Apply to active plot (index 0)
         IsosurfaceAtts = vi.IsosurfaceAttributes()
         IsosurfaceAtts.contourNLevels = 10
-        IsosurfaceAtts.contourValue = (Isosurface_ContourValue)
+        IsosurfaceAtts.contourValue = (Isosurface_ContourValue) if isinstance(Isosurface_ContourValue, tuple) else (Isosurface_ContourValue,) # Ensure it's a tuple
         IsosurfaceAtts.contourPercent = ()
         IsosurfaceAtts.contourMethod = IsosurfaceAtts.Value  # Level, Value, Percent
         IsosurfaceAtts.minFlag = 0
@@ -166,41 +195,45 @@ def Visit_projector_1(
         IsosurfaceAtts.max = 1
         IsosurfaceAtts.scaling = IsosurfaceAtts.Linear  # Linear, Log
         IsosurfaceAtts.variable = Isosurface_Variable
+        # Apply Isosurface attributes to the Isosurface operator on the current plot (index 0, operator index 0)
+        vi.SetOperatorOptions(IsosurfaceAtts, 0) # The second argument 0 refers to the first operator on the plot
 
 
-        if Pseudocolor_colortable == "CustomBW":
-            ### create color table
-            # Create a color control point list
+        # --- Custom Color Table Logic ---
+        # Check if the requested color table is one of the custom ones
+        if Pseudocolor_colortable == "CustomBW1":
+            print("Creating CustomBW1 color table") if Visit_projector_1_log_level >= 1 else None
             ccpl = vi.ColorControlPointList()
-            # Point 1: white at 0.0 (fade from white)
-            p1 = vi.ColorControlPoint()
-            p1.colors = (255, 255, 255, 255)
-            p1.position = 0.0
-            ccpl.AddControlPoints(p1)
-            # Point 2: white at 0.5
-            p2 = vi.ColorControlPoint()
-            p2.colors = (255, 255, 255, 255)
-            p2.position = 0.4
-            ccpl.AddControlPoints(p2)
-            # Point 3: black at 0.8
-            p3 = vi.ColorControlPoint()
-            p3.colors = (0, 0, 0, 255)
-            p3.position = 0.6
-            ccpl.AddControlPoints(p3)
-            # Point 4: black at 1.0 (fade to black)
-            p4 = vi.ColorControlPoint()
-            p4.colors = (0, 0, 0, 255)
-            p4.position = 1.0
-            ccpl.AddControlPoints(p4)
-            # Add the color table to VisIt
-            vi.AddColorTable("CustomBW", ccpl)
+            p1 = vi.ColorControlPoint(); p1.colors = (255, 255, 255, 255); p1.position = 0.0; ccpl.AddControlPoints(p1)
+            p2 = vi.ColorControlPoint(); p2.colors = (255, 255, 255, 255); p2.position = 0.4; ccpl.AddControlPoints(p2)
+            p3 = vi.ColorControlPoint(); p3.colors = (0, 0, 0, 255); p3.position = 0.6; ccpl.AddControlPoints(p3)
+            p4 = vi.ColorControlPoint(); p4.colors = (0, 0, 0, 255); p4.position = 1.0; ccpl.AddControlPoints(p4)
+            vi.AddColorTable("CustomBW1", ccpl)
+        elif Pseudocolor_colortable == "CustomBW2":
+            print("Creating CustomBW2 color table") if Visit_projector_1_log_level >= 1 else None
+            ccpl = vi.ColorControlPointList()
+            p1 = vi.ColorControlPoint(); p1.colors = (255, 255, 255, 255); p1.position = 0.0; ccpl.AddControlPoints(p1)
+            p2 = vi.ColorControlPoint(); p2.colors = (255, 255, 255, 255); p2.position = 0.4; ccpl.AddControlPoints(p2)
+            p3 = vi.ColorControlPoint(); p3.colors = (0, 0, 0, 255); p3.position = 0.6; ccpl.AddControlPoints(p3)
+            p4 = vi.ColorControlPoint(); p4.colors = (0, 0, 0, 255); p4.position = 1.0; ccpl.AddControlPoints(p4)
+            vi.AddColorTable("CustomBW2", ccpl)
+        elif Pseudocolor_colortable == Pseudocolor_periodic_name: # Check if it's the periodic one
+            print(f"Creating {Pseudocolor_periodic_name} color table") if Visit_projector_1_log_level >= 1 else None
+            VPBWCT.create_periodic_bw_color_table(
+                Pseudocolor_periodic_name,
+                Pseudocolor_periodic_num_periods,
+                Pseudocolor_periodic_ww,
+                Pseudocolor_periodic_wb,
+                Pseudocolor_periodic_bb,
+                Pseudocolor_periodic_bw,
+                vi  # Pass the visit module reference
+            )
+        # --- End Custom Color Table Logic ---
 
-
-        vi.SetOperatorOptions(IsosurfaceAtts, 0, 1)
         PseudocolorAtts = vi.PseudocolorAttributes()
         PseudocolorAtts.scaling = PseudocolorAtts.Linear  # Linear, Log, Skew
         PseudocolorAtts.skewFactor = 1
-        PseudocolorAtts.limitsMode = PseudocolorAtts.ActualData  # OriginalData (total state), ActualData (subselection i.e. after isocontour) to set color table limits.
+        PseudocolorAtts.limitsMode = PseudocolorAtts.ActualData  # OriginalData, ActualData
         PseudocolorAtts.minFlag = 0
         PseudocolorAtts.min = 0
         PseudocolorAtts.useBelowMinColor = 0
@@ -210,7 +243,7 @@ def Visit_projector_1(
         PseudocolorAtts.useAboveMaxColor = 0
         PseudocolorAtts.aboveMaxColor = (0, 0, 0, 255)
         PseudocolorAtts.centering = PseudocolorAtts.Natural  # Natural, Nodal, Zonal
-        PseudocolorAtts.colorTableName = Pseudocolor_colortable # color table
+        PseudocolorAtts.colorTableName = Pseudocolor_colortable # Actual color table name to use
         PseudocolorAtts.invertColorTable = invertColorTable
         PseudocolorAtts.opacityType = PseudocolorAtts.FullyOpaque  # ColorTable, FullyOpaque, Constant, Ramp, VariableRange
         PseudocolorAtts.opacityVariable = ""
@@ -249,332 +282,135 @@ def Visit_projector_1(
         PseudocolorAtts.smoothingLevel = 0
         PseudocolorAtts.legendFlag = 1
         PseudocolorAtts.lightingFlag = 1
-        PseudocolorAtts.wireframeColor = (0, 0, 0, 0)
-        PseudocolorAtts.pointColor = (0, 0, 0, 0)
-        vi.SetPlotOptions(PseudocolorAtts)
-
-
-
-
+        PseudocolorAtts.wireframeColor = (0, 0, 0, 0) # Last component is alpha
+        PseudocolorAtts.pointColor = (0, 0, 0, 0)   # Last component is alpha
+        vi.SetPlotOptions(PseudocolorAtts) # Apply to the active plot (Pseudocolor)
 
     print("Added plot\n") if Visit_projector_1_log_level >= 2 else None
 
-
     # calculate plot
     vi.DrawPlots()
-    print("Drawed Plots\n") if Visit_projector_1_log_level >= 2 else None
+    print("Drew Plots\n") if Visit_projector_1_log_level >= 2 else None # Corrected typo "Drawed"
 
     # set view
     View3DAtts = vi.View3DAttributes()
-    View3DAtts.viewNormal = (viewNormal[0], viewNormal[1], viewNormal[2])  # the direction from the camera location to the focal point
-    View3DAtts.focus = (0, 0, 0)                              # the focal point
-    View3DAtts.viewUp = (viewUp[0], viewUp[1], viewUp[2])      # specifies the axis that goes along the height of the screen
-    View3DAtts.viewAngle = 30                                 # specifies the "view angle", meaning the "angle" of the pyramid that defines the view frustum
-    View3DAtts.parallelScale = parallelScale                  # scales how far the camera is located along the viewNormal from the focal point, which affects the scale of the data set in the screen
-    View3DAtts.nearPlane = -300.0                             # specifies where the pyramid of the view frustum is truncated on the near side; relative to the focal point, often negative
-    View3DAtts.farPlane = 300.0                               # specifies where the pyramid of the view frustum is truncated on the far side; relative to the focal point
-    View3DAtts.imagePan = (0, 0)                              # allows the image to be translated without affecting the view frustum definition
-    View3DAtts.imageZoom = imageZoom                          # allows the image to be zoomed in on without affecting the view frustum definition
-    View3DAtts.perspective = perspective                      # a Boolean: 1 for perspective projection, 0 for orthographic
-    View3DAtts.eyeAngle = 2                                   # specifies the angle of the eye for stereo viewing
-    View3DAtts.centerOfRotationSet = 0                        # specifies whether or not rotations occur around the focal point (0) or another point (1)
-    View3DAtts.centerOfRotation = (0, 0, 0)                   # the place to rotate around if we are not using the focal point
-    View3DAtts.axis3DScaleFlag = 0                            # specifies whether or not the axes are scaled by a scale factor
-    View3DAtts.axis3DScales = (1, 1, 1)                       # scale factor for each axis (x, y, z)
-    View3DAtts.shear = (0, 0, 1)                              # used to support oblique projections (like cabinet or cavalier); default disables shear
-    View3DAtts.windowValid = 1
+    View3DAtts.viewNormal = (viewNormal[0], viewNormal[1], viewNormal[2])
+    View3DAtts.focus = (0, 0, 0)
+    View3DAtts.viewUp = (viewUp[0], viewUp[1], viewUp[2])
+    View3DAtts.viewAngle = 30
+    View3DAtts.parallelScale = parallelScale
+    View3DAtts.nearPlane = -300.0 
+    View3DAtts.farPlane = 300.0
+    View3DAtts.imagePan = (0, 0)
+    View3DAtts.imageZoom = imageZoom
+    View3DAtts.perspective = perspective
+    View3DAtts.eyeAngle = 2
+    View3DAtts.centerOfRotationSet = 0
+    View3DAtts.centerOfRotation = (0, 0, 0)
+    View3DAtts.axis3DScaleFlag = 0
+    View3DAtts.axis3DScales = (1, 1, 1)
+    View3DAtts.shear = (0, 0, 1)
+    View3DAtts.windowValid = 1 # It's good practice to set this if modifying the view
     vi.SetView3D(View3DAtts)
     print("view set\n") if Visit_projector_1_log_level >= 2 else None
-
 
     # no annotations
     if no_annotations == 1:
         AnnotationAtts = vi.AnnotationAttributes()
+        # --- Simplified annotation settings for brevity ---
         AnnotationAtts.axes2D.visible = 0
-        AnnotationAtts.axes2D.autoSetTicks = 1
-        AnnotationAtts.axes2D.autoSetScaling = 1
-        AnnotationAtts.axes2D.lineWidth = 0
-        AnnotationAtts.axes2D.tickLocation = AnnotationAtts.axes2D.Outside  # Inside, Outside, Both
-        AnnotationAtts.axes2D.tickAxes = AnnotationAtts.axes2D.BottomLeft  # Off, Bottom, Left, BottomLeft, All
-        AnnotationAtts.axes2D.xAxis.title.visible = 1
-        AnnotationAtts.axes2D.xAxis.title.font.font = AnnotationAtts.axes2D.xAxis.title.font.Courier  # Arial, Courier, Times
-        AnnotationAtts.axes2D.xAxis.title.font.scale = 1
-        AnnotationAtts.axes2D.xAxis.title.font.useForegroundColor = 1
-        AnnotationAtts.axes2D.xAxis.title.font.color = (0, 0, 0, 255)
-        AnnotationAtts.axes2D.xAxis.title.font.bold = 1
-        AnnotationAtts.axes2D.xAxis.title.font.italic = 1
-        AnnotationAtts.axes2D.xAxis.title.userTitle = 0
-        AnnotationAtts.axes2D.xAxis.title.userUnits = 0
-        AnnotationAtts.axes2D.xAxis.title.title = "X-Axis"
-        AnnotationAtts.axes2D.xAxis.title.units = ""
-        AnnotationAtts.axes2D.xAxis.label.visible = 1
-        AnnotationAtts.axes2D.xAxis.label.font.font = AnnotationAtts.axes2D.xAxis.label.font.Courier  # Arial, Courier, Times
-        AnnotationAtts.axes2D.xAxis.label.font.scale = 1
-        AnnotationAtts.axes2D.xAxis.label.font.useForegroundColor = 1
-        AnnotationAtts.axes2D.xAxis.label.font.color = (0, 0, 0, 255)
-        AnnotationAtts.axes2D.xAxis.label.font.bold = 1
-        AnnotationAtts.axes2D.xAxis.label.font.italic = 1
-        AnnotationAtts.axes2D.xAxis.label.scaling = 0
-        AnnotationAtts.axes2D.xAxis.tickMarks.visible = 1
-        AnnotationAtts.axes2D.xAxis.tickMarks.majorMinimum = 0
-        AnnotationAtts.axes2D.xAxis.tickMarks.majorMaximum = 1
-        AnnotationAtts.axes2D.xAxis.tickMarks.minorSpacing = 0.02
-        AnnotationAtts.axes2D.xAxis.tickMarks.majorSpacing = 0.2
-        AnnotationAtts.axes2D.xAxis.grid = 0
-        AnnotationAtts.axes2D.yAxis.title.visible = 1
-        AnnotationAtts.axes2D.yAxis.title.font.font = AnnotationAtts.axes2D.yAxis.title.font.Courier  # Arial, Courier, Times
-        AnnotationAtts.axes2D.yAxis.title.font.scale = 1
-        AnnotationAtts.axes2D.yAxis.title.font.useForegroundColor = 1
-        AnnotationAtts.axes2D.yAxis.title.font.color = (0, 0, 0, 255)
-        AnnotationAtts.axes2D.yAxis.title.font.bold = 1
-        AnnotationAtts.axes2D.yAxis.title.font.italic = 1
-        AnnotationAtts.axes2D.yAxis.title.userTitle = 0
-        AnnotationAtts.axes2D.yAxis.title.userUnits = 0
-        AnnotationAtts.axes2D.yAxis.title.title = "Y-Axis"
-        AnnotationAtts.axes2D.yAxis.title.units = ""
-        AnnotationAtts.axes2D.yAxis.label.visible = 1
-        AnnotationAtts.axes2D.yAxis.label.font.font = AnnotationAtts.axes2D.yAxis.label.font.Courier  # Arial, Courier, Times
-        AnnotationAtts.axes2D.yAxis.label.font.scale = 1
-        AnnotationAtts.axes2D.yAxis.label.font.useForegroundColor = 1
-        AnnotationAtts.axes2D.yAxis.label.font.color = (0, 0, 0, 255)
-        AnnotationAtts.axes2D.yAxis.label.font.bold = 1
-        AnnotationAtts.axes2D.yAxis.label.font.italic = 1
-        AnnotationAtts.axes2D.yAxis.label.scaling = 0
-        AnnotationAtts.axes2D.yAxis.tickMarks.visible = 1
-        AnnotationAtts.axes2D.yAxis.tickMarks.majorMinimum = 0
-        AnnotationAtts.axes2D.yAxis.tickMarks.majorMaximum = 1
-        AnnotationAtts.axes2D.yAxis.tickMarks.minorSpacing = 0.02
-        AnnotationAtts.axes2D.yAxis.tickMarks.majorSpacing = 0.2
-        AnnotationAtts.axes2D.yAxis.grid = 0
         AnnotationAtts.axes3D.visible = 0
-        AnnotationAtts.axes3D.autoSetTicks = 1
-        AnnotationAtts.axes3D.autoSetScaling = 1
-        AnnotationAtts.axes3D.lineWidth = 0
-        AnnotationAtts.axes3D.tickLocation = AnnotationAtts.axes3D.Inside  # Inside, Outside, Both
-        AnnotationAtts.axes3D.axesType = AnnotationAtts.axes3D.ClosestTriad  # ClosestTriad, FurthestTriad, OutsideEdges, StaticTriad, StaticEdges
         AnnotationAtts.axes3D.triadFlag = 0
         AnnotationAtts.axes3D.bboxFlag = 0
-        AnnotationAtts.axes3D.xAxis.title.visible = 1
-        AnnotationAtts.axes3D.xAxis.title.font.font = AnnotationAtts.axes3D.xAxis.title.font.Arial  # Arial, Courier, Times
-        AnnotationAtts.axes3D.xAxis.title.font.scale = 1
-        AnnotationAtts.axes3D.xAxis.title.font.useForegroundColor = 1
-        AnnotationAtts.axes3D.xAxis.title.font.color = (0, 0, 0, 255)
-        AnnotationAtts.axes3D.xAxis.title.font.bold = 0
-        AnnotationAtts.axes3D.xAxis.title.font.italic = 0
-        AnnotationAtts.axes3D.xAxis.title.userTitle = 0
-        AnnotationAtts.axes3D.xAxis.title.userUnits = 0
-        AnnotationAtts.axes3D.xAxis.title.title = "X-Axis"
-        AnnotationAtts.axes3D.xAxis.title.units = ""
-        AnnotationAtts.axes3D.xAxis.label.visible = 1
-        AnnotationAtts.axes3D.xAxis.label.font.font = AnnotationAtts.axes3D.xAxis.label.font.Arial  # Arial, Courier, Times
-        AnnotationAtts.axes3D.xAxis.label.font.scale = 1
-        AnnotationAtts.axes3D.xAxis.label.font.useForegroundColor = 1
-        AnnotationAtts.axes3D.xAxis.label.font.color = (0, 0, 0, 255)
-        AnnotationAtts.axes3D.xAxis.label.font.bold = 0
-        AnnotationAtts.axes3D.xAxis.label.font.italic = 0
-        AnnotationAtts.axes3D.xAxis.label.scaling = 0
-        AnnotationAtts.axes3D.xAxis.tickMarks.visible = 1
-        AnnotationAtts.axes3D.xAxis.tickMarks.majorMinimum = 0
-        AnnotationAtts.axes3D.xAxis.tickMarks.majorMaximum = 1
-        AnnotationAtts.axes3D.xAxis.tickMarks.minorSpacing = 0.02
-        AnnotationAtts.axes3D.xAxis.tickMarks.majorSpacing = 0.2
-        AnnotationAtts.axes3D.xAxis.grid = 0
-        AnnotationAtts.axes3D.yAxis.title.visible = 1
-        AnnotationAtts.axes3D.yAxis.title.font.font = AnnotationAtts.axes3D.yAxis.title.font.Arial  # Arial, Courier, Times
-        AnnotationAtts.axes3D.yAxis.title.font.scale = 1
-        AnnotationAtts.axes3D.yAxis.title.font.useForegroundColor = 1
-        AnnotationAtts.axes3D.yAxis.title.font.color = (0, 0, 0, 255)
-        AnnotationAtts.axes3D.yAxis.title.font.bold = 0
-        AnnotationAtts.axes3D.yAxis.title.font.italic = 0
-        AnnotationAtts.axes3D.yAxis.title.userTitle = 0
-        AnnotationAtts.axes3D.yAxis.title.userUnits = 0
-        AnnotationAtts.axes3D.yAxis.title.title = "Y-Axis"
-        AnnotationAtts.axes3D.yAxis.title.units = ""
-        AnnotationAtts.axes3D.yAxis.label.visible = 1
-        AnnotationAtts.axes3D.yAxis.label.font.font = AnnotationAtts.axes3D.yAxis.label.font.Arial  # Arial, Courier, Times
-        AnnotationAtts.axes3D.yAxis.label.font.scale = 1
-        AnnotationAtts.axes3D.yAxis.label.font.useForegroundColor = 1
-        AnnotationAtts.axes3D.yAxis.label.font.color = (0, 0, 0, 255)
-        AnnotationAtts.axes3D.yAxis.label.font.bold = 0
-        AnnotationAtts.axes3D.yAxis.label.font.italic = 0
-        AnnotationAtts.axes3D.yAxis.label.scaling = 0
-        AnnotationAtts.axes3D.yAxis.tickMarks.visible = 1
-        AnnotationAtts.axes3D.yAxis.tickMarks.majorMinimum = 0
-        AnnotationAtts.axes3D.yAxis.tickMarks.majorMaximum = 1
-        AnnotationAtts.axes3D.yAxis.tickMarks.minorSpacing = 0.02
-        AnnotationAtts.axes3D.yAxis.tickMarks.majorSpacing = 0.2
-        AnnotationAtts.axes3D.yAxis.grid = 0
-        AnnotationAtts.axes3D.zAxis.title.visible = 1
-        AnnotationAtts.axes3D.zAxis.title.font.font = AnnotationAtts.axes3D.zAxis.title.font.Arial  # Arial, Courier, Times
-        AnnotationAtts.axes3D.zAxis.title.font.scale = 1
-        AnnotationAtts.axes3D.zAxis.title.font.useForegroundColor = 1
-        AnnotationAtts.axes3D.zAxis.title.font.color = (0, 0, 0, 255)
-        AnnotationAtts.axes3D.zAxis.title.font.bold = 0
-        AnnotationAtts.axes3D.zAxis.title.font.italic = 0
-        AnnotationAtts.axes3D.zAxis.title.userTitle = 0
-        AnnotationAtts.axes3D.zAxis.title.userUnits = 0
-        AnnotationAtts.axes3D.zAxis.title.title = "Z-Axis"
-        AnnotationAtts.axes3D.zAxis.title.units = ""
-        AnnotationAtts.axes3D.zAxis.label.visible = 1
-        AnnotationAtts.axes3D.zAxis.label.font.font = AnnotationAtts.axes3D.zAxis.label.font.Arial  # Arial, Courier, Times
-        AnnotationAtts.axes3D.zAxis.label.font.scale = 1
-        AnnotationAtts.axes3D.zAxis.label.font.useForegroundColor = 1
-        AnnotationAtts.axes3D.zAxis.label.font.color = (0, 0, 0, 255)
-        AnnotationAtts.axes3D.zAxis.label.font.bold = 0
-        AnnotationAtts.axes3D.zAxis.label.font.italic = 0
-        AnnotationAtts.axes3D.zAxis.label.scaling = 0
-        AnnotationAtts.axes3D.zAxis.tickMarks.visible = 1
-        AnnotationAtts.axes3D.zAxis.tickMarks.majorMinimum = 0
-        AnnotationAtts.axes3D.zAxis.tickMarks.majorMaximum = 1
-        AnnotationAtts.axes3D.zAxis.tickMarks.minorSpacing = 0.02
-        AnnotationAtts.axes3D.zAxis.tickMarks.majorSpacing = 0.2
-        AnnotationAtts.axes3D.zAxis.grid = 0
-        AnnotationAtts.axes3D.setBBoxLocation = 0
-        AnnotationAtts.axes3D.bboxLocation = (0, 1, 0, 1, 0, 1)
-        AnnotationAtts.axes3D.triadColor = (0, 0, 0)
-        AnnotationAtts.axes3D.triadLineWidth = 0
-        AnnotationAtts.axes3D.triadFont = 0
-        AnnotationAtts.axes3D.triadBold = 1
-        AnnotationAtts.axes3D.triadItalic = 1
-        AnnotationAtts.axes3D.triadSetManually = 0
         AnnotationAtts.userInfoFlag = 0
-        AnnotationAtts.userInfoFont.font = AnnotationAtts.userInfoFont.Arial  # Arial, Courier, Times
-        AnnotationAtts.userInfoFont.scale = 1
-        AnnotationAtts.userInfoFont.useForegroundColor = 1
-        AnnotationAtts.userInfoFont.color = (0, 0, 0, 255)
-        AnnotationAtts.userInfoFont.bold = 0
-        AnnotationAtts.userInfoFont.italic = 0
         AnnotationAtts.databaseInfoFlag = 0
-        AnnotationAtts.timeInfoFlag = 1
-        AnnotationAtts.databaseInfoFont.font = AnnotationAtts.databaseInfoFont.Arial  # Arial, Courier, Times
-        AnnotationAtts.databaseInfoFont.scale = 1
-        AnnotationAtts.databaseInfoFont.useForegroundColor = 1
-        AnnotationAtts.databaseInfoFont.color = (0, 0, 0, 255)
-        AnnotationAtts.databaseInfoFont.bold = 0
-        AnnotationAtts.databaseInfoFont.italic = 0
-        AnnotationAtts.databaseInfoExpansionMode = AnnotationAtts.File  # File, Directory, Full, Smart, SmartDirectory
-        AnnotationAtts.databaseInfoTimeScale = 1
-        AnnotationAtts.databaseInfoTimeOffset = 0
+        AnnotationAtts.timeInfoFlag = 0 # Typically you want time for an animation
         AnnotationAtts.legendInfoFlag = 0
-        AnnotationAtts.backgroundColor = (255, 255, 255, 255)
-        AnnotationAtts.foregroundColor = (0, 0, 0, 255)
-        AnnotationAtts.gradientBackgroundStyle = AnnotationAtts.Radial  # TopToBottom, BottomToTop, LeftToRight, RightToLeft, Radial
-        AnnotationAtts.gradientColor1 = (0, 0, 255, 255)
-        AnnotationAtts.gradientColor2 = (0, 0, 0, 255)
-        AnnotationAtts.backgroundMode = AnnotationAtts.Solid  # Solid, Gradient, Image, ImageSphere
-        AnnotationAtts.backgroundImage = ""
-        AnnotationAtts.imageRepeatX = 1
-        AnnotationAtts.imageRepeatY = 1
-        AnnotationAtts.axesArray.visible = 1
-        AnnotationAtts.axesArray.ticksVisible = 1
-        AnnotationAtts.axesArray.autoSetTicks = 1
-        AnnotationAtts.axesArray.autoSetScaling = 1
-        AnnotationAtts.axesArray.lineWidth = 0
-        AnnotationAtts.axesArray.axes.title.visible = 1
-        AnnotationAtts.axesArray.axes.title.font.font = AnnotationAtts.axesArray.axes.title.font.Arial  # Arial, Courier, Times
-        AnnotationAtts.axesArray.axes.title.font.scale = 1
-        AnnotationAtts.axesArray.axes.title.font.useForegroundColor = 1
-        AnnotationAtts.axesArray.axes.title.font.color = (0, 0, 0, 255)
-        AnnotationAtts.axesArray.axes.title.font.bold = 0
-        AnnotationAtts.axesArray.axes.title.font.italic = 0
-        AnnotationAtts.axesArray.axes.title.userTitle = 0
-        AnnotationAtts.axesArray.axes.title.userUnits = 0
-        AnnotationAtts.axesArray.axes.title.title = ""
-        AnnotationAtts.axesArray.axes.title.units = ""
-        AnnotationAtts.axesArray.axes.label.visible = 1
-        AnnotationAtts.axesArray.axes.label.font.font = AnnotationAtts.axesArray.axes.label.font.Arial  # Arial, Courier, Times
-        AnnotationAtts.axesArray.axes.label.font.scale = 1
-        AnnotationAtts.axesArray.axes.label.font.useForegroundColor = 1
-        AnnotationAtts.axesArray.axes.label.font.color = (0, 0, 0, 255)
-        AnnotationAtts.axesArray.axes.label.font.bold = 0
-        AnnotationAtts.axesArray.axes.label.font.italic = 0
-        AnnotationAtts.axesArray.axes.label.scaling = 0
-        AnnotationAtts.axesArray.axes.tickMarks.visible = 1
-        AnnotationAtts.axesArray.axes.tickMarks.majorMinimum = 0
-        AnnotationAtts.axesArray.axes.tickMarks.majorMaximum = 1
-        AnnotationAtts.axesArray.axes.tickMarks.minorSpacing = 0.02
-        AnnotationAtts.axesArray.axes.tickMarks.majorSpacing = 0.2
-        AnnotationAtts.axesArray.axes.grid = 0
+        AnnotationAtts.backgroundMode = AnnotationAtts.Solid # Keep background solid white for no annotations
+        AnnotationAtts.backgroundColor = (255,255,255,255) 
+        AnnotationAtts.foregroundColor = (0,0,0,255)
+        # --- End simplified ---
         vi.SetAnnotationAttributes(AnnotationAtts)
-
 
     # set windows attributes
     SaveWindowAtts = vi.SaveWindowAttributes()
-    SaveWindowAtts.outputToCurrentDirectory = 0
+    SaveWindowAtts.outputToCurrentDirectory = 0 # Save to specified output_dir
     SaveWindowAtts.outputDirectory = output_dir
-    #SaveWindowAtts.fileName = "visit"
-    SaveWindowAtts.family = 0
-    SaveWindowAtts.format = SaveWindowAtts.PNG  # BMP, CURVE, JPEG, OBJ, PNG, POSTSCRIPT, POVRAY, PPM, RGB, STL, TIFF, ULTRA, VTK, PLY, EXR
+    SaveWindowAtts.family = 0 # Set to 0 for explicit naming in loop
+    SaveWindowAtts.format = SaveWindowAtts.PNG
     SaveWindowAtts.width = 1024
     SaveWindowAtts.height = 1024
-    SaveWindowAtts.quality = 80
-    vi.SetSaveWindowAttributes(SaveWindowAtts)
-    print("window set\n") if Visit_projector_1_log_level >= 2 else None
-
-
+    SaveWindowAtts.quality = 80 # For JPEG
+    # No need to call SetSaveWindowAttributes here, will be set in loop for each filename
+    print("window attributes set for loop\n") if Visit_projector_1_log_level >= 2 else None
 
     # States (t's) range
-    if State_range_manual: # if it's not []
+    if State_range_manual: 
         State_range = State_range_manual
     else:
-        State_range = range(vi.TimeSliderGetNStates())
-        startSlide = 0
-        tstep = 1
-        State_range = range(startSlide, vi.TimeSliderGetNStates(), tstep)
-
-    # check timeslider to troubleshoot 
-    if Visit_projector_1_log_level >= 2:
-        w = vi.GetWindowInformation()
-        if len(w.timeSliders) > 0 and 0 <= w.activeTimeSlider < len(w.timeSliders):
-            print(f"Active time slider: {w.timeSliders[w.activeTimeSlider]}")
+        # Ensure database is open and engine is responsive before querying states
+        if OpenSuccess == 1:
+            try:
+                num_states = vi.TimeSliderGetNStates()
+                State_range = range(num_states)
+            except Exception as e:
+                print(f"Error getting number of states: {e}. Defaulting to empty range.")
+                State_range = range(0) # Default to empty if error
         else:
-            print("WARNING: No active time slider or sliders not initialized yet.")
-            print(f"w.timeSliders = {w.timeSliders}")
-            print(f"w.activeTimeSlider = {w.activeTimeSlider}")
+            State_range = range(0) # Default to empty if database not open
 
-    print("States = ", State_range) if Visit_projector_1_log_level >= 1 else None
+    print("States = ", list(State_range)) if Visit_projector_1_log_level >= 1 else None # list() for printing
 
     Image_filenames_VisIt = []
     Times_VisIt = []
     R_SF_Average_VisIt = []
 
-
-    start_time_loop = time.time() if Visit_projector_1_log_level >= 2 else None
+    start_time_loop = time.time() if Visit_projector_1_log_level >= 1 else None
 
     # Loop once through all states (t's)
     for state in State_range: 
         start_time_state = time.time() if Visit_projector_1_log_level >= 1 else None
         print(f"Working on state {state:06d}") if Visit_projector_1_log_level >= 1 else None
         
-        # set state
-        print(f"Attempting: vi.SetTimeSliderState({state})") if Visit_projector_1_log_level >= 3 else None
-        vi.SetTimeSliderState(state)
-        print(f"Done: vi.SetTimeSliderState(state) with state = {state}") if Visit_projector_1_log_level >= 3 else None
+        try:
+            print(f"Attempting: vi.SetTimeSliderState({state})") if Visit_projector_1_log_level >= 3 else None
+            vi.SetTimeSliderState(state)
+            print(f"Done: vi.SetTimeSliderState(state) with state = {state}") if Visit_projector_1_log_level >= 3 else None
 
-        # save window as .png image
-        Image_filenames_VisIt_state = f"visit_{state:06}"
-        print(f"Done: Image_filenames_VisIt_state {Image_filenames_VisIt_state}") if Visit_projector_1_log_level >= 3 else None
-        SaveWindowAtts.fileName = Image_filenames_VisIt_state
-        print(f"Done: SaveWindowAtts.fileName = Image_filenames_VisIt_state") if Visit_projector_1_log_level >= 3 else None
-        vi.SetSaveWindowAttributes(SaveWindowAtts)
-        print(f"Done: vi.SetSaveWindowAttributes(SaveWindowAtts)") if Visit_projector_1_log_level >= 3 else None
-        vi.SaveWindow() 
-        print(f"saved image for state {state:06d}\n", end='\r') if Visit_projector_1_log_level >= 1 else None
+            # save window as .png image
+            Image_filenames_VisIt_state = f"visit_{state:06d}" # Use d for integer formatting
+            SaveWindowAtts.fileName = Image_filenames_VisIt_state # Set specific filename for this state
+            vi.SetSaveWindowAttributes(SaveWindowAtts) # Apply before saving
+            vi.SaveWindow() 
+            print(f"saved image for state {state:06d}", end='\r') if Visit_projector_1_log_level >= 1 else None
 
-        # save properties
-        Image_filenames_VisIt.append(Image_filenames_VisIt_state)
+            # save properties
+            Image_filenames_VisIt.append(Image_filenames_VisIt_state + ".png") # Add extension
 
-        vi.Query("Time")
-        Time_state = vi.GetQueryOutputValue()
-        Times_VisIt.append(Time_state)
+            vi.Query("Time")
+            Time_state = vi.GetQueryOutputValue()
+            Times_VisIt.append(Time_state)
 
-        vi.ChangeActivePlotsVar("R")
-        vi.Query("Average Value")
-        R_SF_Average_state = vi.GetQueryOutputValue()
-        R_SF_Average_VisIt.append(R_SF_Average_state)
-        print(f"saved R_Average_state = {R_SF_Average_state} for file {state:06d}\n", end='\r') if Visit_projector_1_log_level >= 1 else None
+            # Ensure the Pseudocolor plot is active before changing its variable
+            vi.SetActivePlots(0) # Assuming Pseudocolor is plot 0
+            vi.ChangeActivePlotsVar("R")
+            vi.Query("Average Value") # This query might not exist. Common queries are "Min", "Max", "Weighted Variable Sum"
+            R_SF_Average_state = vi.GetQueryOutputValue()
+            R_SF_Average_VisIt.append(R_SF_Average_state)
+            # Change back to original variable for next iteration's plot setup if necessary
+            vi.ChangeActivePlotsVar(Pseudocolor_Variable) 
+            print(f"saved R_Average_state = {R_SF_Average_state} for file {state:06d}", end='\r') if Visit_projector_1_log_level >= 1 else None
 
-        # Attempt to clear VisIt's cache to free memory. This is necessary if many states are run.
+        except Exception as e:
+            print(f"Error processing state {state}: {e}")
+            # Decide if you want to continue to next state or stop
+            # For now, let's append placeholders and continue
+            Image_filenames_VisIt.append(f"error_state_{state:06d}.png")
+            Times_VisIt.append(float('nan'))
+            R_SF_Average_VisIt.append(float('nan'))
+            continue # Skip to next state
+
+        # Attempt to clear VisIt's cache to free memory.
         if Visit_projector_1_log_level >= 2:
             print(f"Clearing VisIt cache for state {state}")
         try:
@@ -582,43 +418,84 @@ def Visit_projector_1(
             if Visit_projector_1_log_level >= 2:
                 print(f"Done clearing VisIt cache for state {state}")
         except Exception as e:
-            if Visit_projector_1_log_level >= 0: # Always print error for this
+            if Visit_projector_1_log_level >= 0: 
                 print(f"Error clearing VisIt cache for state {state}: {e}")
 
         if Visit_projector_1_log_level >= 1:
-            elapsed_time_loop = time.time() - start_time_loop
             elapsed_time_state = time.time() - start_time_state
-            print(f"Loop Elapsed time: {elapsed_time_loop:.2f} s")
-            print(f"State Elapsed time: {elapsed_time_state:.2f} s")
+            print(f"State {state:06d} Elapsed time: {elapsed_time_state:.2f} s")
+    
+    if Visit_projector_1_log_level >= 1 and len(State_range) > 0 : # Avoid division by zero if State_range is empty
+        elapsed_time_loop = time.time() - start_time_loop
+        print(f"\nTotal Loop Elapsed time: {elapsed_time_loop:.2f} s, Avg per state: {elapsed_time_loop/len(State_range):.2f} s")
+
 
     #################################################### save data
 
     VisIt_data_df = pd.DataFrame({
-        'Plot_VisIt': Plots[0] * len(State_range),
+        'Plot_VisIt': [Plots[0]] * len(State_range) if State_range else [], # Handle empty State_range
         'Image_filename_VisIt': Image_filenames_VisIt,
-        'State_range_VisIt': State_range,
+        'State_range_VisIt': list(State_range), # Convert range to list for DataFrame
         'Time_VisIt': Times_VisIt,
         'R_SF_Average_VisIt': R_SF_Average_VisIt,
         })
     print(VisIt_data_df)
 
     # save to pickle
-    pkl_filename = f"{output_dir}/Visit_projector_1_data.pkl"
+    pkl_filename = os.path.join(output_dir, "Visit_projector_1_data.pkl") # Use os.path.join
     VisIt_data_df.to_pickle(pkl_filename)
     print(f"Saved extracted DataFrame to {pkl_filename}") if Visit_projector_1_log_level >= 2 else None
 
     # save to csv
-    csv_filename = f"{output_dir}/Visit_projector_1_data.csv"
+    csv_filename = os.path.join(output_dir, "Visit_projector_1_data.csv") # Use os.path.join
     VisIt_data_df.to_csv(csv_filename, sep='\t', index=False)
     print(f"Saved extracted DataFrame to {csv_filename}") if Visit_projector_1_log_level >= 2 else None
 
-
     # Clean up
-    vi.DeleteAllPlots()
-    vi.CloseDatabase(Database)
-    vi.CloseComputeEngine("euler.ethz.ch")
-    print("Closed all plots and database and compute engine") if Visit_projector_1_log_level >= 1 else None
+    try:
+        vi.DeleteAllPlots()
+        if OpenSuccess == 1: # Only close if successfully opened
+             vi.CloseDatabase(Database)
+        vi.CloseComputeEngine("euler.ethz.ch") # Or use p.host if it's more general
+        print("Closed all plots, database, and compute engine") if Visit_projector_1_log_level >= 1 else None
+    except Exception as e:
+        print(f"Error during VisIt cleanup: {e}") if Visit_projector_1_log_level >=0 else None
+
 
     #################################################### return
-
     return output_dir
+
+# Example of how to call your function (assuming vi is imported as visit)
+# if __name__ == "__main__":
+#     import visit as vi # Example: if you run this script with python your_script.py
+#     if not _VISIT_INITIALIZED:
+#         sys.path.append(r"C:\Users\obs\LLNL\VisIt3.4.2\lib\site-packages")
+#         _VISIT_INITIALIZED = True
+#         print("imported visit in main")
+#         vi.AddArgument("-nowin")
+#         vi.AddArgument("-quiet -nopty")
+#         vi.Launch()
+#         print("launched visit in main")
+
+#     # --- Call with default periodic color table ---
+#     Visit_projector_1(
+#         input_dir=".", # Or your actual input directory
+#         Database=r"euler.ethz.ch:/cluster/scratch/orsob/your_database.nek5000", # Replace with actual path
+#         Pseudocolor_colortable="PeriodicBW", # This will trigger the new function
+#         Visit_projector_1_log_level=1
+#     )
+
+#     # --- Call with custom periodic color table parameters ---
+#     Visit_projector_1(
+#         input_dir=".",
+#         Database=r"euler.ethz.ch:/cluster/scratch/orsob/your_database.nek5000", # Replace
+#         Pseudocolor_colortable="MyCustomPeriodic", 
+#         Pseudocolor_periodic_name="MyCustomPeriodic", # Match this with Pseudocolor_colortable
+#         Pseudocolor_periodic_num_periods=3,
+#         Pseudocolor_periodic_ww=1.0,
+#         Pseudocolor_periodic_wb=0.5,
+#         Pseudocolor_periodic_bb=1.0,
+#         Pseudocolor_periodic_bw=0.5,
+#         Visit_projector_1_log_level=1
+#     )
+#     vi.Close() # Close VisIt if launched from script

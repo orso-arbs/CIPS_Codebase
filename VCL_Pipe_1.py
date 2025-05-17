@@ -45,7 +45,7 @@ def VCL_pipeline(
     vp_imageZoom=1,
     vp_parallelScale=80,
     vp_perspective=0,
-    vp_Visit_projector_1_log_level=1,
+    vp_Visit_projector_1_log_level=0,
     vp_Visit_projector_1_show_windows=0,
     vp_output_dir_manual="",
     vp_output_dir_comment="",
