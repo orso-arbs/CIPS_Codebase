@@ -39,19 +39,70 @@ def Spherical_Reconstruction_1(
     N_images = len(dimentionalised_df)
 
     i = 40
+
     print(f"Image {i} of {N_images}")
-    print(f"Image file path: {dimentionalised_df.loc[i, 'image_file_path']}")
-    image_RGB = color.rgb2gray(sk_io.imread(dimentionalised_df.loc[i, 'image_file_path'])[..., :3])
     R = dimentionalised_df.loc[i, 'R_SF_nonDim']
-    print(f"R = {R}")
+    image_Nx_px = dimentionalised_df.loc[i, 'image_Ny_px']
+    image_Ny_px = dimentionalised_df.loc[i, 'image_Nx_px']
+    d_T_per_px = dimentionalised_df.loc[i, 'd_T_per_px']
+    
+    CST_Boundary_nonDim, CST_Boundary_combined_nonDim = Cubed_Sphere_Tile_Boundary(R, N_pts=100)
+    CST_Boundary_combined_px = Affine_image_px_and_NonDim(
+        Coordinates = CST_Boundary_combined_nonDim,
+        nonDim_to_px=True, 
+        image_Nx_px=image_Nx_px,
+        image_Ny_px=image_Ny_px,
+        d_T_per_px=d_T_per_px,
+        )
 
-    # # Example usage in your main function:
-    # for i in range(N_images):
-    #     image_RGB = color.rgb2gray(sk_io.imread(dimentionalised_df.loc[i, 'image_file_path'])[..., :3])
+    # Load image without converting to grayscale
+    image_RGB = sk_io.imread(dimentionalised_df.loc[i, 'image_file_path'])[..., :3]
+    outlines = dimentionalised_df.loc[i, 'outlines']
+    masks = dimentionalised_df.loc[i, 'masks']
 
-    #     R = dimentionalised_df.loc[i, 'R_SF_nonDim']
-    #     print(f"R = {R}")
 
+    if 1==0: # plot image + masks + outlines + CST_Boundary + reference cirle
+        # Create figure with white background
+        fig, ax = plt.subplots(1, 1, figsize=(10, 10))
+
+        # Display base RGB image
+        im_rgb = ax.imshow(image_RGB)
+        
+        # Plot masks with transparent zeros
+        masked = np.ma.masked_where(masks == 0, masks)
+        im_masks = ax.imshow(masked, alpha=0.9)
+        # fig.colorbar(im_masks, label='Mask Values')  # Hide colorbar
+        #
+        ## Plot outlines with transparent zeros
+        outlined = np.ma.masked_where(outlines == 0, outlines)
+        im_outlines = ax.imshow(outlined, alpha=1)
+        # fig.colorbar(im_outlines, label='Outline Values')  # Hide colorbar
+        
+        # add Cubed Sphere Tile Boundary
+        boundary_plot = ax.plot(CST_Boundary_combined_px[0], CST_Boundary_combined_px[1], 'r', linewidth=2, label='Cubed Sphere Tile Boundary')
+
+        # Plot reference circle
+        theta = np.linspace(0, 2*np.pi, 200)
+        ax.plot(R*np.cos(theta) / d_T_per_px + image_Nx_px/2, R*np.sin(theta) / d_T_per_px + image_Ny_px/2, 'r--', 
+        label='Reference Circle', linewidth=2)
+
+        ax.set_title(f"Image {i} Cubic Sphere Tile Boundary and Reference Circle", fontsize=16)
+        ax.axis('off')
+        
+        # Add cursor info
+        def format_coord(x, y):
+            x, y = int(x), int(y)
+            if 0 <= x < image_RGB.shape[1] and 0 <= y < image_RGB.shape[0]:
+                mask_val = masks[y, x]
+                outline_val = outlines[y, x]
+                return f'x={x:d}, y={y:d}, mask={mask_val:.2f}, outline={outline_val:.2f}'
+            return 'x=, y='
+            
+        ax.format_coord = format_coord
+        
+        plt.show()
+
+    return output_dir
 
 
 
@@ -61,7 +112,48 @@ def detJ(R, x, z):
     """Calculate the Jacobian determinant at point (x,z)"""
     return R/np.sqrt(R**2 - x**2 - z**2)
 
-def Cubed_Sphere_Tile_Boundary(R, N_pts=100):
+def Affine_image_px_and_NonDim(Coordinates, px_to_nonDim=False, nonDim_to_px=False, 
+                                image_Nx_px=None, image_Ny_px=None, d_T_per_px=None):
+    """
+    Transforms coordinates between pixel and non-dimensional space.
+    
+    Args:
+        Coordinates (numpy.ndarray): 2xN array of coordinates
+        px_to_nonDim (bool): Convert from pixel to non-dimensional
+        nonDim_to_px (bool): Convert from non-dimensional to pixel
+        image_Nx_px (int): Image width in pixels
+        image_Ny_px (int): Image height in pixels
+        d_T_per_px (float): Conversion factor
+    
+    Returns:
+        numpy.ndarray: 2xN array of transformed coordinates
+    """
+    if px_to_nonDim and nonDim_to_px:
+        raise ValueError("Cannot set both px_to_nonDim and nonDim_to_px to True")
+    
+    if not px_to_nonDim and not nonDim_to_px:
+        raise ValueError("Must set either px_to_nonDim or nonDim_to_px to True")
+        
+    if image_Nx_px is None or image_Ny_px is None or d_T_per_px is None:
+        raise ValueError("Must provide image_Nx_px, image_Ny_px, and d_T_per_px")
+
+    Transformed_Coordinates = np.zeros_like(Coordinates)
+    
+    if px_to_nonDim:
+        x_px = Coordinates[0]
+        y_px = Coordinates[1]
+        Transformed_Coordinates[0] = (x_px - image_Nx_px/2) * d_T_per_px
+        Transformed_Coordinates[1] = (image_Ny_px/2 - y_px) * d_T_per_px
+        
+    if nonDim_to_px:
+        x_nonDim = Coordinates[0]
+        z_nonDim = Coordinates[1]
+        Transformed_Coordinates[0] = x_nonDim / d_T_per_px + image_Nx_px/2
+        Transformed_Coordinates[1] = image_Ny_px/2 - z_nonDim / d_T_per_px
+        
+    return Transformed_Coordinates
+
+def Cubed_Sphere_Tile_Boundary(R, N_pts=500):
     """
     Calculates the boundary points of a cubed sphere tile.
     
@@ -80,26 +172,37 @@ def Cubed_Sphere_Tile_Boundary(R, N_pts=100):
     CST_Boundary = pd.DataFrame(columns=['N', 'W', 'S', 'E'])
     
     # North boundary
-    z_N = np.linspace(L, -L, N_pts)
-    x_N = np.sqrt((R**2 - z_N**2) / 2)
+    x_N = np.linspace(-L, L, N_pts)
+    z_N = np.sqrt((R**2 - x_N**2) / 2)
     CST_Boundary.at[0, 'N'] = np.vstack((x_N, z_N))
-    
+
     # South boundary
-    z_S = np.linspace(L, -L, N_pts)
-    x_S = -np.sqrt((R**2 - z_S**2) / 2)
+    x_S = np.linspace(L, -L, N_pts)
+    z_S = -np.sqrt((R**2 - x_S**2) / 2)
     CST_Boundary.at[0, 'S'] = np.vstack((x_S, z_S))
-    
-    # West boundary
-    x_W = np.linspace(-L, L, N_pts)
-    z_W = np.sqrt((R**2 - x_W**2) / 2)
-    CST_Boundary.at[0, 'W'] = np.vstack((x_W, z_W))
-    
+
     # East boundary
-    x_E = np.linspace(-L, L, N_pts)
-    z_E = -np.sqrt((R**2 - x_E**2) / 2)
+    z_E = np.linspace(L, -L, N_pts)
+    x_E = np.sqrt((R**2 - z_E**2) / 2)
     CST_Boundary.at[0, 'E'] = np.vstack((x_E, z_E))
     
-    return CST_Boundary # CST_Boundary.at[0
+    # West boundary
+    z_W = np.linspace(-L, L, N_pts)
+    x_W = -np.sqrt((R**2 - z_W**2) / 2)
+    CST_Boundary.at[0, 'W'] = np.vstack((x_W, z_W))
+    
+    # Concatenate all boundaries into one array
+    boundaries = []
+    for b in ['N', 'E', 'S', 'W']:  # Order matters for continuous path
+        boundaries.append(CST_Boundary.at[0, b])
+    CST_Boundary_combined = np.hstack(boundaries)
+    CST_Boundary_combined = np.hstack([CST_Boundary_combined, CST_Boundary_combined[:, [0]]]) # Add first point again to close the loop
+    
+    return CST_Boundary, CST_Boundary_combined
+
+
+
+    return CST_Boundary
 
 def plot_boundary_and_detJ(CST_Boundary, R, plot_resolution=200, cmap='viridis', alpha=1.0):
     """
@@ -165,7 +268,7 @@ def plot_boundary_and_detJ(CST_Boundary, R, plot_resolution=200, cmap='viridis',
     
     for boundary, color, label in zip(boundaries, colors, labels):
         points = CST_Boundary.at[0, boundary]
-        ax.plot(points[1], points[0], color=color, label=label, 
+        ax.plot(points[0], points[1], color=color, label=label, 
                 linewidth=2.5, linestyle='-')
     
     # Calculate and plot extrema points
@@ -188,15 +291,15 @@ def plot_boundary_and_detJ(CST_Boundary, R, plot_resolution=200, cmap='viridis',
         if boundary == 'N':
             # Arrow to middle point (minimum)
             ax.annotate(f'{detJ_mid:.2f}',
-                        xy=(z_mid, x_mid), xycoords='data',
-                        xytext=(z_mid, x_mid - R*0.2), textcoords='data',
+                        xy=(x_mid, z_mid), xycoords='data',
+                        xytext=(x_mid, z_mid - R*0.2), textcoords='data',
                         arrowprops=dict(arrowstyle="->", connectionstyle="arc3,rad=0.2"),
                         bbox=dict(boxstyle="round", fc="w", ec="0.5", alpha=0.8))
             
             # Arrow to end point (maximum)
             ax.annotate(f'{detJ_end:.2f}',
-                        xy=(z_end, x_end), xycoords='data',
-                        xytext=(z_end + R*0.2, x_end - R*0.2), textcoords='data',
+                        xy=(x_end, z_end), xycoords='data',
+                        xytext=(x_end + R*0.2, z_end - R*0.2), textcoords='data',
                         arrowprops=dict(arrowstyle="->", connectionstyle="arc3,rad=-0.2"),
                         bbox=dict(boxstyle="round", fc="w", ec="0.5", alpha=0.8))
 
@@ -207,8 +310,8 @@ def plot_boundary_and_detJ(CST_Boundary, R, plot_resolution=200, cmap='viridis',
     
     # Improve grid and labels
     ax.grid(True, alpha=0.3, linestyle='--')
-    ax.set_xlabel('z', fontsize=12)
-    ax.set_ylabel('x', fontsize=12)
+    ax.set_xlabel('x', fontsize=12)
+    ax.set_ylabel('z', fontsize=12)
     ax.set_title('Cubed Sphere Tile Boundary with det(J)', 
                 fontsize=14, pad=20)
     
@@ -230,11 +333,12 @@ def plot_boundary_and_detJ(CST_Boundary, R, plot_resolution=200, cmap='viridis',
 if __name__ == "__main__":
     print("Running Spherical Reconstruction...")
 
-
-    #R = 1.0
-    #boundary = Cubed_Sphere_Tile_Boundary(R, N_pts=100)
-    #plot_boundary_and_detJ(boundary, R)
+    if 1==0: # to plot: Cubed Sphere Tile Boundary with det(J)
+        R = 1.0
+        CST_Boundary, CST_Boundary_combined = Cubed_Sphere_Tile_Boundary(R)
+        plot_boundary_and_detJ(CST_Boundary, R)
 
 
     Spherical_Reconstruction_1(
-    input_dir = r"C:\Users\obs\Desktop\VCL_Pipe_1_2025-05-16_01-02-47_HRR\Visit_Projector_1_2025-05-16_01-02-49\CP_segment_1_2025-05-16_02-02-47\CP_extract_1_2025-05-16_02-10-02\dim2_VisIt_R_1_2025-05-16_02-10-14"    )
+    input_dir = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\SF_CP_analysis_pipeline_data\Visit_Projector_1_2025-05-10_14-46-34_A11_T-3_VM-hot\CP_segment_1_2025-05-10_15-40-15_cyto3\CP_extract_1_2025-05-10_15-46-46\CP_DIM~1"
+    )

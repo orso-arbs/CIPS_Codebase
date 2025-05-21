@@ -29,7 +29,7 @@ def Visit_projector_1(
     distance_bw = 1.0,  # Relative length of black-to-white gradient
 
     Isosurface_Variable = "temperature", Isosurface_ContourValue = 3,
-    no_annotations = 1, viewNormal = [0,-1,0], viewUp = [1,0,0], imageZoom = 1, parallelScale = 100, perspective = 1, # View
+    no_annotations = 1, viewNormal = [0,1,0], viewUp = [0,0,1], imageZoom = 1, parallelScale = 100, perspective = 1, # View
     Visit_projector_1_show_windows = 0, # Window
 
     # output and logging
@@ -342,6 +342,7 @@ def Visit_projector_1(
     SaveWindowAtts.width = 1024
     SaveWindowAtts.height = 1024
     SaveWindowAtts.quality = 80 # For JPEG
+    SaveWindowAtts.screenCapture = 0 
     # No need to call SetSaveWindowAttributes here, will be set in loop for each filename
     print("window attributes set for loop\n") if Visit_projector_1_log_level >= 2 else None
 
