@@ -3,7 +3,7 @@ import sys
 import pandas as pd
 import time
 import json
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw, ImageFont
 
 import Format_1 as F_1 # Assuming Format_1.py contains F_out_dir and ParameterLog
 
@@ -32,6 +32,20 @@ def create_periodic_bw_color_table(num_periods, distance_ww, distance_wb, distan
     if total_relative_distance_one_period <= 0:
         print(f"Error: Sum of segment lengths (distance_ww, distance_wb, distance_bb, distance_bw) must be positive. Cannot create color table PeriodicBW.")
         return
+    
+
+    # Calculate the normalized deltas for each segment based on the total length
+    # of the colormap (which is total_relative_distance mapped to [0,1])
+    # norm_factor is the scaling factor to map one unit of relative distance to the [0,1] colormap range
+    distance_ww_wb_bb = float(distance_ww + distance_wb + distance_bb)
+    total_relative_distance = float(distance_ww_wb_bb * num_periods + distance_bw * (num_periods - 1))
+
+    norm_factor = 1.0 / (total_relative_distance)
+    
+    delta_ww = distance_ww * norm_factor
+    delta_wb = distance_wb * norm_factor
+    delta_bb = distance_bb * norm_factor
+    delta_bw = distance_bw * norm_factor
 
     white_color = (255, 255, 255, 255)  # RGBA for white
     black_color = (0, 0, 0, 255)      # RGBA for black
@@ -39,45 +53,39 @@ def create_periodic_bw_color_table(num_periods, distance_ww, distance_wb, distan
     current_pos = 0.0
     point_definitions = [] # List to store (color_tuple, position_float)
 
-    # Calculate the normalized deltas for each segment based on the total length
-    # of the colormap (which is num_periods * total_relative_distance_one_period mapped to [0,1])
-    # norm_factor is the scaling factor to map one unit of relative distance to the [0,1] colormap range
-    norm_factor = 1.0 / (total_relative_distance_one_period * num_periods)
-    
-    delta_ww = distance_ww * norm_factor
-    delta_wb = distance_wb * norm_factor
-    delta_bb = distance_bb * norm_factor
-    delta_bw = distance_bw * norm_factor
-
     # Add the very first control point (start of the first white segment)
     point_definitions.append((white_color, current_pos))
 
-    # Loop through each period to define control points
+    # Loop through each period
     for i in range(num_periods):
-        # End of White segment / Start of White-to-Black gradient
+        # White segment
         current_pos += delta_ww
-        current_pos = min(current_pos, 1.0) 
+        current_pos = min(current_pos, 1.0)
         point_definitions.append((white_color, current_pos))
 
-        # End of White-to-Black gradient / Start of Black segment
+        # White-to-Black gradient endpoint
         current_pos += delta_wb
         current_pos = min(current_pos, 1.0)
         point_definitions.append((black_color, current_pos))
 
-        # End of Black segment / Start of Black-to-White gradient
+        # Black segment endpoint
         current_pos += delta_bb
         current_pos = min(current_pos, 1.0)
-        point_definitions.append((black_color, current_pos))
-
-        # End of Black-to-White gradient / End of period (also start of next white segment)
-        current_pos += delta_bw
         
-        pos_to_set = current_pos
-        if i == num_periods - 1: # Ensure the very last point is exactly at 1.0
-            pos_to_set = 1.0
-        else: # For intermediate periods, clamp to avoid overshooting
-            pos_to_set = min(pos_to_set, 1.0)
-        point_definitions.append((white_color, pos_to_set))
+        # For the last period, make sure we end at exactly 1.0 with black
+        if i == num_periods - 1:
+            point_definitions.append((black_color, 1.0))
+        else:
+            # For non-final periods, add the black point at current position
+            point_definitions.append((black_color, current_pos))
+            # And add the transition back to white for the next period
+            current_pos += delta_bw
+            current_pos = min(current_pos, 1.0)
+            point_definitions.append((white_color, current_pos))
+
+    # Ensure the very last point is exactly at 1.0 and black
+    if point_definitions[-1][1] < 1.0 or point_definitions[-1][0] != black_color:
+        point_definitions.append((black_color, 1.0))
 
     # Initialize ColorControlPointList
     ccpl = visit_module_ref.ColorControlPointList()
@@ -116,7 +124,9 @@ def create_periodic_bw_color_table(num_periods, distance_ww, distance_wb, distan
     width, height = 512, 50
     preview = Image.new('RGB', (width, height), 'white')
     draw = ImageDraw.Draw(preview)
+    font = ImageFont.load_default()  # For labels
     
+    # Draw the color gradient first
     for i in range(width):
         x = i / (width - 1)  # Normalize to [0,1]
         # Find surrounding control points
@@ -130,8 +140,42 @@ def create_periodic_bw_color_table(num_periods, distance_ww, distance_wb, distan
                 draw.line([(i,0), (i,height)], fill=tuple(color))
                 break
 
+    # Add markers and labels
+    label_height = height + 15  # Height for text labels
+    preview_with_labels = Image.new('RGB', (width, label_height), 'white')
+    preview_with_labels.paste(preview, (0, 0))
+    draw = ImageDraw.Draw(preview_with_labels)
+
+    # Draw period markers and labels
+    for i in range(num_periods):
+        # Calculate start position for this period
+        period_start_pos = i * (distance_ww_wb_bb) / total_relative_distance
+        if i > 0:
+            period_start_pos += (i * distance_bw) / total_relative_distance
+
+        # Draw full red vertical line for period start
+        period_x = int(period_start_pos * width)
+        draw.line([(period_x, 0), (period_x, height)], fill=(255,0,0), width=2)
+
+        # Get exact positions from control points for this period
+        points_in_period = point_definitions[i*4:(i+1)*4] if i < num_periods-1 else point_definitions[i*4:]
+        
+        # Find white and black points from the control points
+        for j, (color, pos) in enumerate(points_in_period):
+            x = int(pos * width)
+            if color == white_color:
+                # Red dashed line for white points
+                for y in range(0, height, 4):
+                    draw.line([(x, y), (x, min(y+2, height))], fill=(255,0,0), width=1)
+                draw.text((x-4, height+2), "w", fill=(255,0,0), font=font)
+            elif color == black_color:
+                # Red dashed line for black points
+                for y in range(0, height, 4):
+                    draw.line([(x, y), (x, min(y+2, height))], fill=(255,0,0), width=1)
+                draw.text((x-4, height+2), "b", fill=(255,0,0), font=font)
+
     preview_path = os.path.join(colortable_output_dir, f"PeriodicBW_preview.png")
-    preview.save(preview_path)
+    preview_with_labels.save(preview_path)
     
     # Add the color table to VisIt
     visit_module_ref.AddColorTable("PeriodicBW", ccpl)

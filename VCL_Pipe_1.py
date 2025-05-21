@@ -37,7 +37,7 @@ def VCL_pipeline(
                             # s9 :  N2      s18: Sa
     vp_Pseudocolor_colortable="PeriodicBW",
     vp_invertColorTable=0,
-    Pseudocolor_periodic_num_periods = 2,   # periods of w-w-b-b points (4 points)
+    Pseudocolor_periodic_num_periods = 3,   # periods of w-w-b-b points (4 points)
     distance_ww = 2.0,          # Relative length of solid white
     distance_wb = 1.0,          # Relative length of white-to-black gradient
     distance_bb = 2.0,          # Relative length of solid black
@@ -50,7 +50,7 @@ def VCL_pipeline(
     vp_imageZoom=1,
     vp_parallelScale=80,
     vp_perspective=0,
-    vp_Visit_projector_1_log_level=1,
+    vp_Visit_projector_1_log_level=0,
     vp_Visit_projector_1_show_windows=0,
     vp_output_dir_manual="",
     vp_output_dir_comment="",

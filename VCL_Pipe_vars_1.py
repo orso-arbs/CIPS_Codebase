@@ -11,7 +11,7 @@ def VCL_variation_1(
     # General control
     input_dir=r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\VCL_variations",
     vcl_variation_output_dir_manual="",
-    vcl_variation_output_dir_comment="test", 
+    vcl_variation_output_dir_comment="Colortable_PeriodicBW_vars", 
 ):
     #################################################### I/O
     vcl_variations_1_output_dir = F_1.F_out_dir(input_dir = input_dir, script_path = __file__, output_dir_comment = vcl_variation_output_dir_comment, output_dir_manual = vcl_variation_output_dir_manual) # Format_1 required definition of output directory
@@ -24,69 +24,84 @@ def VCL_variation_1(
 
     # Define parameter variations
     # Each dict contains parameters to override in VCL_pipeline
-    # Specifically, these will affect Visit_Projector_1 via vp_* argumentss
     variations = [
+        # num_periods=1 variations
         {
-            "vcl_pipeline_output_dir_comment": "CustomBW",
-            "vp_output_dir_comment": "CustomBW",
-            "vp_Pseudocolor_colortable": "CustomBW",
-            "vp_invertColorTable": 0, # Assuming default
+            "Pseudocolor_periodic_num_periods": 1,
+            "distance_ww": 1.0,
+            "distance_bb": 1.0,
+            "vcl_pipeline_output_dir_comment": "Periods1_ww1bb1",
+            "vp_output_dir_comment": "Periods1_ww1bb1",
+            "vp_Pseudocolor_colortable": "PeriodicBW",
         },
         {
-            "vcl_pipeline_output_dir_comment": "orangehot_invC_1",
-            "vp_output_dir_comment": "orangehot_invC_1",
-            "vp_Pseudocolor_colortable": "orangehot",
-            "vp_invertColorTable": 1,
+            "Pseudocolor_periodic_num_periods": 1,
+            "distance_ww": 2.0,
+            "distance_bb": 2.0,
+            "vcl_pipeline_output_dir_comment": "Periods1_ww2bb2",
+            "vp_output_dir_comment": "Periods1_ww2bb2",
+            "vp_Pseudocolor_colortable": "PeriodicBW",
         },
         {
-            "vcl_pipeline_output_dir_comment": "Purples",
-            "vp_output_dir_comment": "Purples",
-            "vp_Pseudocolor_colortable": "Purples",
-            "vp_invertColorTable": 0, # Assuming default
+            "Pseudocolor_periodic_num_periods": 1,
+            "distance_ww": 3.0,
+            "distance_bb": 3.0,
+            "vcl_pipeline_output_dir_comment": "Periods1_ww3bb3",
+            "vp_output_dir_comment": "Periods1_ww3bb3",
+            "vp_Pseudocolor_colortable": "PeriodicBW",
+        },
+        # num_periods=2 variations
+        {
+            "Pseudocolor_periodic_num_periods": 2,
+            "distance_ww": 1.0,
+            "distance_bb": 1.0,
+            "vcl_pipeline_output_dir_comment": "Periods2_ww1bb1",
+            "vp_output_dir_comment": "Periods2_ww1bb1",
+            "vp_Pseudocolor_colortable": "PeriodicBW",
         },
         {
-            "vcl_pipeline_output_dir_comment": "hot_and_cold",
-            "vp_output_dir_comment": "hot_and_cold",
-            "vp_Pseudocolor_colortable": "hot_and_cold",
-            "vp_invertColorTable": 0, # Assuming default
+            "Pseudocolor_periodic_num_periods": 2,
+            "distance_ww": 2.0,
+            "distance_bb": 2.0,
+            "vcl_pipeline_output_dir_comment": "Periods2_ww2bb2",
+            "vp_output_dir_comment": "Periods2_ww2bb2",
+            "vp_Pseudocolor_colortable": "PeriodicBW",
         },
         {
-            "vcl_pipeline_output_dir_comment": "BrBG",
-            "vp_output_dir_comment": "BrBG",
-            "vp_Pseudocolor_colortable": "BrBG",
-            "vp_invertColorTable": 0, # Assuming default
+            "Pseudocolor_periodic_num_periods": 2,
+            "distance_ww": 3.0,
+            "distance_bb": 3.0,
+            "vcl_pipeline_output_dir_comment": "Periods2_ww3bb3",
+            "vp_output_dir_comment": "Periods2_ww3bb3",
+            "vp_Pseudocolor_colortable": "PeriodicBW",
+        },
+        # num_periods=5 variations
+        {
+            "Pseudocolor_periodic_num_periods": 5,
+            "distance_ww": 1.0,
+            "distance_bb": 1.0,
+            "vcl_pipeline_output_dir_comment": "Periods5_ww1bb1",
+            "vp_output_dir_comment": "Periods5_ww1bb1",
+            "vp_Pseudocolor_colortable": "PeriodicBW",
         },
         {
-            "vcl_pipeline_output_dir_comment": "difference",
-            "vp_output_dir_comment": "difference",
-            "vp_Pseudocolor_colortable": "difference",
-            "vp_invertColorTable": 0, # Assuming default
+            "Pseudocolor_periodic_num_periods": 5,
+            "distance_ww": 2.0,
+            "distance_bb": 2.0,
+            "vcl_pipeline_output_dir_comment": "Periods5_ww2bb2",
+            "vp_output_dir_comment": "Periods5_ww2bb2",
+            "vp_Pseudocolor_colortable": "PeriodicBW",
         },
         {
-            "vcl_pipeline_output_dir_comment": "plasma",
-            "vp_output_dir_comment": "plasma",
-            "vp_Pseudocolor_colortable": "plasma",
-            "vp_invertColorTable": 0, # Assuming default
-        },
-        {
-            "vcl_pipeline_output_dir_comment": "turbo",
-            "vp_output_dir_comment": "turbo",
-            "vp_Pseudocolor_colortable": "turbo",
-            "vp_invertColorTable": 0, # Assuming default
-        },
-        {
-            "vcl_pipeline_output_dir_comment": "hot",
-            "vp_output_dir_comment": "hot",
-            "vp_Pseudocolor_colortable": "hot",
-            "vp_invertColorTable": 0, # Assuming default
-        },
-        {
-            "vcl_pipeline_output_dir_comment": "Accent",
-            "vp_output_dir_comment": "Accent",
-            "vp_Pseudocolor_colortable": "Accent",
-            "vp_invertColorTable": 0, # Assuming default
+            "Pseudocolor_periodic_num_periods": 5,
+            "distance_ww": 3.0,
+            "distance_bb": 3.0,
+            "vcl_pipeline_output_dir_comment": "Periods5_ww3bb3",
+            "vp_output_dir_comment": "Periods5_ww3bb3",
+            "vp_Pseudocolor_colortable": "PeriodicBW",
         },
     ]
+
     # run variations
     for i, var_params in enumerate(variations):
         print(f"\n--- Starting Variation {i+1}/{len(variations)}: {var_params['vp_output_dir_comment']} ---")
@@ -100,8 +115,15 @@ def VCL_variation_1(
             #"vp_input_dir": vcl_variations_1_output_dir, # Directs VP1 output into this folder
             "vp_output_dir_comment": var_params["vp_output_dir_comment"], # VP1 uses this for its own subfolder name
             "vp_Pseudocolor_colortable": var_params["vp_Pseudocolor_colortable"],
-            "vp_invertColorTable": var_params["vp_invertColorTable"],
+            "vp_invertColorTable": var_params.get("vp_invertColorTable", 0),
 
+            # Add the new periodic colortable parameters
+            "Pseudocolor_periodic_num_periods": var_params["Pseudocolor_periodic_num_periods"],
+            "distance_ww": var_params["distance_ww"],
+            "distance_bb": var_params["distance_bb"],
+            # Keep default values for wb and bw
+            "distance_wb": 1.0,
+            "distance_bw": 1.0,
         }
 
         try:
