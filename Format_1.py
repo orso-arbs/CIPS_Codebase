@@ -107,13 +107,32 @@ def F_out_dir(input_dir, script_path,
     if output_dir_manual:
         Comment = f"_{output_dir_comment.replace(' ', '_')}" if output_dir_comment else ""
         output_dir = output_dir_manual + Comment
-        os.makedirs(output_dir, exist_ok=True) if create_output_dir==1 else None
+        if create_output_dir==1:
+            os.makedirs(output_dir, exist_ok=True)
+        else:
+            None
     else:
-        current_date = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        # Create the main output directory
+        now = datetime.datetime.now()
+        current_date = now.strftime("%Y%m%d_%H%M%S") + f"{int(now.microsecond/100000):1d}"
         script_name = os.path.splitext(os.path.basename(script_path))[0]
-        folder_name = f"{script_name}_{current_date}" + (f"_{output_dir_comment.replace(' ', '_')}" if output_dir_comment else "")
+        folder_name = f"{current_date}"
         output_dir = os.path.join(input_dir, folder_name)
-    os.makedirs(output_dir, exist_ok=True) if create_output_dir==1 else None
+
+        # auxillary folder for long pathnames
+        folder_name_auxillary = f"{current_date}_{script_name}" + (f"__{output_dir_comment.replace(' ', '_')}" if output_dir_comment else "")
+        output_dir_auxilliary = os.path.join(input_dir, folder_name_auxillary)
+
+        if create_output_dir==1:
+            # Create the main output directory
+            os.makedirs(output_dir, exist_ok=True)
+
+            #auxillary folder for long pathnames
+            os.makedirs(output_dir_auxilliary, exist_ok=True) # create folder that gives the full name of the folder
+            with open(os.path.join(output_dir_auxilliary, folder_name_auxillary), 'w', encoding='utf-8') as f: # create text file that explains why.
+                f.write("This file exists just to inform you that the folder holding this file exists merely to detail to the name of the folder named with the same date+time as this file but that carries all the interesting data. That was necessary because the pathnames of the nested function outputs became too long.") # fill with "nothing"
+        else:
+            None
     return output_dir
 
 
@@ -267,27 +286,35 @@ Output:
 import re
 
 def extract_execution_details(folder_name):
-    # Extract the operation (everything before the first '_')
-    operation_match = re.match(r'([^_]+)', folder_name)
-    if operation_match:
-        operation = operation_match.group(1)
-    else:
-        operation = None
+    """
+    Extracts the operation, execution time, and comment from a folder name with format:
+    "20250531_1800579_Visit_Projector_1__example_comment"
     
-    # First, try to extract the execution time (YYYY-MM-DD_HH-MM-SS)
-    match = re.search(r'(\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2})', folder_name)
-    if match:
-        execution_time = match.group(1)
-    else:
-        execution_time = None
+    Returns:
+        operation (str): e.g. "Visit_Projector_1"
+        execution_time (str): e.g. "20250531_1800579"
+        comment (str): e.g. "example_comment" or "" if no comment
+    """
+    # First, try to extract the execution time (timestamp with decisecond)
+    match = re.search(r'^(\d{8}_\d{6}\d{1})', folder_name)
+    if not match:
+        return None, None, ""
     
-    # Now, extract the comment (everything after the execution time and optional date)
-    comment_match = re.search(r'_\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}_(.+)', folder_name)
-    if comment_match:
-        comment = comment_match.group(1)
+    execution_time = match.group(1)
+    
+    # Check if double underscore exists, which separates operation from comment
+    remaining = folder_name[len(execution_time)+1:]
+    parts = remaining.split('__', 1)
+    
+    if len(parts) == 2:
+        # We found the double underscore separator
+        operation = parts[0]
+        comment = parts[1]
     else:
-        comment = None
-
+        # No double underscore, everything after timestamp is operation
+        operation = remaining
+        comment = ""
+    
     return operation, execution_time, comment
 
 

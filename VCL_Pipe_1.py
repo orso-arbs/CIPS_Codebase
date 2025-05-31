@@ -308,8 +308,8 @@ def VCL_pipeline(
 
 # Example of how to run the pipeline with default settings
 if __name__ == "__main__":
-    print("Running VCL-Pipeline with default settings as a standalone script example.")
+    print("Running VCL-Pipeline.")
     
     VCL_pipeline(
     )
-    print("Default pipeline run finished.")
+    print("VCL-Pipeline run finished.")
