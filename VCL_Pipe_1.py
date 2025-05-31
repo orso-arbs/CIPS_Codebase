@@ -18,14 +18,14 @@ def VCL_pipeline(
     # General control
     input_dir=r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\VCL_Pipe_Default_dir", # leave empty to start pipeline with visit folder
     vcl_pipeline_output_dir_manual="", # leave empty to start pipeline with visit folder
-    vcl_pipeline_output_dir_comment="", 
+    vcl_pipeline_output_dir_comment="Resolution 3000px2", 
 
     # Visit_projector_1 args
     vp_input_dir="",
     vp_Database=r"euler.ethz.ch:/cluster/scratch/orsob/orsoMT_orsob/A11_states/A11_all_states.visit",
     vp_State_range_manual=[],
     vp_Plots=["Pseudocolor - Isosurface"],
-    vp_Pseudocolor_Variable="s6",
+    vp_Pseudocolor_Variable="Pseudocolor - Isosurface", # "temperature", "density", "pressure", "velocity_magnitude"
                             # s1 :  H2      s10: HRR            s19: omega_x
                             # s2 :  O2      s11: stretch        s20: omega_y
                             # s3 :  H2O     s12: curvature      s21: omega_z
@@ -35,7 +35,7 @@ def VCL_pipeline(
                             # s7 :  HO2     s16: Sd
                             # s8 :  H2O2    s17: Sdd
                             # s9 :  N2      s18: Sa
-    vp_Pseudocolor_colortable="PeriodicBW",
+    vp_Pseudocolor_colortable="hot", 
     vp_invertColorTable=0,
     Pseudocolor_periodic_num_periods = 3,   # periods of w-w-b-b points (4 points)
     distance_ww = 2.0,          # Relative length of solid white
@@ -45,12 +45,14 @@ def VCL_pipeline(
     vp_Isosurface_Variable="temperature",
     vp_Isosurface_ContourValue=3,
     vp_no_annotations=1,
-    vp_viewNormal=[0, 0, -1],
-    vp_viewUp=[1, 0, 0],
+    vp_viewNormal=[0, -1, 0],
+    vp_viewUp=[0, 0, 1],
     vp_imageZoom=1,
     vp_parallelScale=80,
     vp_perspective=0,
-    vp_Visit_projector_1_log_level=0,
+    vp_WindowWidth = 3000, # Window size in px
+    vp_WindowHeight = 3000, # Window size in px
+    vp_Visit_projector_1_log_level=1,
     vp_Visit_projector_1_show_windows=0,
     vp_output_dir_manual="",
     vp_output_dir_comment="",
@@ -157,7 +159,8 @@ def VCL_pipeline(
             Isosurface_Variable=vp_Isosurface_Variable, Isosurface_ContourValue=vp_Isosurface_ContourValue,
             no_annotations=vp_no_annotations, viewNormal=vp_viewNormal, viewUp=vp_viewUp, imageZoom=vp_imageZoom, parallelScale=vp_parallelScale, perspective=vp_perspective,
             Visit_projector_1_log_level=vp_Visit_projector_1_log_level, Visit_projector_1_show_windows=vp_Visit_projector_1_show_windows,
-            output_dir_manual=vp_output_dir_manual, # This is key for variations
+            WindowWidth = vp_WindowWidth, WindowHeight = vp_WindowHeight,
+            output_dir_manual=vp_output_dir_manual,
             output_dir_comment=vp_output_dir_comment,
         )
         # print(f"Visit_Projector_1 output: {VP1_output_dir}")
@@ -308,7 +311,5 @@ if __name__ == "__main__":
     print("Running VCL-Pipeline with default settings as a standalone script example.")
     
     VCL_pipeline(
-        input_dir=r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\VCL_Pipe_Default_dir", # directory to place outputs
-        vcl_pipeline_output_dir_comment="TestColTable"
     )
     print("Default pipeline run finished.")

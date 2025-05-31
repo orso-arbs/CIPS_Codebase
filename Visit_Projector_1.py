@@ -29,7 +29,8 @@ def Visit_projector_1(
     distance_bw = 1.0,  # Relative length of black-to-white gradient
 
     Isosurface_Variable = "temperature", Isosurface_ContourValue = 3,
-    no_annotations = 1, viewNormal = [0,1,0], viewUp = [0,0,1], imageZoom = 1, parallelScale = 100, perspective = 1, # View
+    no_annotations = 1, viewNormal = [0,-1,0], viewUp = [0,0,1], imageZoom = 1, parallelScale = 100, perspective = 0, # View
+    WindowWidth = 1024, WindowHeight = 1024, # Window size
     Visit_projector_1_show_windows = 0, # Window
 
     # output and logging
@@ -339,8 +340,8 @@ def Visit_projector_1(
     SaveWindowAtts.outputDirectory = output_dir
     SaveWindowAtts.family = 0 # Set to 0 for explicit naming in loop
     SaveWindowAtts.format = SaveWindowAtts.PNG
-    SaveWindowAtts.width = 1024
-    SaveWindowAtts.height = 1024
+    SaveWindowAtts.width = WindowWidth
+    SaveWindowAtts.height = WindowHeight
     SaveWindowAtts.quality = 80 # For JPEG
     SaveWindowAtts.screenCapture = 0 
     # No need to call SetSaveWindowAttributes here, will be set in loop for each filename
@@ -467,37 +468,35 @@ def Visit_projector_1(
     #################################################### return
     return output_dir
 
-# Example of how to call your function (assuming vi is imported as visit)
-# if __name__ == "__main__":
-#     import visit as vi # Example: if you run this script with python your_script.py
-#     if not _VISIT_INITIALIZED:
-#         sys.path.append(r"C:\Users\obs\LLNL\VisIt3.4.2\lib\site-packages")
-#         _VISIT_INITIALIZED = True
-#         print("imported visit in main")
-#         vi.AddArgument("-nowin")
-#         vi.AddArgument("-quiet -nopty")
-#         vi.Launch()
-#         print("launched visit in main")
 
-#     # --- Call with default periodic color table ---
-#     Visit_projector_1(
-#         input_dir=".", # Or your actual input directory
-#         Database=r"euler.ethz.ch:/cluster/scratch/orsob/your_database.nek5000", # Replace with actual path
-#         Pseudocolor_colortable="PeriodicBW", # This will trigger the new function
-#         Visit_projector_1_log_level=1
-#     )
+# Example of how to run
+if __name__ == "__main__":
+    print("\nRunning Visit_projector_1\n")
 
-#     # --- Call with custom periodic color table parameters ---
-#     Visit_projector_1(
-#         input_dir=".",
-#         Database=r"euler.ethz.ch:/cluster/scratch/orsob/your_database.nek5000", # Replace
-#         Pseudocolor_colortable="MyCustomPeriodic", 
-#         Pseudocolor_periodic_name="MyCustomPeriodic", # Match this with Pseudocolor_colortable
-#         Pseudocolor_periodic_num_periods=3,
-#         Pseudocolor_periodic_ww=1.0,
-#         Pseudocolor_periodic_wb=0.5,
-#         Pseudocolor_periodic_bb=1.0,
-#         Pseudocolor_periodic_bw=0.5,
-#         Visit_projector_1_log_level=1
-#     )
-#     vi.Close() # Close VisIt if launched from script
+    Visit_projector_1(
+    input_dir = r"C:\Users\obs\Desktop\CIPS_output_desktop",
+    # VisIt parameters
+    Database = r"euler.ethz.ch:/cluster/scratch/orsob/orsoMT_orsob/A11_states/A11_all_states.visit", 
+    State_range_manual = [], # Data
+    Plots = ["Pseudocolor - Isosurface"], # Plots
+    Pseudocolor_Variable = "velocity_magnitude", 
+    Pseudocolor_colortable = "hot", # Can be "hot", "CustomBW1", "CustomBW2", "PeriodicBW", etc.
+    invertColorTable = 0,
+    # Parameters for the periodic black and white color table
+    Pseudocolor_periodic_num_periods = 2, # periods of w-w-b-b points (4 points)
+    distance_ww = 2.0,  # Relative length of solid white
+    distance_wb = 1.0,  # Relative length of white-to-black gradient
+    distance_bb = 2.0,  # Relative length of solid black
+    distance_bw = 1.0,  # Relative length of black-to-white gradient
+
+    Isosurface_Variable = "temperature", Isosurface_ContourValue = 3,
+    no_annotations = 1, viewNormal = [0,-1,0], viewUp = [0,0,1], imageZoom = 1, parallelScale = 100, perspective = 0, # View
+    WindowWidth = 6000, WindowHeight = 6000, # Window size
+    Visit_projector_1_show_windows = 0, # Window
+
+    # output and logging
+    Visit_projector_1_log_level = 2,
+    output_dir_manual = "", output_dir_comment = "",
+
+    )
+    print("Visit_projector_1 run finished.")

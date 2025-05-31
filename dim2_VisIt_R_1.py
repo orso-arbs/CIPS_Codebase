@@ -178,24 +178,6 @@ def dimentionalise_2_from_VisIt_R_Average(
     pickle_filename = 'dimentionalised_DataFrame.pkl'
     dimentionalised_df.to_pickle(os.path.join(output_dir, pickle_filename))
 
-    # # Save DataFrame to Excel (useful for manual inspection)
-    #excel_filename = 'dimentionalised_DataFrame.xlsx'
-    # try:
-    #     # Ensure complex objects like numpy arrays are handled if needed, or select subset of columns
-    #     # excel_safe_df = dimentionalised_df.select_dtypes(exclude=['object']) # Example: exclude object columns
-    #     # excel_safe_df.to_excel(os.path.join(output_dir, excel_filename), index=False)
-    #     # Or convert arrays to strings/lists if Excel export is desired with them
-    #     df_for_excel = dimentionalised_df.copy()
-    #     for col in df_for_excel.columns:
-    #          if df_for_excel[col].apply(lambda x: isinstance(x, np.ndarray)).any():
-    #              df_for_excel[col] = df_for_excel[col].apply(lambda x: str(x.tolist()) if isinstance(x, np.ndarray) else x) # Convert arrays to string representation of list
-    #     df_for_excel.to_excel(os.path.join(output_dir, excel_filename), index=False)
-
-    # except Exception as e:
-    #     print(f"Warning: Could not save to Excel format. Error: {e}")
-    #     print("Excel format might not support complex data types like numpy arrays stored in the DataFrame.")
-
-
     #################################################### return
 
     return output_dir # Format_1 requires output_dir as first return
