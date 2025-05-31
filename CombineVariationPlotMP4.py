@@ -4,8 +4,8 @@ import shutil
 def get_individual_run_comment(run_folder_name):
     """
     Extracts the comment part from an individual variation run folder name.
-    Example: "VCL_Pipeline_2025-05-11_19-53-42_PsCol_orangehot_invC_1" -> "PsCol_orangehot_invC_1"
-    Assumes a prefix like "VCL_Pipeline_DATE_TIME_" or similar structure with at least 4 underscore-separated parts before the comment.
+    Example: "CIPS_Pipeline_2025-05-11_19-53-42_PsCol_orangehot_invC_1" -> "PsCol_orangehot_invC_1"
+    Assumes a prefix like "CIPS_Pipeline_DATE_TIME_" or similar structure with at least 4 underscore-separated parts before the comment.
     """
     try:
         parts = run_folder_name.split('_')
@@ -116,26 +116,26 @@ def combine_variation_mp4s(variation_set_dir):
 if __name__ == '__main__':
     # --- IMPORTANT: SET YOUR "VARIATION MAIN FOLDER" PATH HERE ---
     # This directory should be a specific experiment set folder, 
-    # e.g., "VCL_Pipeline_variations_1_2025-05-10_20-34-05",
+    # e.g., "CIPS_Pipeline_variations_1_2025-05-10_20-34-05",
     # which in turn contains the individual variation run folders like
-    # "VCL_Pipeline_2025-05-11_19-53-42_PsCol_orangehot_invC_1".
+    # "CIPS_Pipeline_2025-05-11_19-53-42_PsCol_orangehot_invC_1".
 
     # Example for Windows:
-    # This is the path to a folder like "VCL_Pipeline_variations_1_2025-05-10_20-34-05"
-    variation_set_directory = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\VCL_variations\VCL_Pipeline_variations_1_2025-05-11_19-12-06"
+    # This is the path to a folder like "CIPS_Pipeline_variations_1_2025-05-10_20-34-05"
+    variation_set_directory = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_variations\CIPS_Pipeline_variations_1_2025-05-11_19-12-06"
     
     # Example for macOS/Linux:
-    # variation_set_directory = "/path/to/your/VCL_variations/VCL_Pipeline_variations_1_2025-05-10_20-34-05"
+    # variation_set_directory = "/path/to/your/CIPS_variations/CIPS_Pipeline_variations_1_2025-05-10_20-34-05"
     
     # --- VERIFY THIS PATH ---
     # Replace this with the actual path to your "Variation main folder"
     # variation_set_directory = r"YOUR_ACTUAL_VARIATION_MAIN_FOLDER_PATH_HERE" 
 
-    if variation_set_directory == r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\VCL_variations\VCL_Pipeline_variations_1_2025-05-10_20-34-05" or \
-       variation_set_directory == "/path/to/your/VCL_variations/VCL_Pipeline_variations_1_2025-05-10_20-34-05" or \
-       variation_set_directory == r"YOUR_ACTUAL_VARIATION_MAIN_FOLDER_PATH_HERE": # Added placeholder check
+    if variation_set_directory == r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_variations\CIPS_Pipeline_variations_1_2025-05-10_20-34-05" or \
+        variation_set_directory == "/path/to/your/CIPS_variations/CIPS_Pipeline_variations_1_2025-05-10_20-34-05" or \
+        variation_set_directory == r"YOUR_ACTUAL_VARIATION_MAIN_FOLDER_PATH_HERE": # Added placeholder check
         print("Reminder: Please VERIFY the 'variation_set_directory' variable in the script.")
-        print("It should point to a 'Variation main folder' (e.g., ...VCL_Pipeline_variations_1_2025-05-10_20-34-05),")
+        print("It should point to a 'Variation main folder' (e.g., ...CIPS_Pipeline_variations_1_2025-05-10_20-34-05),")
         print("which CONTAINS your individual variation run folders (e.g., ...PsCol_orangehot_invC_1).")
         print(f"Currently set to: {variation_set_directory}\n")
 

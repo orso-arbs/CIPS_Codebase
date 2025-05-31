@@ -14,11 +14,11 @@ import plot4_dimentions as p4
 
 
 @F_1.ParameterLog(max_size = 1024 * 10) # 10KB 
-def VCL_pipeline(
+def CIPS_pipeline(
     # General control
-    input_dir=r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\VCL_Pipe_Default_dir", # leave empty to start pipeline with visit folder
-    vcl_pipeline_output_dir_manual="", # leave empty to start pipeline with visit folder
-    vcl_pipeline_output_dir_comment="Resolution 3000px2", 
+    input_dir=r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_Pipe_Default_dir", # leave empty to start pipeline with visit folder
+    cips_pipeline_output_dir_manual="", # leave empty to start pipeline with visit folder
+    cips_pipeline_output_dir_comment="Resolution 3000px2", 
 
     # Visit_projector_1 args
     vp_input_dir="",
@@ -123,7 +123,7 @@ def VCL_pipeline(
 
 ):
     """
-    Runs the VCL (VisIt-Cellpose-Lineage-Tree) pipeline with configurable parameters.
+    Runs the CIPS (VisIt-Cellpose-Image-Processing-System) pipeline with configurable parameters.
     Each major step can be toggled on/off using the 'run_*' boolean flags.
     Output directories are chained from one step to the next.
     The 'vp_input_dir' is the primary input for the first step (Visit_projector_1).
@@ -133,7 +133,7 @@ def VCL_pipeline(
     """
 
     #################################################### I/O
-    vcl_pipeline_output_dir = F_1.F_out_dir(input_dir = input_dir, script_path = __file__, output_dir_comment = vcl_pipeline_output_dir_comment, output_dir_manual = vcl_pipeline_output_dir_manual) # Format_1 required definition of output directory
+    cips_pipeline_output_dir = F_1.F_out_dir(input_dir = input_dir, script_path = __file__, output_dir_comment = cips_pipeline_output_dir_comment, output_dir_manual = cips_pipeline_output_dir_manual) # Format_1 required definition of output directory
 
     # Initialize output directory variables
     VP1_output_dir = None
@@ -144,7 +144,7 @@ def VCL_pipeline(
     #########################################        Visit
 
     if not vp_input_dir:
-        vp_input_dir = vcl_pipeline_output_dir # to put the Visit output in the pipeline folder if the VisIt output folder is not specified
+        vp_input_dir = cips_pipeline_output_dir # to put the Visit output in the pipeline folder if the VisIt output folder is not specified
 
     if run_visit_projector:
         print(f"--- Running Visit_Projector_1 ---")
@@ -295,7 +295,7 @@ def VCL_pipeline(
     # Return the path of the final data directory (e.g., dimentionalisation output)
     # or a dictionary of key output paths if needed by the calling script.
     return {
-        "vcl_pipeline_output_dir": vcl_pipeline_output_dir,
+        "cips_pipeline_output_dir": cips_pipeline_output_dir,
         "VP1_output_dir": VP1_output_dir,
         "CPs1_output_dir": CPs1_output_dir,
         "CPe1_output_dir": CPe1_output_dir,
@@ -308,8 +308,8 @@ def VCL_pipeline(
 
 # Example of how to run the pipeline with default settings
 if __name__ == "__main__":
-    print("Running VCL-Pipeline.")
+    print("Running CIPS-Pipeline.")
     
-    VCL_pipeline(
+    CIPS_pipeline(
     )
-    print("VCL-Pipeline run finished.")
+    print("CIPS-Pipeline run finished.")

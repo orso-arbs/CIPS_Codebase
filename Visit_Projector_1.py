@@ -17,7 +17,7 @@ def Visit_projector_1(
 
     # VisIt parameters
     Database, State_range_manual = [], # Data
-    Plots = ["Pseudocolor-velocity_magnitude Isosurface-temperature3"], # Plots
+    Plots = ["Pseudocolor - Isosurface"], # Plots
     Pseudocolor_Variable = "velocity_magnitude", 
     Pseudocolor_colortable = "hot", # Can be "hot", "CustomBW1", "CustomBW2", "PeriodicBW", etc.
     invertColorTable = 0,
