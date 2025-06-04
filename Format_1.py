@@ -123,16 +123,20 @@ def F_out_dir(input_dir, script_path,
         folder_name_auxillary = f"{current_date}_{script_name}" + (f"__{output_dir_comment.replace(' ', '_')}" if output_dir_comment else "")
         output_dir_auxilliary = os.path.join(input_dir, folder_name_auxillary)
 
+        text_file_name = f"{folder_name_auxillary}.txt"
+        text_file_path = os.path.join(output_dir_auxilliary, text_file_name)
+
         if create_output_dir==1:
             # Create the main output directory
             os.makedirs(output_dir, exist_ok=True)
 
             #auxillary folder for long pathnames
             os.makedirs(output_dir_auxilliary, exist_ok=True) # create folder that gives the full name of the folder
-            with open(os.path.join(output_dir_auxilliary, folder_name_auxillary), 'w', encoding='utf-8') as f: # create text file that explains why.
-                f.write("This file exists just to inform you that the folder holding this file exists merely to detail to the name of the folder named with the same date+time as this file but that carries all the interesting data. That was necessary because the pathnames of the nested function outputs became too long.") # fill with "nothing"
-        else:
-            None
+            with open(text_file_path, 'w', encoding='utf-8') as f: # create text file that explains why.
+                f.write(f"This file exists just to inform you that the folder named '{folder_name_auxillary}' "
+                        "exists merely to detail the name of the folder named with the same date+time as this file "
+                        "but that carries all the interesting data. That was necessary because the pathnames of "
+                        "the nested function outputs became too long.")
     return output_dir
 
 

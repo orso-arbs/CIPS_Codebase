@@ -47,7 +47,8 @@ Note: The code has been checked for functionality only in Windows 11 with Visit 
 3. Connect to the ETH network
    1. Either use an ETH WIFI
    2. [Or connect via VPN](https://unlimited.ethz.ch/spaces/itkb/pages/21125994/VPN)
-4. Run Pipeline
-   1. Select Visit Database in []
-      1. either a .visit file or  
+4. Running the Pipeline in CIPS_Pipe_1
+   1. VisIt
+      1. Set vp_Database as the path to your .nek5000 or .visit Database file
       2. 
+      3. 

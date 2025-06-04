@@ -23,8 +23,8 @@ def CP_segment_1(
 
     # Cellpose parameters
     CP_model_type = 'cyto3', gpu = True, # models.Cellpose() parameters
-    diameter_estimate_guess_px = None, channels = [0,0], flow_threshold = 0.4, cellprob_threshold = 0.0, resample = True, niter = 0, # model.eval() parameters
-    CP_default_plot_onoff = 0, CP_default_image_onoff = 0, CP_default_seg_file_onoff = 1, # output default Cellpose files
+    diameter_estimate_guess_px = None, channels = [0,0], flow_threshold = 0.7, cellprob_threshold = 0.0, resample = True, niter = 0, # model.eval() parameters
+    CP_default_plot_onoff = 1, CP_default_image_onoff = 1, CP_default_seg_file_onoff = 1, # output default Cellpose files
 
     # output and logging 
     CP_segment_log_level = 0,
@@ -189,7 +189,7 @@ def CP_segment_1(
 
     # Write the parameters to the pkl file
 
-    F_1.debug_info(output_dir_comment)
+    F_1.debug_info(output_dir_comment) if CP_segment_log_level >= 2 else None
     CP_settings = {
         "CP_model_type": CP_model_type,
         "CP_model_path": CP_instance.cp.pretrained_model,
@@ -206,17 +206,18 @@ def CP_segment_1(
     # Convert to DataFrame (single row)
     CP_settings_df = pd.DataFrame([CP_settings])
 
-    F_1.debug_info(CP_settings_df["CP_model_type"])
-    F_1.debug_info(CP_settings_df["CP_model_path"])
-    F_1.debug_info(CP_settings_df["CP_model_for_diameter_estimate"])
-    F_1.debug_info(CP_settings_df["gpu"])
-    F_1.debug_info(CP_settings_df["diameter_estimate_guess_px"])
-    F_1.debug_info(CP_settings_df["diameter_training_px"])
-    F_1.debug_info(CP_settings_df["flow_threshold"])
-    F_1.debug_info(CP_settings_df["cellprob_threshold"])
-    F_1.debug_info(CP_settings_df["resample"])
-    F_1.debug_info(CP_settings_df["niter"])
-    F_1.debug_info(CP_settings_df["CP_segment_output_dir_comment"])
+    if CP_segment_log_level >= 2:
+        F_1.debug_info(CP_settings_df["CP_model_type"])
+        F_1.debug_info(CP_settings_df["CP_model_path"])
+        F_1.debug_info(CP_settings_df["CP_model_for_diameter_estimate"])
+        F_1.debug_info(CP_settings_df["gpu"])
+        F_1.debug_info(CP_settings_df["diameter_estimate_guess_px"])
+        F_1.debug_info(CP_settings_df["diameter_training_px"])
+        F_1.debug_info(CP_settings_df["flow_threshold"])
+        F_1.debug_info(CP_settings_df["cellprob_threshold"])
+        F_1.debug_info(CP_settings_df["resample"])
+        F_1.debug_info(CP_settings_df["niter"])
+        F_1.debug_info(CP_settings_df["CP_segment_output_dir_comment"])
 
     # Save as pickle
     CP_settings_df.to_pickle(f"{output_dir}/CP_settings.pkl")

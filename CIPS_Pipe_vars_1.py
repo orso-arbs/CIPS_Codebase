@@ -11,7 +11,7 @@ def CIPS_variation_1(
     # General control
     input_dir=r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_variations",
     cips_variation_output_dir_manual="",
-    cips_variation_output_dir_comment="Colortable_PeriodicBW_vars", 
+    cips_variation_output_dir_comment="Image_Resolution_States79and100", 
 ):
     #################################################### I/O
     cips_variations_1_output_dir = F_1.F_out_dir(input_dir = input_dir, script_path = __file__, output_dir_comment = cips_variation_output_dir_comment, output_dir_manual = cips_variation_output_dir_manual) # Format_1 required definition of output directory
@@ -27,102 +27,42 @@ def CIPS_variation_1(
     variations = [
         # num_periods=1 variations
         {
-            "Pseudocolor_periodic_num_periods": 1,
-            "distance_ww": 1.0,
-            "distance_bb": 1.0,
-            "cips_pipeline_output_dir_comment": "Periods1_ww1bb1",
-            "vp_output_dir_comment": "Periods1_ww1bb1",
-            "vp_Pseudocolor_colortable": "PeriodicBW",
+            "cips_pipeline_output_dir_comment": "1024x1024",
+            "vp_WindowWidth": 1024,
+            "vp_WindowHeight": 1024,
+            "vp_output_dir_comment": "1024x1024",
         },
         {
-            "Pseudocolor_periodic_num_periods": 1,
-            "distance_ww": 2.0,
-            "distance_bb": 2.0,
-            "cips_pipeline_output_dir_comment": "Periods1_ww2bb2",
-            "vp_output_dir_comment": "Periods1_ww2bb2",
-            "vp_Pseudocolor_colortable": "PeriodicBW",
+            "cips_pipeline_output_dir_comment": "3000x3000",
+            "vp_WindowWidth": 3000,
+            "vp_WindowHeight": 3000,
+            "vp_output_dir_comment": "3000x3000",
         },
         {
-            "Pseudocolor_periodic_num_periods": 1,
-            "distance_ww": 3.0,
-            "distance_bb": 3.0,
-            "cips_pipeline_output_dir_comment": "Periods1_ww3bb3",
-            "vp_output_dir_comment": "Periods1_ww3bb3",
-            "vp_Pseudocolor_colortable": "PeriodicBW",
+            "cips_pipeline_output_dir_comment": "5000x5000",
+            "vp_WindowWidth": 5000,
+            "vp_WindowHeight": 5000,
+            "vp_output_dir_comment": "5000x5000",
         },
-        # num_periods=2 variations
-        {
-            "Pseudocolor_periodic_num_periods": 2,
-            "distance_ww": 1.0,
-            "distance_bb": 1.0,
-            "cips_pipeline_output_dir_comment": "Periods2_ww1bb1",
-            "vp_output_dir_comment": "Periods2_ww1bb1",
-            "vp_Pseudocolor_colortable": "PeriodicBW",
-        },
-        {
-            "Pseudocolor_periodic_num_periods": 2,
-            "distance_ww": 2.0,
-            "distance_bb": 2.0,
-            "cips_pipeline_output_dir_comment": "Periods2_ww2bb2",
-            "vp_output_dir_comment": "Periods2_ww2bb2",
-            "vp_Pseudocolor_colortable": "PeriodicBW",
-        },
-        {
-            "Pseudocolor_periodic_num_periods": 2,
-            "distance_ww": 3.0,
-            "distance_bb": 3.0,
-            "cips_pipeline_output_dir_comment": "Periods2_ww3bb3",
-            "vp_output_dir_comment": "Periods2_ww3bb3",
-            "vp_Pseudocolor_colortable": "PeriodicBW",
-        },
-        # num_periods=5 variations
-        {
-            "Pseudocolor_periodic_num_periods": 5,
-            "distance_ww": 1.0,
-            "distance_bb": 1.0,
-            "cips_pipeline_output_dir_comment": "Periods5_ww1bb1",
-            "vp_output_dir_comment": "Periods5_ww1bb1",
-            "vp_Pseudocolor_colortable": "PeriodicBW",
-        },
-        {
-            "Pseudocolor_periodic_num_periods": 5,
-            "distance_ww": 2.0,
-            "distance_bb": 2.0,
-            "cips_pipeline_output_dir_comment": "Periods5_ww2bb2",
-            "vp_output_dir_comment": "Periods5_ww2bb2",
-            "vp_Pseudocolor_colortable": "PeriodicBW",
-        },
-        {
-            "Pseudocolor_periodic_num_periods": 5,
-            "distance_ww": 3.0,
-            "distance_bb": 3.0,
-            "cips_pipeline_output_dir_comment": "Periods5_ww3bb3",
-            "vp_output_dir_comment": "Periods5_ww3bb3",
-            "vp_Pseudocolor_colortable": "PeriodicBW",
-        },
+
     ]
+
 
     # run variations
     for i, var_params in enumerate(variations):
-        print(f"\n--- Starting Variation {i+1}/{len(variations)}: {var_params['vp_output_dir_comment']} ---")
+        print(f"\n\n\n--- Starting Variation {i+1}/{len(variations)}: {var_params['vp_output_dir_comment']} ---")
 
         # Prepare arguments for CIPS_pipeline
         pipeline_args = {
+            # General arguments
             'input_dir': cips_variations_1_output_dir, # set the directory for the pipeline
             "cips_pipeline_output_dir_comment": var_params["cips_pipeline_output_dir_comment"], # For overall pipeline logging
 
             # Visit_Projector_1 arguments
             "vp_output_dir_comment": var_params["vp_output_dir_comment"], # VP1 uses this for its own subfolder name
-            "vp_Pseudocolor_colortable": var_params["vp_Pseudocolor_colortable"],
-            "vp_invertColorTable": var_params.get("vp_invertColorTable", 0),
+            "vp_WindowWidth": var_params["vp_WindowWidth"],
+            "vp_WindowHeight": var_params["vp_WindowHeight"],
 
-            # Add the new periodic colortable parameters
-            "Pseudocolor_periodic_num_periods": var_params["Pseudocolor_periodic_num_periods"],
-            "distance_ww": var_params["distance_ww"],
-            "distance_bb": var_params["distance_bb"],
-            # Keep default values for wb and bw
-            "distance_wb": 1.0,
-            "distance_bw": 1.0,
         }
 
         try:
