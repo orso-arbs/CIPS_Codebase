@@ -16,14 +16,15 @@ import plot4_dimentions as p4
 @F_1.ParameterLog(max_size = 1024 * 10) # 10KB 
 def CIPS_pipeline(
     # General control
-    input_dir=r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_Pipe_Default_dir", # leave empty to start pipeline with visit folder
-    cips_pipeline_output_dir_manual="", # leave empty to start pipeline with visit folder
-    cips_pipeline_output_dir_comment="Resolution 6000px2", 
+    input_dir=r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_Pipe_Default_dir",
+    cips_pipeline_output_dir_manual="",
+    cips_pipeline_output_dir_comment="Resolution 1000px2 state 0", 
+    cips_pipeline_global_log_level=None,  # Default to None
 
     # Visit_projector_1 args
     vp_input_dir="",
     vp_Database=r"euler.ethz.ch:/cluster/scratch/orsob/orsoMT_orsob/A11_states/A11_all_states.visit",
-    vp_State_range_manual=[],
+    vp_State_range_manual=[0],
     vp_Plots=["Pseudocolor - Isosurface"],
     vp_Pseudocolor_Variable="velocity_magnitude", # "temperature", "density", "pressure", "velocity_magnitude"
                             # s1 :  H2      s10: HRR            s19: omega_x
@@ -50,8 +51,8 @@ def CIPS_pipeline(
     vp_imageZoom=1,
     vp_parallelScale=80,
     vp_perspective=0,
-    vp_WindowWidth = 3000, # Window size in px
-    vp_WindowHeight = 3000, # Window size in px
+    vp_WindowWidth = 1000, # Window size in px
+    vp_WindowHeight = 1000, # Window size in px
     vp_Visit_projector_1_log_level=1,
     vp_Visit_projector_1_show_windows=0,
     vp_output_dir_manual="",
@@ -66,11 +67,10 @@ def CIPS_pipeline(
 
     # CP_extract_1 args
     cpe_CP_extract_log_level=1,
-    # cpe_diameter_training_px=None,
 
     # dimentionalise_2_from_VisIt_R_Average args
     d2_CP_dimentionalise_log_level=1,
-    d2_output_dir_comment="",
+    d2_output_dir_comment="",    
 
     # plotter_1 args
     p1_output_dir_manual="",
@@ -81,7 +81,7 @@ def CIPS_pipeline(
     p4_output_dir_manual="",
     p4_output_dir_comment="",
     p4_show_plot=0,
-    p4_Plot_log_level=0,
+    p4_Plot_log_level=1,  # Default to 1
     p4_Panel_1_A11=0,
     p4_A11_manual_data_base_dir=r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\Data\A11_manual_extraction",
     p4_Panel_2_Dimentionalised_from_VisIt=1,
@@ -123,14 +123,22 @@ def CIPS_pipeline(
 
 ):
     """
-    Runs the CIPS (VisIt-Cellpose-Image-Processing-System) pipeline with configurable parameters.
-    Each major step can be toggled on/off using the 'run_*' boolean flags.
-    Output directories are chained from one step to the next.
-    The 'vp_input_dir' is the primary input for the first step (Visit_projector_1).
-    The 'vp_output_dir_manual' can be used to specify a top-level directory for a run,
-    into which Visit_Projector_1 will create its specific output folder.
-    Subsequent steps will use the output of the previous step as their input.
+    Runs the CIPS pipeline with configurable parameters.
+    
+    Parameters added:
+    ----------
+    cips_pipeline_global_log_level : int, optional
+        Global log level that will be used for all components unless specifically overridden.
+        Default is 0 (minimal logging).
     """
+
+    # Override individual log levels with global level if set
+    if cips_pipeline_global_log_level is not None:
+        vp_Visit_projector_1_log_level = cips_pipeline_global_log_level
+        cps_CP_segment_log_level = cips_pipeline_global_log_level
+        cpe_CP_extract_log_level = cips_pipeline_global_log_level
+        d2_CP_dimentionalise_log_level = cips_pipeline_global_log_level
+        p4_Plot_log_level = cips_pipeline_global_log_level
 
     #################################################### I/O
     cips_pipeline_output_dir = F_1.F_out_dir(input_dir = input_dir, script_path = __file__, output_dir_comment = cips_pipeline_output_dir_comment, output_dir_manual = cips_pipeline_output_dir_manual) # Format_1 required definition of output directory
@@ -148,9 +156,6 @@ def CIPS_pipeline(
 
     if run_visit_projector:
         print(f"--- Running Visit_Projector_1 ---")
-        # For variations, vp_output_dir_manual will be set by the calling script
-        # to ensure outputs go into the correct variation folder.
-        # vp_output_dir_comment will be specific to the variation.
         VP1_output_dir = VP1.Visit_projector_1(
             input_dir=vp_input_dir,
             Database=vp_Database, State_range_manual=vp_State_range_manual,
@@ -158,7 +163,8 @@ def CIPS_pipeline(
             Pseudocolor_Variable=vp_Pseudocolor_Variable, Pseudocolor_colortable=vp_Pseudocolor_colortable, invertColorTable=vp_invertColorTable, Pseudocolor_periodic_num_periods=Pseudocolor_periodic_num_periods, distance_ww=distance_ww, distance_wb=distance_wb, distance_bb=distance_bb, distance_bw=distance_bw, 
             Isosurface_Variable=vp_Isosurface_Variable, Isosurface_ContourValue=vp_Isosurface_ContourValue,
             no_annotations=vp_no_annotations, viewNormal=vp_viewNormal, viewUp=vp_viewUp, imageZoom=vp_imageZoom, parallelScale=vp_parallelScale, perspective=vp_perspective,
-            Visit_projector_1_log_level=vp_Visit_projector_1_log_level, Visit_projector_1_show_windows=vp_Visit_projector_1_show_windows,
+            Visit_projector_1_log_level=vp_Visit_projector_1_log_level,  # Use processed log level
+            Visit_projector_1_show_windows=vp_Visit_projector_1_show_windows,
             WindowWidth = vp_WindowWidth, WindowHeight = vp_WindowHeight,
             output_dir_manual=vp_output_dir_manual,
             output_dir_comment=vp_output_dir_comment,
@@ -181,7 +187,7 @@ def CIPS_pipeline(
                 gpu=cps_gpu,
                 diameter_estimate_guess_px=cps_diameter_estimate_guess_px,
                 output_dir_comment=cps_output_dir_comment,
-                CP_segment_log_level=cps_CP_segment_log_level,
+                CP_segment_log_level=cps_CP_segment_log_level,  # Use processed log level
             )
             # print(f"CP_segment_1 output: {CPs1_output_dir}")
         else:
@@ -195,7 +201,7 @@ def CIPS_pipeline(
             print(f"--- Running CP_extract_1 ---")
             CPe1_output_dir = CPe1.CP_extract_1(
                 input_dir=CPs1_output_dir,
-                CP_extract_log_level=cpe_CP_extract_log_level,
+                CP_extract_log_level=cpe_CP_extract_log_level,  # Use processed log level
                 # diameter_training_px=cpe_diameter_training_px, # if added as arg
             )
             # print(f"CP_extract_1 output: {CPe1_output_dir}")
@@ -209,7 +215,7 @@ def CIPS_pipeline(
             print(f"--- Running dimentionalise_2_from_VisIt_R_Average ---")
             d2_output_dir = d2.dimentionalise_2_from_VisIt_R_Average(
                 input_dir=CPe1_output_dir,
-                CP_dimentionalise_log_level=d2_CP_dimentionalise_log_level,
+                CP_dimentionalise_log_level=d2_CP_dimentionalise_log_level,  # Use processed log level
                 output_dir_comment=d2_output_dir_comment,
             )
             # print(f"dimentionalise_2_from_VisIt_R_Average output: {d2_output_dir}")
@@ -245,7 +251,7 @@ def CIPS_pipeline(
                 input_dir=plot_input_dir,
                 output_dir_manual=p4_output_dir_manual,
                 output_dir_comment=p4_output_dir_comment,
-                show_plot=p4_show_plot, Plot_log_level=p4_Plot_log_level,
+                show_plot=p4_show_plot, Plot_log_level=p4_Plot_log_level,  # Use processed log level
                 Panel_1_A11=p4_Panel_1_A11, A11_manual_data_base_dir=p4_A11_manual_data_base_dir,
                 Panel_2_Dimentionalised_from_VisIt=p4_Panel_2_Dimentionalised_from_VisIt,
             )

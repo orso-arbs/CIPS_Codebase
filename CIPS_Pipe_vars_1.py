@@ -11,7 +11,7 @@ def CIPS_variation_1(
     # General control
     input_dir=r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_variations",
     cips_variation_output_dir_manual="",
-    cips_variation_output_dir_comment="Image_Resolution_States79and100", 
+    cips_variation_output_dir_comment="Image_Resolution_State_0", 
 ):
     #################################################### I/O
     cips_variations_1_output_dir = F_1.F_out_dir(input_dir = input_dir, script_path = __file__, output_dir_comment = cips_variation_output_dir_comment, output_dir_manual = cips_variation_output_dir_manual) # Format_1 required definition of output directory
@@ -38,13 +38,6 @@ def CIPS_variation_1(
             "vp_WindowHeight": 3000,
             "vp_output_dir_comment": "3000x3000",
         },
-        {
-            "cips_pipeline_output_dir_comment": "5000x5000",
-            "vp_WindowWidth": 5000,
-            "vp_WindowHeight": 5000,
-            "vp_output_dir_comment": "5000x5000",
-        },
-
     ]
 
 
