@@ -80,11 +80,11 @@ def crop_images_in_folder(folder_path, regex_pattern, crop_width, crop_height):
 if __name__ == "__main__":
     # --- Configuration ---
     # ⚠️ IMPORTANT: Replace these with your actual values!
-    INPUT_FOLDER = r"C:\Users\obs\Desktop\Diameter estimate variations\segmented"  # e.g., "/Users/yourname/Pictures/MyPhotos"
+    INPUT_FOLDER = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\Manuscript\Images\Resolutions and diameters crops with disk\Source images - Diameter estimate variations\S0 segmented"  # e.g., "/Users/yourname/Pictures/MyPhotos"
     # Regex to match, e.g., r".*\.jpg$" for all JPGs, or r"image_\d{3}\.png$" for image_001.png etc.
-    REGEX = r"\d+-\d+\.png$" # Matches common image extensions (case-insensitive due to re.IGNORECASE not used here, but PIL handles various cases)
-    CROP_W = 0.75*1000  # Desired width of the crop
-    CROP_H = 0.75*1000  # Desired height of the crop
+    REGEX = r"S0-\d+-\d+\.png$" # Matches common image extensions (case-insensitive due to re.IGNORECASE not used here, but PIL handles various cases)
+    CROP_W = 0.15*1000  # Desired width of the crop
+    CROP_H = 0.15*1000  # Desired height of the crop
 
     if INPUT_FOLDER == "your_image_folder_path":
         print("Please update the 'INPUT_FOLDER' variable in the script with the actual path to your images.")

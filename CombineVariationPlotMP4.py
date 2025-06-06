@@ -23,7 +23,7 @@ def get_individual_run_comment(run_folder_name):
         print(f"  Warning: Could not robustly parse comment for '{run_folder_name}': {e}. Using folder name as comment.")
         return run_folder_name
 
-def combine_variation_mp4s(variation_set_dir):
+def combine_variation_mp4s(variation_set_dir, log_level=1):
     """
     Combines .mp4 files from multiple 'individual variation run folders' (which are
     subdirectories of variation_set_dir) into a common folder.
@@ -39,6 +39,8 @@ def combine_variation_mp4s(variation_set_dir):
             This directory would contain subfolders like:
             - "VCL_Pipeline_2025-05-11_19-53-42_PsCol_orangehot_invC_1"
             - "VCL_Pipeline_2025-05-11_20-00-00_AnotherVariation_2"
+        log_level (int, optional):
+            Level of logging detail. 0=none, 1=summary only, 2=verbose. Default is 1.
     """
     if not os.path.isdir(variation_set_dir):
         print(f"Error: The 'Variation main folder' directory '{variation_set_dir}' does not exist.")
@@ -53,14 +55,14 @@ def combine_variation_mp4s(variation_set_dir):
     try:
         os.makedirs(combined_plots_path, exist_ok=True)
         if os.path.isdir(combined_plots_path) and not os.listdir(combined_plots_path): 
-             print(f"Successfully created folder: '{combined_plots_path}'")
+             print(f"Successfully created folder: '{combined_plots_path}'") if log_level >= 2 else None
         elif os.path.isdir(combined_plots_path):
-             print(f"Folder '{combined_plots_path}' already exists. Files will be added/overwritten.")
+             print(f"Folder '{combined_plots_path}' already exists. Files will be added/overwritten.") if log_level >= 2 else None
     except OSError as e:
         print(f"Error creating directory '{combined_plots_path}': {e}")
         return
 
-    print(f"\nSearching for .mp4 files within individual run folders inside '{variation_set_dir}'...")
+    print(f"\nSearching for .mp4 files within individual run folders inside '{variation_set_dir}'...") if log_level >= 2 else None
     mp4_copied_count = 0
     individual_run_folders_processed_count = 0
 
@@ -73,11 +75,11 @@ def combine_variation_mp4s(variation_set_dir):
             individual_run_folder_name = item_name
             individual_run_folders_processed_count += 1
             
-            print(f"\nProcessing Individual Run Folder: '{individual_run_folder_name}'")
+            print(f"\nProcessing Individual Run Folder: '{individual_run_folder_name}'") if log_level >= 2 else None
             
             # Extract the comment for this specific individual run folder
             run_comment = get_individual_run_comment(individual_run_folder_name)
-            print(f"  Using comment for naming: '{run_comment}'")
+            print(f"  Using comment for naming: '{run_comment}'") if log_level >= 2 else None
 
             # Walk through the directory tree of the current_individual_run_folder_path
             for dirpath, dirnames, filenames in os.walk(current_individual_run_folder_path):
@@ -96,21 +98,23 @@ def combine_variation_mp4s(variation_set_dir):
                         try:
                             # Copy the file
                             shutil.copy2(original_mp4_path, destination_mp4_path)
-                            print(f"  Copied: '{original_mp4_path}' \n    TO -> '{destination_mp4_path}'")
+                            print(f"  Copied: '{original_mp4_path}' \n    TO -> '{destination_mp4_path}'") if log_level >= 2 else None
                             mp4_copied_count += 1
                         except Exception as e:
                             print(f"  Error copying file '{original_mp4_path}': {e}")
     
-    print("\n--- Summary ---")
-    if individual_run_folders_processed_count == 0:
-        print(f"No 'individual variation run folders' found directly inside '{variation_set_dir}' (excluding '{combined_plots_folder_name}').")
-        print("Please ensure this script is pointed to a 'Variation main folder' that CONTAINS your individual run folders.")
-    elif mp4_copied_count == 0:
-        print(f"Processed {individual_run_folders_processed_count} individual run folder(s), but no .mp4 files were found to copy.")
-    else:
-        print(f"Finished copying. Total .mp4 files copied: {mp4_copied_count} from {individual_run_folders_processed_count} individual run folder(s).")
-    
-    print(f"All combined .mp4 files are located in: '{combined_plots_path}'")
+    # Always show summary if log_level >= 1
+    if log_level >= 1:
+        print("\n--- Summary ---")
+        if individual_run_folders_processed_count == 0:
+            print(f"No 'individual variation run folders' found directly inside '{variation_set_dir}' (excluding '{combined_plots_folder_name}').")
+            print("Please ensure this script is pointed to a 'Variation main folder' that CONTAINS your individual run folders.")
+        elif mp4_copied_count == 0:
+            print(f"Processed {individual_run_folders_processed_count} individual run folder(s), but no .mp4 files were found to copy.")
+        else:
+            print(f"Finished copying. Total .mp4 files copied: {mp4_copied_count} from {individual_run_folders_processed_count} individual run folder(s).")
+        
+        print(f"All combined .mp4 files are located in: '{combined_plots_path}'")
 
 
 if __name__ == '__main__':

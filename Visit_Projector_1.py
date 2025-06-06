@@ -19,7 +19,7 @@ def Visit_projector_1(
     Database, State_range_manual = [], # Data
     Plots = ["Pseudocolor - Isosurface"], # Plots
     Pseudocolor_Variable = "velocity_magnitude", 
-    Pseudocolor_colortable = "hot", # Can be "hot", "CustomBW1", "CustomBW2", "PeriodicBW", etc.
+    Pseudocolor_colortable = "hot", # Can be "hot", "CustomBW1", "CustomBW2", "PeriodicBW", "PointWise", etc.
     invertColorTable = 0,
     # Parameters for the periodic black and white color table
     Pseudocolor_periodic_num_periods = 2, # periods of w-w-b-b points (4 points)
@@ -27,6 +27,11 @@ def Visit_projector_1(
     distance_wb = 1.0,  # Relative length of white-to-black gradient
     distance_bb = 2.0,  # Relative length of solid black
     distance_bw = 1.0,  # Relative length of black-to-white gradient
+    show_color_table_markers = True,  # Whether to show position markers in color table preview
+    # Parameters for the pointwise color table
+    pointwise_color_points = None,  # List of [position, r, g, b, a] points for PointWise color table
+    show_wb_curve = True,  # Whether to show white-black curve in pointwise color table
+    curve_color = 'red',  # Color for the white-black curve and labels
 
     Isosurface_Variable = "temperature", Isosurface_ContourValue = 3,
     no_annotations = 1, viewNormal = [0,-1,0], viewUp = [0,0,1], imageZoom = 1, parallelScale = 100, perspective = 0, # View
@@ -55,8 +60,8 @@ def Visit_projector_1(
     Pseudocolor_Variable : str, optional
         Variable to use for the Pseudocolor plot. Default is "velocity_magnitude".
     Pseudocolor_colortable : str, optional
-        Name of the color table for the Pseudocolor plot. Can be a built-in name or "CustomBW1", "CustomBW2",
-        or the value of `Pseudocolor_periodic_name` to trigger custom generation. Default is "hot".
+        Name of the color table for the Pseudocolor plot. Can be a built-in name, "CustomBW1", "CustomBW2",
+        "PeriodicBW", or "PointWise" to trigger custom generation. Default is "hot".
     invertColorTable : int, optional
         0 or 1 to invert the color table. Default is 0.
     Isosurface_Variable : str, optional
@@ -90,6 +95,8 @@ def Visit_projector_1(
         Relative length of the solid black segment in the periodic color table. Default is 2.0.
     distance_bw : float, optional
         Relative length of the black-to-white gradient in the periodic color table. Default is 1.0.
+    show_color_table_markers : bool, optional
+        Whether to show position markers and labels in color table preview images. Default is True.
     Visit_projector_1_log_level : int, optional
         Log level for the function. Default is 0.
     output_dir_manual : str, optional
@@ -228,8 +235,33 @@ def Visit_projector_1(
                 distance_bb,
                 distance_bw,
                 visit_module_ref=vi,
-                colortable_output_dir=colortable_storage_dir
+                colortable_output_dir=colortable_storage_dir,
+                show_markers=show_color_table_markers
                 )
+        elif Pseudocolor_colortable == "PointWise":
+            print(f"Creating PointWise color table") if Visit_projector_1_log_level >= 1 else None
+            
+            if not pointwise_color_points or not isinstance(pointwise_color_points, list):
+                print("Warning: pointwise_color_points must be a non-empty list for PointWise color table. Using default points.")
+                # Default color points if none provided
+                pointwise_color_points = [
+                    [0.0, 255, 255, 255, 255],  # White at bottom
+                    [0.5, 128, 128, 128, 255],  # Gray in middle
+                    [1.0, 0, 0, 0, 255]          # Black at top
+                ]
+                
+            # Create a subdirectory for color tables
+            colortable_storage_dir = os.path.join(output_dir, "colortables")
+            VPBWCT.create_pointwise_bw_color_table(
+                points_list=pointwise_color_points,
+                visit_module_ref=vi,
+                colortable_output_dir=colortable_storage_dir,
+                name="PointWise",
+                show_markers=show_color_table_markers,
+                show_wb_curve=show_wb_curve,
+                curve_color=curve_color
+            )
+
         # --- End Custom Color Table Logic ---
 
         PseudocolorAtts = vi.PseudocolorAttributes()

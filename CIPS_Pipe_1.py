@@ -18,13 +18,13 @@ def CIPS_pipeline(
     # General control
     input_dir=r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_Pipe_Default_dir",
     cips_pipeline_output_dir_manual="",
-    cips_pipeline_output_dir_comment="Resolution 1000px2 state 0", 
-    cips_pipeline_global_log_level=None,  # Default to None
+    cips_pipeline_output_dir_comment="Resolution 3000px2", 
+    cips_pipeline_global_log_level=None,  # Added global log level parameter
 
     # Visit_projector_1 args
     vp_input_dir="",
     vp_Database=r"euler.ethz.ch:/cluster/scratch/orsob/orsoMT_orsob/A11_states/A11_all_states.visit",
-    vp_State_range_manual=[0],
+    vp_State_range_manual=[100],
     vp_Plots=["Pseudocolor - Isosurface"],
     vp_Pseudocolor_Variable="velocity_magnitude", # "temperature", "density", "pressure", "velocity_magnitude"
                             # s1 :  H2      s10: HRR            s19: omega_x
@@ -36,13 +36,18 @@ def CIPS_pipeline(
                             # s7 :  HO2     s16: Sd
                             # s8 :  H2O2    s17: Sdd
                             # s9 :  N2      s18: Sa
-    vp_Pseudocolor_colortable="hot", 
+    vp_Pseudocolor_colortable="hot", # Can be "hot", "CustomBW1", "CustomBW2", "PeriodicBW", "PointWise", etc.
     vp_invertColorTable=0,
+    # Parameters for the periodic black and white color table
     Pseudocolor_periodic_num_periods = 3,   # periods of w-w-b-b points (4 points)
     distance_ww = 2.0,          # Relative length of solid white
     distance_wb = 1.0,          # Relative length of white-to-black gradient
     distance_bb = 2.0,          # Relative length of solid black
     distance_bw = 1.0,          # Relative length of black-to-white gradient
+    # Parameters for the pointwise color table
+    pointwise_color_points = None,  # List of [position, r, g, b, a] points for PointWise color table
+    show_color_table_markers = True,  # Whether to show position markers and labels in color table preview
+    
     vp_Isosurface_Variable="temperature",
     vp_Isosurface_ContourValue=3,
     vp_no_annotations=1,
@@ -51,8 +56,8 @@ def CIPS_pipeline(
     vp_imageZoom=1,
     vp_parallelScale=80,
     vp_perspective=0,
-    vp_WindowWidth = 1000, # Window size in px
-    vp_WindowHeight = 1000, # Window size in px
+    vp_WindowWidth = 3000, # Window size in px
+    vp_WindowHeight = 3000, # Window size in px
     vp_Visit_projector_1_log_level=1,
     vp_Visit_projector_1_show_windows=0,
     vp_output_dir_manual="",
@@ -110,18 +115,8 @@ def CIPS_pipeline(
     run_plotter_4=True,
     run_plotter_2=True,
     run_plotter_3_panel=True,
-
-    # run_cp_segment=False,
-    # run_cp_extract=False,
-    # run_dimentionalise=False,
-    # run_plotter_1=False,
-    # run_plotter_4=False,
-    # run_plotter_2=False,
-    # run_plotter_3_panel=False
-
-
-
-):
+    
+    ):
     """
     Runs the CIPS pipeline with configurable parameters.
     
@@ -130,6 +125,13 @@ def CIPS_pipeline(
     cips_pipeline_global_log_level : int, optional
         Global log level that will be used for all components unless specifically overridden.
         Default is 0 (minimal logging).
+    pointwise_color_points : list of lists, optional
+        Points defining the PointWise color table. Each point is a list [position, r, g, b, a].
+        position should be a float between 0.0 and 1.0
+        r, g, b, a are color values between 0-255
+        Required if vp_Pseudocolor_colortable="PointWise". Default is None.
+    show_color_table_markers : bool, optional
+        Whether to show position markers and labels in color table preview images. Default is True.
     """
 
     # Override individual log levels with global level if set
@@ -160,8 +162,18 @@ def CIPS_pipeline(
             input_dir=vp_input_dir,
             Database=vp_Database, State_range_manual=vp_State_range_manual,
             Plots=vp_Plots,
-            Pseudocolor_Variable=vp_Pseudocolor_Variable, Pseudocolor_colortable=vp_Pseudocolor_colortable, invertColorTable=vp_invertColorTable, Pseudocolor_periodic_num_periods=Pseudocolor_periodic_num_periods, distance_ww=distance_ww, distance_wb=distance_wb, distance_bb=distance_bb, distance_bw=distance_bw, 
-            Isosurface_Variable=vp_Isosurface_Variable, Isosurface_ContourValue=vp_Isosurface_ContourValue,
+            Pseudocolor_Variable=vp_Pseudocolor_Variable, 
+            Pseudocolor_colortable=vp_Pseudocolor_colortable, 
+            invertColorTable=vp_invertColorTable, 
+            Pseudocolor_periodic_num_periods=Pseudocolor_periodic_num_periods, 
+            distance_ww=distance_ww, 
+            distance_wb=distance_wb, 
+            distance_bb=distance_bb, 
+            distance_bw=distance_bw,
+            pointwise_color_points=pointwise_color_points,
+            show_color_table_markers=show_color_table_markers,
+            Isosurface_Variable=vp_Isosurface_Variable, 
+            Isosurface_ContourValue=vp_Isosurface_ContourValue,
             no_annotations=vp_no_annotations, viewNormal=vp_viewNormal, viewUp=vp_viewUp, imageZoom=vp_imageZoom, parallelScale=vp_parallelScale, perspective=vp_perspective,
             Visit_projector_1_log_level=vp_Visit_projector_1_log_level,  # Use processed log level
             Visit_projector_1_show_windows=vp_Visit_projector_1_show_windows,

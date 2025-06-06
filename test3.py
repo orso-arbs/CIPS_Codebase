@@ -1,58 +1,46 @@
-import os
+import matplotlib.pyplot as plt
+import matplotlib.colors as mcolors
+import numpy as np
 
-def get_folders_two_levels_deep(base_path):
-    """
-    Finds all folder paths exactly two levels deep from a base path.
+# 1. Define the control points for the grayscale colormap.
+# This dictionary defines the value (0=black, 1=white) at specific points
+# along the colormap (from 0.0 to 1.0).
+# The format for each entry is (position, value_at_position, value_at_position).
+# For grayscale, 'red', 'green', and 'blue' channels are identical.
 
-    Args:
-        base_path (str): The starting directory path.
+cdict = {
+    'red':   [(0.0,  0.0, 0.0),   # At point 0.0, the color is black (0)
+              (0.25, 1.0, 1.0),   # At point 0.25, the color is white (1)
+              (0.75, 0.5, 0.5),   # At point 0.75, the color is mid-gray (0.5)
+              (1.0,  0.0, 0.0)],  # At point 1.0, the color is black (0)
 
-    Returns:
-        list: A list of absolute paths to folders two levels deep.
-    """
-    level2_folders = []
-    if not os.path.isdir(base_path):
-        print(f"Error: Base path '{base_path}' not found or is not a directory.")
-        return level2_folders
+    'green': [(0.0,  0.0, 0.0),
+              (0.25, 1.0, 1.0),
+              (0.75, 0.5, 0.5),
+              (1.0,  0.0, 0.0)],
 
-    # Normalize base_path to remove trailing slash for consistent depth calculation
-    # and count path separators to determine base depth.
-    norm_base_path = base_path.rstrip(os.sep)
-    base_path_sep_count = norm_base_path.count(os.sep)
+    'blue':  [(0.0,  0.0, 0.0),
+              (0.25, 1.0, 1.0),
+              (0.75, 0.5, 0.5),
+              (1.0,  0.0, 0.0)]
+}
 
-    for root, dirs, _ in os.walk(base_path, topdown=True):
-        # Calculate the depth of the current 'root' relative to 'base_path'
-        current_root_sep_count = root.rstrip(os.sep).count(os.sep)
-        current_root_relative_depth = current_root_sep_count - base_path_sep_count
 
-        # We are interested in the children ('dirs') of folders that are 1 level deep.
-        # These children will be 2 levels deep relative to base_path.
-        if current_root_relative_depth == 1:
-            for dir_name in dirs:
-                level2_folders.append(os.path.join(root, dir_name))
-            
-            # Optimization: We've found the level 2 folders from this 'root' (a level 1 folder).
-            # Tell os.walk not to go deeper into these level 2 folders from this point,
-            # as we only care about folders *exactly* at level 2.
-            dirs[:] = [] 
-        elif current_root_relative_depth >= 2:
-            # If 'root' itself is already at level 2 or deeper,
-            # we don't need to explore its children for this task.
-            dirs[:] = []
-            
-    return level2_folders
+# 2. Create the colormap object from the dictionary
+cmap_name = "my_custom_bw_colormap"
+custom_cmap = mcolors.LinearSegmentedColormap(cmap_name, cdict)
 
-if __name__ == "__main__":
-    # --- Set your base directory path here ---
-    base_directory = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\VCL_variations"
+# 3. Create some data to visualize
+# Here, we'll create a simple 2D gradient
+data = np.random.rand(20, 20)
 
-    print(f"Searching for folders 2 levels deep in: '{base_directory}'\n")
-    
-    folders_found = get_folders_two_levels_deep(base_directory)
+# 4. Plot the data using the custom colormap
+fig, ax = plt.subplots(figsize=(6, 5))
+im = ax.imshow(data, cmap=custom_cmap)
 
-    if folders_found:
-        print("Folders found at two levels deep:")
-        for folder_path in folders_found:
-            print(folder_path)
-    else:
-        print(f"No folders found two levels deep from '{base_directory}'.")
+# Add a colorbar to show the colormap
+fig.colorbar(im, ax=ax)
+ax.set_title("Plot with a Custom Grayscale Colormap")
+
+# Display the plot
+plt.show()

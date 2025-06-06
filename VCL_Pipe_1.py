@@ -18,14 +18,14 @@ def VCL_pipeline(
     # General control
     input_dir=r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\VCL_Pipe_Default_dir", # leave empty to start pipeline with visit folder
     vcl_pipeline_output_dir_manual="", # leave empty to start pipeline with visit folder
-    vcl_pipeline_output_dir_comment="Resolution 3000px2", 
+    vcl_pipeline_output_dir_comment="", 
 
     # Visit_projector_1 args
     vp_input_dir="",
     vp_Database=r"euler.ethz.ch:/cluster/scratch/orsob/orsoMT_orsob/A11_states/A11_all_states.visit",
-    vp_State_range_manual=[0],
+    vp_State_range_manual=[],
     vp_Plots=["Pseudocolor - Isosurface"],
-    vp_Pseudocolor_Variable="velocity_magnitude", # "temperature", "density", "pressure", "velocity_magnitude"
+    vp_Pseudocolor_Variable="s6",
                             # s1 :  H2      s10: HRR            s19: omega_x
                             # s2 :  O2      s11: stretch        s20: omega_y
                             # s3 :  H2O     s12: curvature      s21: omega_z
@@ -35,24 +35,22 @@ def VCL_pipeline(
                             # s7 :  HO2     s16: Sd
                             # s8 :  H2O2    s17: Sdd
                             # s9 :  N2      s18: Sa
-    vp_Pseudocolor_colortable="hot", 
+    vp_Pseudocolor_colortable="PeriodicBW",
     vp_invertColorTable=0,
-    Pseudocolor_periodic_num_periods = 3,   # periods of w-w-b-b points (4 points)
-    distance_ww = 2.0,          # Relative length of solid white
-    distance_wb = 1.0,          # Relative length of white-to-black gradient
-    distance_bb = 2.0,          # Relative length of solid black
-    distance_bw = 1.0,          # Relative length of black-to-white gradient
+    Pseudocolor_periodic_num_periods = 2,   # periods of w-w-b-b points (4 points)
+    Pseudocolor_periodic_ww = 2.0,          # Relative length of solid white
+    Pseudocolor_periodic_wb = 1.0,          # Relative length of white-to-black gradient
+    Pseudocolor_periodic_bb = 2.0,          # Relative length of solid black
+    Pseudocolor_periodic_bw = 1.0,          # Relative length of black-to-white gradient
     vp_Isosurface_Variable="temperature",
     vp_Isosurface_ContourValue=3,
     vp_no_annotations=1,
-    vp_viewNormal=[0, -1, 0],
-    vp_viewUp=[0, 0, 1],
+    vp_viewNormal=[0, 0, -1],
+    vp_viewUp=[1, 0, 0],
     vp_imageZoom=1,
     vp_parallelScale=80,
     vp_perspective=0,
-    vp_WindowWidth = 3000, # Window size in px
-    vp_WindowHeight = 3000, # Window size in px
-    vp_Visit_projector_1_log_level=3,
+    vp_Visit_projector_1_log_level=1,
     vp_Visit_projector_1_show_windows=0,
     vp_output_dir_manual="",
     vp_output_dir_comment="",
@@ -65,11 +63,11 @@ def VCL_pipeline(
     cps_CP_segment_log_level=1,
 
     # CP_extract_1 args
-    cpe_CP_extract_log_level=1,
+    cpe_CP_extract_log_level=0,
     # cpe_diameter_training_px=None,
 
     # dimentionalise_2_from_VisIt_R_Average args
-    d2_CP_dimentionalise_log_level=1,
+    d2_CP_dimentionalise_log_level=0,
     d2_output_dir_comment="",
 
     # plotter_1 args
@@ -155,12 +153,11 @@ def VCL_pipeline(
             input_dir=vp_input_dir,
             Database=vp_Database, State_range_manual=vp_State_range_manual,
             Plots=vp_Plots,
-            Pseudocolor_Variable=vp_Pseudocolor_Variable, Pseudocolor_colortable=vp_Pseudocolor_colortable, invertColorTable=vp_invertColorTable, Pseudocolor_periodic_num_periods=Pseudocolor_periodic_num_periods, distance_ww=distance_ww, distance_wb=distance_wb, distance_bb=distance_bb, distance_bw=distance_bw, 
+            Pseudocolor_Variable=vp_Pseudocolor_Variable, Pseudocolor_colortable=vp_Pseudocolor_colortable, invertColorTable=vp_invertColorTable, Pseudocolor_periodic_num_periods = Pseudocolor_periodic_num_periods, Pseudocolor_periodic_ww = Pseudocolor_periodic_ww, Pseudocolor_periodic_wb = Pseudocolor_periodic_wb, Pseudocolor_periodic_bb = Pseudocolor_periodic_bb, Pseudocolor_periodic_bw = Pseudocolor_periodic_bw, 
             Isosurface_Variable=vp_Isosurface_Variable, Isosurface_ContourValue=vp_Isosurface_ContourValue,
             no_annotations=vp_no_annotations, viewNormal=vp_viewNormal, viewUp=vp_viewUp, imageZoom=vp_imageZoom, parallelScale=vp_parallelScale, perspective=vp_perspective,
             Visit_projector_1_log_level=vp_Visit_projector_1_log_level, Visit_projector_1_show_windows=vp_Visit_projector_1_show_windows,
-            WindowWidth = vp_WindowWidth, WindowHeight = vp_WindowHeight,
-            output_dir_manual=vp_output_dir_manual,
+            output_dir_manual=vp_output_dir_manual, # This is key for variations
             output_dir_comment=vp_output_dir_comment,
         )
         # print(f"Visit_Projector_1 output: {VP1_output_dir}")
@@ -308,8 +305,10 @@ def VCL_pipeline(
 
 # Example of how to run the pipeline with default settings
 if __name__ == "__main__":
-    print("Running VCL-Pipeline.")
+    print("Running VCL-Pipeline with default settings as a standalone script example.")
     
     VCL_pipeline(
+        input_dir=r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\VCL_Pipe_Default_dir", # directory to place outputs
+        vcl_pipeline_output_dir_comment="TestColTable"
     )
-    print("VCL-Pipeline run finished.")
+    print("Default pipeline run finished.")

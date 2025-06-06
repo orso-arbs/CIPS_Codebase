@@ -16,6 +16,7 @@ def plot_image_table(
     n_cols,       # Number of columns
     row_labels,   # List of row labels (can contain LaTeX math expressions)
     col_labels,   # List of column labels (can contain LaTeX math expressions)
+    subcaptions=None,  # Add subcaptions parameter, list of strings for each image
     figsize=(15, 10),  # Figure size in inches
     output_dir_manual="",
     output_dir_comment="",
@@ -62,12 +63,12 @@ def plot_image_table(
 
     fig = plt.figure(figsize=(fig_width, fig_height))
     
-    # Calculate grid spacing to accommodate labels - removed spacing between images
-    grid = plt.GridSpec(n_rows + 1, n_cols + 1, figure=fig,
-                       hspace=0.1,  # Reduced from 0.3 to 0.1
-                       wspace=0.1,  # Reduced from 0.3 to 0.1
-                       height_ratios=[0.15] + [1]*n_rows,  # Reduced label height from 0.2 to 0.15
-                       width_ratios=[0.15] + [1]*n_cols)   # Reduced label width from 0.2 to 0.15
+    # Calculate grid spacing to accommodate labels and subcaptions
+    grid = plt.GridSpec(n_rows*2 + 1, n_cols + 1, figure=fig,
+                       hspace=0.3,  # Increased from 0.05 to 0.3 for more vertical spacing
+                       wspace=0.3,  # Increased from 0.1 to 0.3 for more horizontal spacing
+                       height_ratios=[0.3] + [1, 0.15]*n_rows,  # Increased top label height from 0.15 to 0.3
+                       width_ratios=[0.4] + [1]*n_cols)   # Increased left label width from 0.15 to 0.4
 
     # Add column labels
     for j, label in enumerate(col_labels):
@@ -78,22 +79,46 @@ def plot_image_table(
     # Add row labels and images
     for i in range(n_rows):
         # Row label
-        ax = fig.add_subplot(grid[i+1, 0])
-        ax.text(0.5, 0.5, row_labels[i], ha='center', va='center', fontsize=LATEX_FONT_SIZE)
+        ax = fig.add_subplot(grid[i*2+1, 0])
+        ax.text(0.5, 0.5, row_labels[i], 
+               ha='center',  # Keep horizontally centered in the cell
+               va='center', 
+               fontsize=LATEX_FONT_SIZE,
+               linespacing=0.8,  # Adjust line spacing between rows
+               multialignment='left')  # Left-align multiple lines within the text
         ax.axis('off')
         
         # Images in this row
         for j in range(n_cols):
-            ax = fig.add_subplot(grid[i+1, j+1])
+            # Image subplot
+            ax_img = fig.add_subplot(grid[i*2+1, j+1])  # Adjust grid position for images
             img_idx = i * n_cols + j
             try:
                 img = mpimg.imread(image_paths[img_idx])
-                ax.imshow(img, aspect='equal')  # Force equal aspect ratio
-                ax.axis('off')
+                ax_img.imshow(img, aspect='equal')  # Force equal aspect ratio
+                # Add letter label ((a), (b), etc.) in top left corner using LaTeX
+                letter = chr(ord('a') + img_idx)  # Convert 0,1,2,... to a,b,c,...
+                ax_img.text(0.05, 0.95, f"$({letter})$", 
+                       transform=ax_img.transAxes,  # Use axis coordinates (0-1)
+                       fontsize=LATEX_FONT_SIZE,
+                       color='black',
+                       bbox=dict(facecolor='white', edgecolor='none', alpha=0.0),
+                       verticalalignment='top')
+                ax_img.axis('off')
+
+                # Add subcaption if provided
+                if subcaptions and img_idx < len(subcaptions):
+                    ax_sub = fig.add_subplot(grid[i*2+2, j+1])
+                    ax_sub.text(0.5, 0.8, subcaptions[img_idx],  # Moved up from 0.5 to 0.8
+                              ha='center', va='center', 
+                              fontsize=LATEX_FONT_SIZE*0.8,
+                              transform=ax_sub.transAxes)
+                    ax_sub.axis('off')
+
             except Exception as e:
                 print(f"Error loading image {image_paths[img_idx]}: {e}")
-                ax.text(0.5, 0.5, 'Image\nNot Found', ha='center', va='center')
-                ax.axis('off')
+                ax_img.text(0.5, 0.5, 'Image\nNot Found', ha='center', va='center')
+                ax_img.axis('off')
 
     # Save plot
     plt.savefig(os.path.join(output_dir, 'image_table.png'), 
@@ -113,26 +138,60 @@ def plot_image_table(
 if __name__ == "__main__":
     # Example data
     example_images = [
-        r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\Manuscript\Images\Resolutions and diameters crops with disk\1000-20disk.png",
-        r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\Manuscript\Images\Resolutions and diameters crops with disk\1000-40disk.png",
-        r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\Manuscript\Images\Resolutions and diameters crops with disk\1000-80disk.png",
-        r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\Manuscript\Images\Resolutions and diameters crops with disk\3000-55disk.png",
-        r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\Manuscript\Images\Resolutions and diameters crops with disk\3000-111disk.png",
-        r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\Manuscript\Images\Resolutions and diameters crops with disk\3000-222disk.png",
+        r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\Manuscript\Images\Resolutions and diameters crops with disk\S0-1000-10disk.png",
+        r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\Manuscript\Images\Resolutions and diameters crops with disk\S0-1000-21disk.png",
+        r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\Manuscript\Images\Resolutions and diameters crops with disk\S0-1000-42disk.png",
+
+        r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\Manuscript\Images\Resolutions and diameters crops with disk\S0-3000-15disk.png",
+        r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\Manuscript\Images\Resolutions and diameters crops with disk\S0-3000-29disk.png",
+        r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\Manuscript\Images\Resolutions and diameters crops with disk\S0-3000-60disk.png",
+
+
+        r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\Manuscript\Images\Resolutions and diameters crops with disk\S79-1000-20disk.png",
+        r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\Manuscript\Images\Resolutions and diameters crops with disk\S79-1000-40disk.png",
+        r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\Manuscript\Images\Resolutions and diameters crops with disk\S79-1000-80disk.png",
+
+        r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\Manuscript\Images\Resolutions and diameters crops with disk\S79-3000-55disk.png",
+        r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\Manuscript\Images\Resolutions and diameters crops with disk\S79-3000-111disk.png",
+        r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\Manuscript\Images\Resolutions and diameters crops with disk\S79-3000-222disk.png",
     ]
     
-    row_labels = ["$1000^2px^2$", "$3000^2px^2$"]  # LaTeX math expressions
-    col_labels = [r"$\frac{1}{2}d_{auto\ estimate}$", r"$d_{auto\ estimate}$", r"$2d_{auto\ estimate}$"]  # LaTeX math expressions
-
-
+    row_labels = [
+        # Changed row label format to ensure alignment using array
+        r"$\begin{array}{l}1000^2px^2\\[3pt] R=65px\end{array}$",
+        r"$\begin{array}{l}3000^2px^2\\[3pt] R=193px\end{array}$",
+        r"$\begin{array}{l}1000^2px^2\\[3pt] R=306px\end{array}$",
+        r"$\begin{array}{l}3000^2px^2\\[3pt] R=896px\end{array}$",
+    ]
+    col_labels = [r"$\frac{1}{2}d_{auto\ estimate}$", r"$d_{auto\ estimate}$", r"$2d_{auto\ estimate}$"]
+    
+    # Fix subcaption formatting
+    subcaptions = [
+        r"$d_{estimate}=10px$",
+        r"$d_{estimate}=21px$",
+        r"$d_{estimate}=42px$",
+        
+        r"$d_{estimate}=15px$",
+        r"$d_{estimate}=29px$",
+        r"$d_{estimate}=60px$",
+        
+        r"$d_{estimate}=20px$",
+        r"$d_{estimate}=40px$",
+        r"$d_{estimate}=80px$",
+        
+        r"$d_{estimate}=55px$",
+        r"$d_{estimate}=111px$",
+        r"$d_{estimate}=222px$",
+    ]
 
     plot_image_table(
         input_dir=r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_misc",
         image_paths=example_images,
-        n_rows=2,
+        n_rows=4,
         n_cols=3,
         row_labels=row_labels,
         col_labels=col_labels,
-        show_plot=1,
+        subcaptions=subcaptions,
+        show_plot=0,
         Plot_log_level=1
     )

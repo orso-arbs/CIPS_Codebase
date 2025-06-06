@@ -10,24 +10,33 @@ start_time, current_date = F_1.start_inform(__file__)
 
 #########################################        Visit
 
-
-
-
 # Visit
 if 1==1:
     import Visit_Projector_1 as VP1
-    # All 136 states from Altantzis' 2011 PhD thesis (A11)
-    Database = r"euler.ethz.ch:/cluster/scratch/orsob/orsoMT_orsob/A11_states/A11_all_states.visit"
+    
+    # Create custom PointWise colormap
+    custom_points = [
+        [0.0, 255, 255, 255, 255],  # White
+        [0.3, 200, 200, 255, 255],  # Light blue
+        [0.7, 100, 100, 255, 255],  # Medium blue
+        [0.9, 50, 50, 200, 255],    # Dark blue
+        [1.0, 0, 0, 100, 255]       # Navy blue
+    ]
 
     VP1_output_dir = VP1.Visit_projector_1(
         input_dir = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\SF_CP_analysis_pipeline_data", # storage for this script
         Database = Database, State_range_manual = [1,50],
         Plots = ["Pseudocolor - Isosurface"],
-        Pseudocolor_Variable = "velocity_magnitude", Pseudocolor_colortable = "hot", invertColorTable = 0,
+        Pseudocolor_Variable = "velocity_magnitude", 
+        Pseudocolor_colortable = "PointWise", # Use PointWise for custom color table
+        pointwise_color_points = custom_points, # Custom color points
+        show_wb_curve = True, # Show the white-black curve
+        curve_color = 'red', # Red curve and labels
+        invertColorTable = 0,
         Isosurface_Variable = "temperature", Isosurface_ContourValue = 3,
         no_annotations = 1, viewNormal = [0,0,-1], viewUp = [1,0,0], imageZoom = 1, parallelScale = 80, perspective = 0,
         Visit_projector_1_log_level = 1, Visit_projector_1_show_windows = 0,
-        output_dir_manual = "", output_dir_comment = "A11_3_states",
+        output_dir_manual = "", output_dir_comment = "A11_with_custom_colormap",
     )
 
     print("Note: Visit window can now be closed. 'VisIt: Error - Can't delete the last window' is now inconsequentioal to the remaining code")
