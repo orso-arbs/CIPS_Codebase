@@ -516,7 +516,7 @@ def CIPS_pipeline(
             F_1.ding()
 
             # Results dictionary to be returned
-            results = {
+            results_dict = {
                 "cips_pipeline_output_dir": cips_pipeline_output_dir,
                 "VP1_output_dir": VP1_output_dir,
                 "CPs1_output_dir": CPs1_output_dir,
@@ -525,6 +525,8 @@ def CIPS_pipeline(
                 "d2_output_dir": d2_output_dir, 
                 "plot_input_dir": plot_input_dir
             }
+            results = list(results_dict.values())
+            
         except Exception as e:
             print(f"\n!!! EXCEPTION OCCURRED IN CIPS_pipeline !!!", file=sys.stderr) # Will go to Tee (log and console)
             traceback.print_exc(file=sys.stderr) # Will go to Tee (log and console)
