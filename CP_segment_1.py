@@ -23,7 +23,8 @@ def CP_segment_1(
     input_dir,
 
     # Cellpose parameters
-    CP_model_type_for_segmentation = 'cyto3', # Renamed from CP_model_type
+    CP_model_type_for_segmentation = 'cyto3', 
+    CP_model_type_for_diameter_estimation = 'cyto3', # New parameter for diameter estimation model
     gpu = True, CP_empty_cache_onoff = True, # model parameters
     diameter_estimate_guess_px = None, channels = [0,0], flow_threshold = 0.7, cellprob_threshold = 0.0, resample = True, niter = 0, # model.eval() parameters
     augment=True, tile_overlap=0.1, bsize=224, # tiling/augment parameters for model.eval()
@@ -45,9 +46,13 @@ def CP_segment_1(
     ----------
     input_dir : str
         Directory containing the input images (expects .png files).
-    CP_model_type_for_segmentation : str, optional # Renamed and updated
+    CP_model_type_for_segmentation : str, optional
         Specifies the Cellpose model to use for segmentation. Can be a pretrained model name
         ('cyto', 'nuclei', 'cyto2', 'cyto3', 'cpsam') or a path to a custom model file.
+        Defaults to 'cyto3'.
+    CP_model_type_for_diameter_estimation : str, optional # New docstring
+        Specifies the Cellpose model to use for the initial diameter estimation step.
+        This model is part of the Cellpose wrapper instance.
         Defaults to 'cyto3'.
     gpu : bool, optional
         Whether to use the GPU for computation (requires CUDA and PyTorch).
@@ -155,8 +160,8 @@ def CP_segment_1(
     #    This instance always contains a size model (by default from 'cyto3'),
     #    which is what we need for diameter estimation.
     print("\nInitializing Cellpose wrapper to enable diameter estimation...")
-    CP_model_type_for_diameter_estimate = "cyto3"  # Default size model for diameter estimation (Renamed)
-    CP_instance = models.Cellpose(model_type = CP_model_type_for_diameter_estimate, gpu=gpu) # Uses renamed local var
+    # CP_model_type_for_diameter_estimate_local_var = "cyto3" # Old hardcoding replaced by parameter
+    CP_instance = models.Cellpose(model_type = CP_model_type_for_diameter_estimation, gpu=gpu) # Use new parameter
 
     # 2. Load your desired segmentation model (custom OR built-in) into a core CellposeModel object.
     #    The `pretrained_model` parameter accepts both names like 'cyto3' and file paths.
@@ -191,7 +196,7 @@ def CP_segment_1(
     # Commented out old logic - ensure it's not active or update if needed.
     # For brevity, skipping detailed changes in the commented block, assuming new logic is primary.
     # If this old block were to be used, `CP_model_type` would become `CP_model_type_for_segmentation`
-    # and `CP_model_for_diameter_estimate` (as a variable) would become `CP_model_type_for_diameter_estimate`.
+    # and `CP_model_for_diameter_estimate` (as a variable) would become `CP_model_type_for_diameter_estimation`
     # The `tile` parameter in `CP_instance.eval` would also need to be `augment`.
 
     # print("\n CellPose Segmenting")
@@ -257,9 +262,10 @@ def CP_segment_1(
 
     F_1.debug_info(output_dir_comment) if CP_segment_log_level >= 4 else None
     CP_settings = {
-        "CP_model_type_for_segmentation": CP_model_type_for_segmentation, # Renamed key and uses renamed param
-        "CP_model_path": CP_instance.cp.pretrained_model, # Path of the segmentation model
-        "CP_model_type_for_diameter_estimate": CP_instance.sz.model_type, # Renamed key, actual model used for diameter est.
+        "CP_model_type_for_segmentation": CP_model_type_for_segmentation,
+        "CP_segmentation_model_actual_path": CP_instance.cp.pretrained_model, # Renamed from CP_model_path
+        "CP_model_type_for_diameter_estimation_input": CP_model_type_for_diameter_estimation, # New: logs the input parameter
+        "CP_size_model_type_in_wrapper": CP_instance.sz.model_type, # New: logs the actual size model in the wrapper
         "gpu": gpu,
         "CP_empty_cache_onoff": CP_empty_cache_onoff,
         "diameter_estimate_guess_px": diameter_estimate_guess_px,
@@ -277,9 +283,10 @@ def CP_segment_1(
     CP_settings_df = pd.DataFrame([CP_settings])
 
     if CP_segment_log_level >= 4:
-        F_1.debug_info(CP_settings_df["CP_model_type_for_segmentation"]) # Updated key
-        F_1.debug_info(CP_settings_df["CP_model_path"])
-        F_1.debug_info(CP_settings_df["CP_model_type_for_diameter_estimate"]) # Updated key
+        F_1.debug_info(CP_settings_df["CP_model_type_for_segmentation"]) 
+        F_1.debug_info(CP_settings_df["CP_segmentation_model_actual_path"]) # Updated key
+        F_1.debug_info(CP_settings_df["CP_model_type_for_diameter_estimation_input"]) # Updated key
+        F_1.debug_info(CP_settings_df["CP_size_model_type_in_wrapper"]) # Updated key
         F_1.debug_info(CP_settings_df["gpu"])
         F_1.debug_info(CP_settings_df["CP_empty_cache_onoff"])
         F_1.debug_info(CP_settings_df["diameter_estimate_guess_px"])
@@ -330,7 +337,8 @@ def CP_segment_1(
             "flows": flows,
             "styles": styles,
             "diameter_estimate_used_px": diameter_estimate_used_px,
-            "CP_model_type_for_segmentation": CP_model_type_for_segmentation, # Updated
+            "CP_model_type_for_segmentation": CP_model_type_for_segmentation,
+            "CP_model_type_for_diameter_estimation_input": CP_model_type_for_diameter_estimation, # Added for debug
         }
 
         # Print type and size

@@ -80,16 +80,17 @@ def CIPS_pipeline(
     vp_output_dir_comment="",
 
     # CP_segment_1 args
-    cps_CP_model_type="cyto3",
+    cps_CP_model_type_for_segmentation="cyto3", 
+    cps_CP_model_type_for_diameter_estimation="cyto3", # New pipeline parameter
     cps_gpu=True,
-    cps_CP_empty_cache_onoff=True, # New
+    cps_CP_empty_cache_onoff=True, 
     cps_diameter_estimate_guess_px=None,
     cps_channels=[0,0], 
     cps_flow_threshold=0.7, 
     cps_cellprob_threshold=0.0, 
     cps_resample=True, 
     cps_niter=0,
-    cps_tile=True, # New
+    cps_augment=True, # New
     cps_tile_overlap=0.1, # New
     cps_bsize=224, # New
     cps_CP_default_plot_onoff=0, 
@@ -182,6 +183,12 @@ def CIPS_pipeline(
         Required if vp_Pseudocolor_colortable="PointWise". Default is None.
     show_color_table_markers : bool, optional
         Whether to show position markers and labels in color table preview images. Default is True.
+    cps_CP_model_type_for_segmentation : str, optional # Existing parameter, ensure description is up-to-date
+        Specifies the Cellpose model to use for the main segmentation task in CP_segment_1.
+        Default is "cyto3".
+    cps_CP_model_type_for_diameter_estimation : str, optional # New parameter docstring
+        Specifies the Cellpose model to use for the initial diameter estimation step in CP_segment_1.
+        Default is "cyto3".
     cps_channels : list, optional
         Channels for CP_segment_1. Default is [0,0].
     cps_flow_threshold : float, optional
@@ -346,16 +353,17 @@ def CIPS_pipeline(
                     print(f"--- Running CP_segment_1 ---")
                     CPs1_output_dir = CPs1.CP_segment_1(
                         input_dir=VP1_output_dir,
-                        CP_model_type=cps_CP_model_type,
+                        CP_model_type_for_segmentation=cps_CP_model_type_for_segmentation, 
+                        CP_model_type_for_diameter_estimation=cps_CP_model_type_for_diameter_estimation, # Pass new parameter
                         gpu=cps_gpu,
-                        CP_empty_cache_onoff=cps_CP_empty_cache_onoff, # New
+                        CP_empty_cache_onoff=cps_CP_empty_cache_onoff, 
                         diameter_estimate_guess_px=cps_diameter_estimate_guess_px,
                         channels=cps_channels,
                         flow_threshold=cps_flow_threshold,
                         cellprob_threshold=cps_cellprob_threshold,
                         resample=cps_resample,
                         niter=cps_niter,
-                        tile=cps_tile, # New
+                        augment=cps_augment, # New
                         tile_overlap=cps_tile_overlap, # New
                         bsize=cps_bsize, # New
                         CP_default_plot_onoff=cps_CP_default_plot_onoff,
@@ -596,9 +604,9 @@ if __name__ == "__main__":
         run_visit_projector = False, 
         
         # S 0 and 50 from visit
-        #cips_VP1_output_dir_override = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\SF_CP_analysis_pipeline_data\Visit_Projector_1_2025-05-10_19-02-28_A11_2_states",
+        cips_VP1_output_dir_override = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\SF_CP_analysis_pipeline_data\Visit_Projector_1_2025-05-10_19-02-28_A11_2_states",
         # BW visit output below
-        cips_VP1_output_dir_override = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_variations\20250607_2240236\20250607_2240236\20250607_2240246",
+        #cips_VP1_output_dir_override = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_variations\20250607_2240236\20250607_2240236\20250607_2240246",
         
         run_cp_segment=True,
         run_plotter_6_colortables=True, # New

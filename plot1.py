@@ -270,7 +270,9 @@ def plotter_1(input_dir, # Format_1 requires input_dir
         top_text = "" \
         "Cellpose Settings:\n" \
         f"model_type_segmentation = {CP_data_df.iloc[i].get('CP_model_type_for_segmentation', 'N/A')}\n" \
-        f"model_type_diameter_est = {CP_data_df.iloc[i].get('CP_model_type_for_diameter_estimate', 'N/A')}\n" \
+        f"segmentation_model_path = {CP_data_df.iloc[i].get('CP_segmentation_model_actual_path', 'N/A')}\n" \
+        f"model_type_diam_est_input = {CP_data_df.iloc[i].get('CP_model_type_for_diameter_estimation_input', 'N/A')}\n" \
+        f"diam_est_model_type_used = {CP_data_df.iloc[i].get('CP_size_model_type_in_wrapper', 'N/A')}\n" \
         f"augment (tiling) =    {CP_data_df.iloc[i].get('augment', 'N/A')}\n" \
         f"resample =            {CP_data_df.iloc[i].get('resample', 'N/A')}\n" \
         f"niter =               {CP_data_df.iloc[i].get('niter', 'N/A')}\n" \
