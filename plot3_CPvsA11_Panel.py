@@ -18,8 +18,10 @@ import video_maker_1 as vm1
 def plotter_3_CPvsA11_Panel(input_dir, # Format_1 requires input_dir
     CP_data_df = None, # if None a .pkl file has to be in the input_dir. otherwise no CP_data data is provided.
     output_dir_manual = "", output_dir_comment = "",
-    video = 1, show_plot = 1,
-    Panel_1 = 0, Panel_2 = 0, Panel_3 = 0, Panel_4 = 0,
+    video = 1,
+    show_plot = 0,
+    Panel_1 = 0, Panel_2 = 0, Panel_3 = 0, Panel_4 = 1,
+    Plot_log_level=1, # Added Plot_log_level argument
     ):
 
     """
@@ -53,9 +55,9 @@ def plotter_3_CPvsA11_Panel(input_dir, # Format_1 requires input_dir
     output_dir_comment : str, optional
         Comment appended to the default output directory name. Defaults to "".
     video : int, optional
-        Currently unused in this plotter function, but kept for consistency. Defaults to 1.
+        Currently unused in this plotter function, but kept for consistency. Defaults to 0.
     show_plot : int, optional
-        If 1, displays the generated panel plot using `plt.show()`. Defaults to 1.
+        If 1, displays the generated panel plot using `plt.show()`. Defaults to 0.
     Panel_1 : int, optional
         If 1, generates and saves 'plot_panel_1.png'. Defaults to 0.
     Panel_2 : int, optional
@@ -63,7 +65,10 @@ def plotter_3_CPvsA11_Panel(input_dir, # Format_1 requires input_dir
     Panel_3 : int, optional
         If 1, generates and saves 'plot_panel_3.png'. Defaults to 0.
     Panel_4 : int, optional
-        If 1, generates and saves 'plot_panel_4.png' (5x2 comparison panel). Defaults to 0.
+        If 1, generates and saves 'plot_panel_4.png' (5x2 comparison panel). Defaults to 1.
+    Plot_log_level : int, optional
+        Controls the verbosity of logging for this plotting function.
+        Currently not implemented beyond accepting the parameter. Defaults to 1.
 
     Returns
     -------
@@ -658,5 +663,6 @@ def plotter_3_CPvsA11_Panel(input_dir, # Format_1 requires input_dir
         print("\n") # new line
 
 
+    print(f"Plotter 3 (CPvsA11 Panel) finished. Output in {output_dir}")
     ### return
     return output_dir # Format_1 requires output_dir as first return

@@ -22,6 +22,7 @@ def plotter_1(input_dir, # Format_1 requires input_dir
     CP_data_df = None, # if None a .pkl file has to be in the input_dir. otherwise no CP_data_ data is provided.
     output_dir_manual = "", output_dir_comment = "",
     video = 1,
+    Plot_log_level=1, # Added Plot_log_level argument
     ):
 
     """
@@ -63,6 +64,9 @@ def plotter_1(input_dir, # Format_1 requires input_dir
         If 0, only saves the individual plot images.
         If 1, it also creates a video from the generated plot images using `video_maker_1.create_video_from_images`.
         Defaults to 1.
+    Plot_log_level : int, optional
+        Controls the verbosity of logging for this plotting function.
+        Currently not implemented beyond accepting the parameter. Defaults to 1.
 
     Returns
     -------
@@ -81,6 +85,7 @@ def plotter_1(input_dir, # Format_1 requires input_dir
     output_dir = F_1.F_out_dir(input_dir, __file__, output_dir_comment = output_dir_comment, output_dir_manual = output_dir_manual) # Format_1 required definition of output directory
     print(f"Output directory: {output_dir}")
     print(f"type Output directory: {type(output_dir)}")
+
 
     pkl_files = glob.glob(os.path.join(input_dir, "*.pkl"))
 
@@ -264,13 +269,15 @@ def plotter_1(input_dir, # Format_1 requires input_dir
 
         top_text = "" \
         "Cellpose Settings:\n" \
-        f"model_type =          {CP_data_df.iloc[i]['CP_model_type']}\n" \
-        f"resample =            {CP_data_df.iloc[i]['resample']}\n" \
-        f"niter =               {CP_data_df.iloc[i]['niter']}\n" \
-        f"flow_threshold =      {CP_data_df.iloc[i]['flow_threshold']}\n" \
-        f"cellprob_threshold =  {CP_data_df.iloc[i]['cellprob_threshold']}\n" \
-        f"CP_segment_output_dir_comment =  {CP_data_df.iloc[i]['CP_segment_output_dir_comment']}\n" \
-        f"channels =            {CP_data_df.iloc[i]['channels']}\n" \
+        f"model_type_segmentation = {CP_data_df.iloc[i].get('CP_model_type_for_segmentation', 'N/A')}\n" \
+        f"model_type_diameter_est = {CP_data_df.iloc[i].get('CP_model_type_for_diameter_estimate', 'N/A')}\n" \
+        f"augment (tiling) =    {CP_data_df.iloc[i].get('augment', 'N/A')}\n" \
+        f"resample =            {CP_data_df.iloc[i].get('resample', 'N/A')}\n" \
+        f"niter =               {CP_data_df.iloc[i].get('niter', 'N/A')}\n" \
+        f"flow_threshold =      {CP_data_df.iloc[i].get('flow_threshold', 'N/A')}\n" \
+        f"cellprob_threshold =  {CP_data_df.iloc[i].get('cellprob_threshold', 'N/A')}\n" \
+        f"CP_segment_output_dir_comment =  {CP_data_df.iloc[i].get('CP_segment_output_dir_comment', 'N/A')}\n" \
+        f"channels =            {CP_data_df.iloc[i].get('channels', 'N/A')}\n" \
         f"Image directory =     {os.path.dirname(CP_data_df.iloc[i]['image_file_path'])}\n" \
         f"Image =               {os.path.basename(CP_data_df.iloc[i]['image_file_path'])}\n" \
         

@@ -605,3 +605,29 @@ def ParameterLog(max_size=MAX_SIZE, log_level = 0):  # Allow user to specify max
 
         return wrapper
     return decorator
+
+# Helper class to tee output to multiple streams
+class Tee:
+    def __init__(self, *files):
+        self.files = files
+    def write(self, obj):
+        for f in self.files:
+            f.write(obj)
+            f.flush()  # Flush immediately to see output in console in real-time
+    def flush(self):
+        for f in self.files:
+            f.flush()
+    # Add fileno and isatty for compatibility with some libraries if needed
+    def fileno(self):
+        # Return the fileno of the primary console stream, or a sensible default
+        for f in self.files:
+            if hasattr(f, 'fileno'):
+                return f.fileno()
+        raise OSError("Stream does not have a file descriptor") # Or return a default like -1
+    
+    def isatty(self):
+        # Return isatty status of the primary console stream
+        for f in self.files:
+            if hasattr(f, 'isatty'):
+                return f.isatty()
+        return False # Default for non-tty streams

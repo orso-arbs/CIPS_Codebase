@@ -1,6 +1,10 @@
 import sys
 import os
 import Format_1 as F_1
+from Format_1 import Tee # Import Tee class
+import shutil
+import tempfile
+import traceback 
 
 import Visit_Projector_1 as VP1
 import CP_segment_1 as CPs1
@@ -11,6 +15,7 @@ import plot1 as p1
 import plot2_CPvsA11 as p2
 import plot3_CPvsA11_Panel as p3_panel
 import plot4_dimentions as p4
+import plot6_colortables as p6c # Import for the new plotter_6_colortables
 
 
 @F_1.ParameterLog(max_size = 1024 * 10) # 10KB 
@@ -18,13 +23,19 @@ def CIPS_pipeline(
     # General control
     input_dir=r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_Pipe_Default_dir",
     cips_pipeline_output_dir_manual="",
-    cips_pipeline_output_dir_comment="", 
+    cips_pipeline_output_dir_comment="test_rerun", 
     cips_pipeline_global_log_level=None,  # Added global log level parameter
+
+    # Stage output overrides (for resuming pipeline)
+    cips_VP1_output_dir_override="",
+    cips_CPs1_output_dir_override="",
+    cips_CPe1_output_dir_override="",
+    cips_d2_output_dir_override="",
 
     # Visit_projector_1 args
     vp_input_dir="",
     vp_Database=r"euler.ethz.ch:/cluster/scratch/orsob/orsoMT_orsob/A11_states/A11_all_states.visit",
-    vp_State_range_manual=[],
+    vp_State_range_manual=[100],
     vp_Plots=["Pseudocolor - Isosurface"],
     vp_Pseudocolor_Variable="velocity_magnitude", # "temperature", "density", "pressure", "velocity_magnitude"
                             # s1 :  H2      s10: HRR            s19: omega_x
@@ -36,7 +47,7 @@ def CIPS_pipeline(
                             # s7 :  HO2     s16: Sd
                             # s8 :  H2O2    s17: Sdd
                             # s9 :  N2      s18: Sa
-    vp_Pseudocolor_colortable="hot", # Can be "hot", "CustomBW1", "CustomBW2", "PeriodicBW", "PointWise", etc.
+    vp_Pseudocolor_colortable="PointWise", # Can be "hot", "CustomBW1", "CustomBW2", "PeriodicBW", "PointWise", etc.
     vp_invertColorTable=0,
     # Parameters for the periodic black and white color table
     Pseudocolor_periodic_num_periods = 3,   # periods of w-w-b-b points (4 points)
@@ -45,7 +56,12 @@ def CIPS_pipeline(
     distance_bb = 2.0,          # Relative length of solid black
     distance_bw = 1.0,          # Relative length of black-to-white gradient
     # Parameters for the pointwise color table
-    pointwise_color_points = None,  # List of [position, r, g, b, a] points for PointWise color table
+    pointwise_color_points = [ # List of [position, r, g, b, a] points for PointWise color table
+        [0.0, 0, 0, 0, 255], # Black
+        [0.3, 0, 0, 0, 255], # Black
+        [0.7, 255, 255, 255, 255],  # White
+        [1.0, 255, 255, 255, 255],  # White
+        ],  
     show_color_table_markers = True,  # Whether to show position markers and labels in color table preview
     
     vp_Isosurface_Variable="temperature",
@@ -66,27 +82,44 @@ def CIPS_pipeline(
     # CP_segment_1 args
     cps_CP_model_type="cyto3",
     cps_gpu=True,
+    cps_CP_empty_cache_onoff=True, # New
     cps_diameter_estimate_guess_px=None,
+    cps_channels=[0,0], 
+    cps_flow_threshold=0.7, 
+    cps_cellprob_threshold=0.0, 
+    cps_resample=True, 
+    cps_niter=0,
+    cps_tile=True, # New
+    cps_tile_overlap=0.1, # New
+    cps_bsize=224, # New
+    cps_CP_default_plot_onoff=0, 
+    cps_CP_default_image_onoff=0, 
+    cps_CP_default_seg_file_onoff=1,
+    cps_output_dir_manual="",
     cps_output_dir_comment="",
-    cps_CP_segment_log_level=1,
+    cps_CP_segment_log_level=2,
 
     # CP_extract_1 args
+    cpe_output_dir_manual="",
+    cpe_output_dir_comment="",
     cpe_CP_extract_log_level=1,
 
     # dimentionalise_2_from_VisIt_R_Average args
-    d2_CP_dimentionalise_log_level=1,
+    d2_output_dir_manual="",
     d2_output_dir_comment="",    
+    d2_CP_dimentionalise_log_level=1,
 
     # plotter_1 args
     p1_output_dir_manual="",
     p1_output_dir_comment="",
     p1_video=1,
+    p1_Plot_log_level=1,
 
     # plotter_4_dimentionalisation args
     p4_output_dir_manual="",
     p4_output_dir_comment="",
     p4_show_plot=0,
-    p4_Plot_log_level=1,  # Default to 1
+    p4_Plot_log_level=1,
     p4_Panel_1_A11=0,
     p4_A11_manual_data_base_dir=r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\Data\A11_manual_extraction",
     p4_Panel_2_Dimentionalised_from_VisIt=1,
@@ -95,20 +128,37 @@ def CIPS_pipeline(
     p2_output_dir_manual="",
     p2_output_dir_comment="",
     p2_video=1,
+    p2_Plot_log_level=1,
 
     # plotter_3_CPvsA11_Panel args
     p3_output_dir_manual="",
     p3_output_dir_comment="",
     p3_video=0,
     p3_show_plot=0,
+    p3_Plot_log_level=1,
     p3_Panel_1=0,
     p3_Panel_2=0,
     p3_Panel_3=0,
     p3_Panel_4=1,
 
+    # plotter_6_colortables args
+    p6c_output_dir_manual="",
+    p6c_output_dir_comment="",
+    p6c_show_plot=0,
+    p6c_Plot_log_level=1,
+    p6c_color_bar_width_ratio=0.1,
+    p6c_image_width_ratio=0.45,
+    p6c_plot_width_ratio=0.45,
+    p6c_ScaleFactor=1.5,
+    p6c_figsize=(18, 6),
+    p6c_dpi=100,
+    p6c_save_fig=True,
+    p6c_video=False,
+
     # Control flags for pipeline sections
     run_visit_projector=True,
     run_cp_segment=True,
+    run_plotter_6_colortables=True, # New control flag
     run_cp_extract=True,
     run_dimentionalise=True,
     run_plotter_1=True,
@@ -124,7 +174,7 @@ def CIPS_pipeline(
     ----------
     cips_pipeline_global_log_level : int, optional
         Global log level that will be used for all components unless specifically overridden.
-        Default is 0 (minimal logging).
+        Default is None (components use their individual log levels).
     pointwise_color_points : list of lists, optional
         Points defining the PointWise color table. Each point is a list [position, r, g, b, a].
         position should be a float between 0.0 and 1.0
@@ -132,194 +182,387 @@ def CIPS_pipeline(
         Required if vp_Pseudocolor_colortable="PointWise". Default is None.
     show_color_table_markers : bool, optional
         Whether to show position markers and labels in color table preview images. Default is True.
+    cps_channels : list, optional
+        Channels for CP_segment_1. Default is [0,0].
+    cps_flow_threshold : float, optional
+        Flow threshold for CP_segment_1. Default is 0.7.
+    cps_cellprob_threshold : float, optional
+        Cell probability threshold for CP_segment_1. Default is 0.0.
+    cps_resample : bool, optional
+        Resample flag for CP_segment_1. Default is True.
+    cps_niter : int, optional
+        Number of iterations for CP_segment_1. Default is 0.
+    cps_CP_empty_cache_onoff : bool, optional
+        If True, clears CUDA GPU memory before starting Cellpose segmentation. Default is True.
+    cps_tile : bool, optional
+        Whether to run Cellpose on tiles of the image. Default is True.
+    cps_tile_overlap : float, optional
+        Fraction of overlap between tiles if cps_tile is True. Default is 0.1.
+    cps_bsize : int, optional
+        Size of tiles in pixels if cps_tile is True. Default is 224.
+    cps_CP_default_plot_onoff : int, optional
+        Default plot on/off for CP_segment_1. Default is 1.
+    cps_CP_default_image_onoff : int, optional
+        Default image on/off for CP_segment_1. Default is 1.
+    cps_CP_default_seg_file_onoff : int, optional
+        Default segmentation file on/off for CP_segment_1. Default is 1.
+    cps_output_dir_manual : str, optional
+        Manual output directory for CP_segment_1. Default is "".
+    cpe_output_dir_manual : str, optional
+        Manual output directory for CP_extract_1. Default is "".
+    cpe_output_dir_comment : str, optional
+        Output directory comment for CP_extract_1. Default is "".
+    d2_output_dir_manual : str, optional
+        Manual output directory for dimentionalise_2_from_VisIt_R_Average. Default is "".
+    p1_Plot_log_level : int, optional
+        Log level for plotter_1. Default is 1.
+    p2_Plot_log_level : int, optional
+        Log level for plotter_2_CPvsA11. Default is 1.
+    p3_Plot_log_level : int, optional
+        Log level for plotter_3_CPvsA11_Panel. Default is 1.
+    # Parameters for plotter_6_colortables
+    p6c_output_dir_manual : str, optional
+        Manual output directory for plotter_6_colortables. Default is "".
+    p6c_output_dir_comment : str, optional
+        Output directory comment for plotter_6_colortables. Default is "".
+    p6c_show_plot : int, optional
+        Whether to display the plot (1) or not (0) for plotter_6_colortables. Default is 0.
+    p6c_Plot_log_level : int, optional
+        Logging level for plotter_6_colortables. Default is 1.
+    p6c_color_bar_width_ratio : float, optional
+        Width ratio for the colorbar subplot in plotter_6_colortables. Default is 0.1.
+    p6c_image_width_ratio : float, optional
+        Width ratio for the image subplot in plotter_6_colortables. Default is 0.45.
+    p6c_plot_width_ratio : float, optional
+        Width ratio for the property plot subplot in plotter_6_colortables. Default is 0.45.
+    p6c_ScaleFactor : float, optional
+        Scale factor for zooming in on the spherical flame in plotter_6_colortables. Default is 1.5.
+    p6c_figsize : tuple, optional
+        Figure size (width, height) in inches for plotter_6_colortables. Default is (18, 6).
+    p6c_dpi : int, optional
+        DPI for the figure in plotter_6_colortables. Default is 100.
+    p6c_save_fig : bool, optional
+        Whether to save the figure in plotter_6_colortables. Default is True.
+    p6c_video : bool, optional
+        Whether to create a video of the plots in plotter_6_colortables. Default is False.
+    # Stage output overrides
+    cips_VP1_output_dir_override : str, optional
+        If run_visit_projector is False, use this path as VP1.Visit_projector_1 output. Default is "".
+    cips_CPs1_output_dir_override : str, optional
+        If run_cp_segment is False, use this path as CPs1.CP_segment_1 output. Default is "".
+    cips_CPe1_output_dir_override : str, optional
+        If run_cp_extract is False, use this path as CPe1.CP_extract_1 output. Default is "".
+    cips_d2_output_dir_override : str, optional
+        If run_dimentionalise is False, use this path as d2.dimentionalise_2_from_VisIt_R_Average output. Default is "".
     """
 
-    # Override individual log levels with global level if set
-    if cips_pipeline_global_log_level is not None:
-        vp_Visit_projector_1_log_level = cips_pipeline_global_log_level
-        cps_CP_segment_log_level = cips_pipeline_global_log_level
-        cpe_CP_extract_log_level = cips_pipeline_global_log_level
-        d2_CP_dimentionalise_log_level = cips_pipeline_global_log_level
-        p4_Plot_log_level = cips_pipeline_global_log_level
+    original_stdout = sys.stdout
+    original_stderr = sys.stderr
+    temp_log_file_handle = None
+    temp_log_file_path = None 
+    pipeline_output_directory_for_log = None
+    
+    stdout_tee = None
+    stderr_tee = None
+    
+    results = {} # Initialize results to ensure it's always defined
 
-    #################################################### I/O
-    cips_pipeline_output_dir = F_1.F_out_dir(input_dir = input_dir, script_path = __file__, output_dir_comment = cips_pipeline_output_dir_comment, output_dir_manual = cips_pipeline_output_dir_manual) # Format_1 required definition of output directory
+    try:
+        temp_log_file_handle = tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='_cips_pipe_log.txt', encoding='utf-8')
+        temp_log_file_path = temp_log_file_handle.name
+        
+        stdout_tee = Tee(temp_log_file_handle, original_stdout)
+        stderr_tee = Tee(temp_log_file_handle, original_stderr) 
+        
+        sys.stdout = stdout_tee
+        sys.stderr = stderr_tee
 
-    # Initialize output directory variables
-    VP1_output_dir = None
-    CPs1_output_dir = None
-    CPe1_output_dir = None
-    d2_output_dir = None
+        # --- Start of original CIPS_pipeline logic, now within try...except block for logging ---
+        try:
+            # Override individual log levels with global level if set
+            if cips_pipeline_global_log_level is not None:
+                vp_Visit_projector_1_log_level = cips_pipeline_global_log_level
+                cps_CP_segment_log_level = cips_pipeline_global_log_level
+                cpe_CP_extract_log_level = cips_pipeline_global_log_level
+                d2_CP_dimentionalise_log_level = cips_pipeline_global_log_level
+                p1_Plot_log_level = cips_pipeline_global_log_level
+                p2_Plot_log_level = cips_pipeline_global_log_level
+                p3_Plot_log_level = cips_pipeline_global_log_level
+                p4_Plot_log_level = cips_pipeline_global_log_level
+                p6c_Plot_log_level = cips_pipeline_global_log_level # New
 
-    #########################################        Visit
+            #################################################### I/O
+            cips_pipeline_output_dir = F_1.F_out_dir(input_dir = input_dir, script_path = __file__, output_dir_comment = cips_pipeline_output_dir_comment, output_dir_manual = cips_pipeline_output_dir_manual) 
+            pipeline_output_directory_for_log = cips_pipeline_output_dir 
 
-    if not vp_input_dir:
-        vp_input_dir = cips_pipeline_output_dir # to put the Visit output in the pipeline folder if the VisIt output folder is not specified
+            # Initialize output directory variables
+            VP1_output_dir = None
+            CPs1_output_dir = None
+            CPe1_output_dir = None
+            d2_output_dir = None
+            p6c_output_dir = None # New
 
-    if run_visit_projector:
-        print(f"--- Running Visit_Projector_1 ---")
-        VP1_output_dir = VP1.Visit_projector_1(
-            input_dir=vp_input_dir,
-            Database=vp_Database, State_range_manual=vp_State_range_manual,
-            Plots=vp_Plots,
-            Pseudocolor_Variable=vp_Pseudocolor_Variable, 
-            Pseudocolor_colortable=vp_Pseudocolor_colortable, 
-            invertColorTable=vp_invertColorTable, 
-            Pseudocolor_periodic_num_periods=Pseudocolor_periodic_num_periods, 
-            distance_ww=distance_ww, 
-            distance_wb=distance_wb, 
-            distance_bb=distance_bb, 
-            distance_bw=distance_bw,
-            pointwise_color_points=pointwise_color_points,
-            show_color_table_markers=show_color_table_markers,
-            Isosurface_Variable=vp_Isosurface_Variable, 
-            Isosurface_ContourValue=vp_Isosurface_ContourValue,
-            no_annotations=vp_no_annotations, viewNormal=vp_viewNormal, viewUp=vp_viewUp, imageZoom=vp_imageZoom, parallelScale=vp_parallelScale, perspective=vp_perspective,
-            Visit_projector_1_log_level=vp_Visit_projector_1_log_level,  # Use processed log level
-            Visit_projector_1_show_windows=vp_Visit_projector_1_show_windows,
-            WindowWidth = vp_WindowWidth, WindowHeight = vp_WindowHeight,
-            output_dir_manual=vp_output_dir_manual,
-            output_dir_comment=vp_output_dir_comment,
-        )
-        # print(f"Visit_Projector_1 output: {VP1_output_dir}")
-        print("Note: Visit window can now be closed. 'VisIt: Error - Can't delete the last window' is now inconsequential to the remaining code")
-    else:
-        print("--- Skipping Visit_Projector_1 ---")
-        # If skipped, need a way to specify VP1_output_dir if subsequent steps are run
-        # For a full pipeline run, this would typically not be skipped if later steps depend on it.
-        # For parameter sweeps, this step will usually run.
+            #########################################        Visit
 
-    #########################################        Cellpose
-    if run_cp_segment:
-        if VP1_output_dir: # Proceed only if Visit output exists
-            print(f"--- Running CP_segment_1 ---")
-            CPs1_output_dir = CPs1.CP_segment_1(
-                input_dir=VP1_output_dir,
-                CP_model_type=cps_CP_model_type,
-                gpu=cps_gpu,
-                diameter_estimate_guess_px=cps_diameter_estimate_guess_px,
-                output_dir_comment=cps_output_dir_comment,
-                CP_segment_log_level=cps_CP_segment_log_level,  # Use processed log level
-            )
-            # print(f"CP_segment_1 output: {CPs1_output_dir}")
+            if not vp_input_dir:
+                vp_input_dir = cips_pipeline_output_dir 
+
+            if run_visit_projector:
+                print(f"--- Running Visit_Projector_1 ---")
+                VP1_output_dir = VP1.Visit_projector_1(
+                    input_dir=vp_input_dir,
+                    Database=vp_Database, State_range_manual=vp_State_range_manual,
+                    Plots=vp_Plots,
+                    Pseudocolor_Variable=vp_Pseudocolor_Variable, 
+                    Pseudocolor_colortable=vp_Pseudocolor_colortable, 
+                    invertColorTable=vp_invertColorTable, 
+                    Pseudocolor_periodic_num_periods=Pseudocolor_periodic_num_periods, 
+                    distance_ww=distance_ww, 
+                    distance_wb=distance_wb, 
+                    distance_bb=distance_bb, 
+                    distance_bw=distance_bw,
+                    pointwise_color_points=pointwise_color_points,
+                    show_color_table_markers=show_color_table_markers,
+                    Isosurface_Variable=vp_Isosurface_Variable, 
+                    Isosurface_ContourValue=vp_Isosurface_ContourValue,
+                    no_annotations=vp_no_annotations, viewNormal=vp_viewNormal, viewUp=vp_viewUp, imageZoom=vp_imageZoom, parallelScale=vp_parallelScale, perspective=vp_perspective,
+                    Visit_projector_1_log_level=vp_Visit_projector_1_log_level,
+                    Visit_projector_1_show_windows=vp_Visit_projector_1_show_windows,
+                    WindowWidth = vp_WindowWidth, WindowHeight = vp_WindowHeight,
+                    output_dir_manual=vp_output_dir_manual,
+                    output_dir_comment=vp_output_dir_comment,
+                )
+                print("Note: Visit window can now be closed. 'VisIt: Error - Can't delete the last window' is now inconsequential to the remaining code")
+            else:
+                if cips_VP1_output_dir_override and os.path.isdir(cips_VP1_output_dir_override):
+                    VP1_output_dir = cips_VP1_output_dir_override
+                    print(f"--- Skipping Visit_Projector_1 --- Using provided output directory: {VP1_output_dir}")
+                else:
+                    print(f"--- Skipping Visit_Projector_1 --- No valid override directory provided. Subsequent steps requiring its output may be skipped.")
+            
+            #########################################        Cellpose
+            if run_cp_segment:
+                if VP1_output_dir: 
+                    print(f"--- Running CP_segment_1 ---")
+                    CPs1_output_dir = CPs1.CP_segment_1(
+                        input_dir=VP1_output_dir,
+                        CP_model_type=cps_CP_model_type,
+                        gpu=cps_gpu,
+                        CP_empty_cache_onoff=cps_CP_empty_cache_onoff, # New
+                        diameter_estimate_guess_px=cps_diameter_estimate_guess_px,
+                        channels=cps_channels,
+                        flow_threshold=cps_flow_threshold,
+                        cellprob_threshold=cps_cellprob_threshold,
+                        resample=cps_resample,
+                        niter=cps_niter,
+                        tile=cps_tile, # New
+                        tile_overlap=cps_tile_overlap, # New
+                        bsize=cps_bsize, # New
+                        CP_default_plot_onoff=cps_CP_default_plot_onoff,
+                        CP_default_image_onoff=cps_CP_default_image_onoff,
+                        CP_default_seg_file_onoff=cps_CP_default_seg_file_onoff,
+                        output_dir_manual=cps_output_dir_manual,
+                        output_dir_comment=cps_output_dir_comment,
+                        CP_segment_log_level=cps_CP_segment_log_level,
+                    )
+                else:
+                    print("--- Skipping CP_segment_1 (missing Visit_Projector_1 output) ---")
+            else:
+                if cips_CPs1_output_dir_override and os.path.isdir(cips_CPs1_output_dir_override):
+                    CPs1_output_dir = cips_CPs1_output_dir_override
+                    print(f"--- Skipping CP_segment_1 --- Using provided output directory: {CPs1_output_dir}")
+                else:
+                    print(f"--- Skipping CP_segment_1 --- No valid override directory provided. Subsequent steps requiring its output may be skipped.")
+
+            #########################################        Plotter 6 Colortables
+            if run_plotter_6_colortables:
+                if CPs1_output_dir: # Proceed only if CP_segment output exists
+                    print(f"--- Running plotter_6_colortables ---")
+                    p6c_output_dir = p6c.plotter_6_colortables(
+                        input_dir=CPs1_output_dir, # Input is the output of CP_segment_1
+                        output_dir_manual=p6c_output_dir_manual,
+                        output_dir_comment=p6c_output_dir_comment,
+                        show_plot=p6c_show_plot,
+                        Plot_log_level=p6c_Plot_log_level,
+                        color_bar_width_ratio=p6c_color_bar_width_ratio,
+                        image_width_ratio=p6c_image_width_ratio,
+                        plot_width_ratio=p6c_plot_width_ratio,
+                        ScaleFactor=p6c_ScaleFactor,
+                        figsize=p6c_figsize,
+                        dpi=p6c_dpi,
+                        save_fig=p6c_save_fig,
+                        video=p6c_video
+                    )
+                else:
+                    print("--- Skipping plotter_6_colortables (missing CP_segment_1 output) ---")
+            else:
+                print("--- Skipping plotter_6_colortables ---")
+            
+            #########################################        Process Data
+            if run_cp_extract:
+                if CPs1_output_dir: 
+                    print(f"--- Running CP_extract_1 ---")
+                    CPe1_output_dir = CPe1.CP_extract_1(
+                        input_dir=CPs1_output_dir,
+                        CP_extract_log_level=cpe_CP_extract_log_level,
+                        output_dir_manual=cpe_output_dir_manual, 
+                        output_dir_comment=cpe_output_dir_comment, 
+                    )
+                else:
+                    print("--- Skipping CP_extract_1 (missing CP_segment_1 output) ---")
+            else:
+                if cips_CPe1_output_dir_override and os.path.isdir(cips_CPe1_output_dir_override):
+                    CPe1_output_dir = cips_CPe1_output_dir_override
+                    print(f"--- Skipping CP_extract_1 --- Using provided output directory: {CPe1_output_dir}")
+                else:
+                    print(f"--- Skipping CP_extract_1 --- No valid override directory provided. Subsequent steps requiring its output may be skipped.")
+
+            if run_dimentionalise:
+                if CPe1_output_dir: 
+                    print(f"--- Running dimentionalise_2_from_VisIt_R_Average ---")
+                    d2_output_dir = d2.dimentionalise_2_from_VisIt_R_Average(
+                        input_dir=CPe1_output_dir,
+                        CP_dimentionalise_log_level=d2_CP_dimentionalise_log_level,
+                        output_dir_manual=d2_output_dir_manual, 
+                        output_dir_comment=d2_output_dir_comment,
+                    )
+                else:
+                    print("--- Skipping dimentionalise_2_from_VisIt_R_Average (missing CP_extract_1 output) ---")
+            else:
+                if cips_d2_output_dir_override and os.path.isdir(cips_d2_output_dir_override):
+                    d2_output_dir = cips_d2_output_dir_override
+                    print(f"--- Skipping dimentionalise_2_from_VisIt_R_Average --- Using provided output directory: {d2_output_dir}")
+                else:
+                    print(f"--- Skipping dimentionalise_2_from_VisIt_R_Average --- No valid override directory provided. Subsequent steps requiring its output may be skipped.")
+
+            # At this point, d2_output_dir is equivalent to d1_output_dir in the original script for plotting
+            plot_input_dir = d2_output_dir
+
+            #########################################        Plot
+            if run_plotter_1:
+                if plot_input_dir:
+                    print(f"--- Running plotter_1 ---")
+                    p1_output_dir = p1.plotter_1(
+                        input_dir=plot_input_dir,
+                        output_dir_manual=p1_output_dir_manual, # Plotters usually create subfolders in their input_dir
+                        output_dir_comment=p1_output_dir_comment,
+                        video=p1_video,
+                        Plot_log_level=p1_Plot_log_level # Added, assuming plotter_1 takes this
+                    )
+                else:
+                    print("--- Skipping plotter_1 (missing dimentionalisation output) ---")
+            else:
+                print("--- Skipping plotter_1 ---")
+
+            if run_plotter_4:
+                if plot_input_dir:
+                    print(f"--- Running plotter_4_dimentionalisation ---")
+                    p4_output_dir = p4.plotter_4_dimentionalisation(
+                        input_dir=plot_input_dir,
+                        output_dir_manual=p4_output_dir_manual,
+                        output_dir_comment=p4_output_dir_comment,
+                        show_plot=p4_show_plot, Plot_log_level=p4_Plot_log_level,  # Use processed log level
+                        Panel_1_A11=p4_Panel_1_A11, A11_manual_data_base_dir=p4_A11_manual_data_base_dir,
+                        Panel_2_Dimentionalised_from_VisIt=p4_Panel_2_Dimentionalised_from_VisIt,
+                    )
+                else:
+                    print("--- Skipping plotter_4_dimentionalisation (missing dimentionalisation output) ---")
+            else:
+                print("--- Skipping plotter_4_dimentionalisation ---")
+
+            if run_plotter_2:
+                if plot_input_dir:
+                    print(f"--- Running plotter_2_CPvsA11 ---")
+                    p2_output_dir = p2.plotter_2_CPvsA11(
+                        input_dir=plot_input_dir,
+                        output_dir_manual=p2_output_dir_manual,
+                        output_dir_comment=p2_output_dir_comment,
+                        video=p2_video,
+                        Plot_log_level=p2_Plot_log_level # Added, assuming plotter_2 takes this
+                    )
+                else:
+                    print("--- Skipping plotter_2_CPvsA11 (missing dimentionalisation output) ---")
+            else:
+                print("--- Skipping plotter_2_CPvsA11 ---")
+
+            if run_plotter_3_panel:
+                if plot_input_dir:
+                    print(f"--- Running plotter_3_CPvsA11_Panel ---")
+                    p3_out_dir = p3_panel.plotter_3_CPvsA11_Panel(
+                        input_dir=plot_input_dir,
+                        output_dir_manual=p3_output_dir_manual,
+                        output_dir_comment=p3_output_dir_comment,
+                        video=p3_video, show_plot=p3_show_plot,
+                        Plot_log_level=p3_Plot_log_level, # Added, assuming plotter_3 takes this
+                        Panel_1=p3_Panel_1,
+                        Panel_2=p3_Panel_2,
+                        Panel_3=p3_Panel_3,
+                        Panel_4=p3_Panel_4,
+                    )
+                else:
+                    print("--- Skipping plotter_3_CPvsA11_Panel (missing dimentionalisation output) ---")
+            else:
+                print("--- Skipping plotter_3_CPvsA11_Panel ---")
+
+            ######################################################## end
+            F_1.ding()
+
+            # Results dictionary to be returned
+            results = {
+                "cips_pipeline_output_dir": cips_pipeline_output_dir,
+                "VP1_output_dir": VP1_output_dir,
+                "CPs1_output_dir": CPs1_output_dir,
+                "p6c_output_dir": p6c_output_dir, # New
+                "CPe1_output_dir": CPe1_output_dir,
+                "d2_output_dir": d2_output_dir, 
+                "plot_input_dir": plot_input_dir
+            }
+        except Exception as e:
+            print(f"\n!!! EXCEPTION OCCURRED IN CIPS_pipeline !!!", file=sys.stderr) # Will go to Tee (log and console)
+            traceback.print_exc(file=sys.stderr) # Will go to Tee (log and console)
+            raise # Re-raise the exception to be caught by the caller if any
+        # --- End of original CIPS_pipeline logic ---
+
+    finally:
+        # Ensure streams are flushed before restoring
+        if sys.stdout is stdout_tee and stdout_tee is not None: 
+            sys.stdout.flush()
+        if sys.stderr is stderr_tee and stderr_tee is not None: 
+            sys.stderr.flush()
+
+        # Restore original stdout and stderr
+        sys.stdout = original_stdout
+        sys.stderr = original_stderr
+
+        if temp_log_file_handle:
+            temp_log_file_handle.close() 
+
+            if pipeline_output_directory_for_log and os.path.isdir(pipeline_output_directory_for_log):
+                dir_name_for_log_prefix = os.path.basename(pipeline_output_directory_for_log)
+                log_file_name = f"{dir_name_for_log_prefix}_CIPS_Pipe_terminal_output.txt"
+                final_log_path = os.path.join(pipeline_output_directory_for_log, log_file_name)
+                try:
+                    shutil.move(temp_log_file_path, final_log_path)
+                    print(f"CIPS_pipeline terminal output saved to: {final_log_path}", file=original_stdout)
+                except Exception as e_move:
+                    print(f"Error moving CIPS_pipeline log from {temp_log_file_path} to {final_log_path}: {e_move}", file=original_stdout)
+                    print(f"Temporary log file remains at: {temp_log_file_path}", file=original_stdout)
+            elif temp_log_file_path and os.path.exists(temp_log_file_path):
+                print(f"CIPS_pipeline output directory not determined or invalid. Terminal log remains at: {temp_log_file_path}", file=original_stdout)
+        elif temp_log_file_path and os.path.exists(temp_log_file_path): 
+             print(f"Temporary log file may exist at: {temp_log_file_path} but was not properly closed or moved.", file=original_stdout)
         else:
-            print("--- Skipping CP_segment_1 (missing Visit_Projector_1 output) ---")
-    else:
-        print("--- Skipping CP_segment_1 ---")
+            print("Failed to initialize or use temporary log file for CIPS_pipeline.", file=original_stdout)
 
-    #########################################        Process Data
-    if run_cp_extract:
-        if CPs1_output_dir: # Proceed only if CP_segment output exists
-            print(f"--- Running CP_extract_1 ---")
-            CPe1_output_dir = CPe1.CP_extract_1(
-                input_dir=CPs1_output_dir,
-                CP_extract_log_level=cpe_CP_extract_log_level,  # Use processed log level
-                # diameter_training_px=cpe_diameter_training_px, # if added as arg
-            )
-            # print(f"CP_extract_1 output: {CPe1_output_dir}")
-        else:
-            print("--- Skipping CP_extract_1 (missing CP_segment_1 output) ---")
-    else:
-        print("--- Skipping CP_extract_1 ---")
-
-    if run_dimentionalise:
-        if CPe1_output_dir: # Proceed only if CP_extract output exists
-            print(f"--- Running dimentionalise_2_from_VisIt_R_Average ---")
-            d2_output_dir = d2.dimentionalise_2_from_VisIt_R_Average(
-                input_dir=CPe1_output_dir,
-                CP_dimentionalise_log_level=d2_CP_dimentionalise_log_level,  # Use processed log level
-                output_dir_comment=d2_output_dir_comment,
-            )
-            # print(f"dimentionalise_2_from_VisIt_R_Average output: {d2_output_dir}")
-        else:
-            print("--- Skipping dimentionalise_2_from_VisIt_R_Average (missing CP_extract_1 output) ---")
-    else:
-        print("--- Skipping dimentionalise_2_from_VisIt_R_Average ---")
+    return results # Return the collected results
 
 
-    # At this point, d2_output_dir is equivalent to d1_output_dir in the original script for plotting
-    plot_input_dir = d2_output_dir
 
-    #########################################        Plot
-    if run_plotter_1:
-        if plot_input_dir:
-            print(f"--- Running plotter_1 ---")
-            p1_output_dir = p1.plotter_1(
-                input_dir=plot_input_dir,
-                output_dir_manual=p1_output_dir_manual, # Plotters usually create subfolders in their input_dir
-                output_dir_comment=p1_output_dir_comment,
-                video=p1_video
-            )
-            # print(f"plotter_1 output: {p1_output_dir}")
-        else:
-            print("--- Skipping plotter_1 (missing dimentionalisation output) ---")
-    else:
-        print("--- Skipping plotter_1 ---")
 
-    if run_plotter_4:
-        if plot_input_dir:
-            print(f"--- Running plotter_4_dimentionalisation ---")
-            p4_output_dir = p4.plotter_4_dimentionalisation(
-                input_dir=plot_input_dir,
-                output_dir_manual=p4_output_dir_manual,
-                output_dir_comment=p4_output_dir_comment,
-                show_plot=p4_show_plot, Plot_log_level=p4_Plot_log_level,  # Use processed log level
-                Panel_1_A11=p4_Panel_1_A11, A11_manual_data_base_dir=p4_A11_manual_data_base_dir,
-                Panel_2_Dimentionalised_from_VisIt=p4_Panel_2_Dimentionalised_from_VisIt,
-            )
-            # print(f"plotter_4_dimentionalisation output: {p4_output_dir}")
-        else:
-            print("--- Skipping plotter_4_dimentionalisation (missing dimentionalisation output) ---")
-    else:
-        print("--- Skipping plotter_4_dimentionalisation ---")
 
-    if run_plotter_2:
-        if plot_input_dir:
-            print(f"--- Running plotter_2_CPvsA11 ---")
-            p2_output_dir = p2.plotter_2_CPvsA11(
-                input_dir=plot_input_dir,
-                output_dir_manual=p2_output_dir_manual,
-                output_dir_comment=p2_output_dir_comment,
-                video=p2_video
-            )
-            # print(f"plotter_2_CPvsA11 output: {p2_output_dir}")
-        else:
-            print("--- Skipping plotter_2_CPvsA11 (missing dimentionalisation output) ---")
-    else:
-        print("--- Skipping plotter_2_CPvsA11 ---")
 
-    if run_plotter_3_panel:
-        if plot_input_dir:
-            print(f"--- Running plotter_3_CPvsA11_Panel ---")
-            p3_out_dir = p3_panel.plotter_3_CPvsA11_Panel(
-                input_dir=plot_input_dir,
-                output_dir_manual=p3_output_dir_manual,
-                output_dir_comment=p3_output_dir_comment,
-                video=p3_video, show_plot=p3_show_plot,
-                Panel_1=p3_Panel_1,
-                Panel_2=p3_Panel_2,
-                Panel_3=p3_Panel_3,
-                Panel_4=p3_Panel_4,
-            )
-            # print(f"plotter_3_CPvsA11_Panel output: {p3_out_dir}")
-        else:
-            print("--- Skipping plotter_3_CPvsA11_Panel (missing dimentionalisation output) ---")
-    else:
-        print("--- Skipping plotter_3_CPvsA11_Panel ---")
 
-    ######################################################## end
-    F_1.ding()
 
-    # Return the path of the final data directory (e.g., dimentionalisation output)
-    # or a dictionary of key output paths if needed by the calling script.
-    return {
-        "cips_pipeline_output_dir": cips_pipeline_output_dir,
-        "VP1_output_dir": VP1_output_dir,
-        "CPs1_output_dir": CPs1_output_dir,
-        "CPe1_output_dir": CPe1_output_dir,
-        "d2_output_dir": d2_output_dir, # Final data processing output before plotting
-        "plot_input_dir": plot_input_dir
-    }
 
 
 
@@ -328,6 +571,45 @@ def CIPS_pipeline(
 if __name__ == "__main__":
     print("Running CIPS-Pipeline.")
     
+    # Example of running from a pre-existing Visit_Projector_1 output
+    # Set run_visit_projector=False and provide the path to cips_VP1_output_dir_override
+    # All subsequent steps will run based on this provided directory.
+    
+    # To run all stages:
+    # CIPS_pipeline(
+    #     cips_pipeline_global_log_level=None,
+
+    #     run_visit_projector=True,
+    #     run_cp_segment=True,
+    #     run_cp_extract=True,
+    #     run_dimentionalise=True,
+    #     run_plotter_1=True,
+    #     run_plotter_4=True,
+    #     run_plotter_2=True,
+    #     run_plotter_3_panel=True,
+    # )
+
+    # Example: Skip Visit_Projector, use its existing output, and run the rest
     CIPS_pipeline(
+        cips_pipeline_global_log_level=None, # Example: Set global log level
+        
+        run_visit_projector = False, 
+        
+        # S 0 and 50 from visit
+        #cips_VP1_output_dir_override = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\SF_CP_analysis_pipeline_data\Visit_Projector_1_2025-05-10_19-02-28_A11_2_states",
+        # BW visit output below
+        cips_VP1_output_dir_override = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_variations\20250607_2240236\20250607_2240236\20250607_2240246",
+        
+        run_cp_segment=True,
+        run_plotter_6_colortables=True, # New
+        run_cp_extract=True,
+        run_dimentionalise=True,
+        run_plotter_1=True,
+        run_plotter_4=True,
+        run_plotter_2=True,
+        run_plotter_3_panel=True,
     )
+
     print("CIPS-Pipeline run finished.")
+
+

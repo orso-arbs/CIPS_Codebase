@@ -22,6 +22,7 @@ def plotter_2_CPvsA11(input_dir, # Format_1 requires input_dir
     CP_data_df = None, # if None a .pkl file has to be in the input_dir. otherwise no CP_data data is provided.
     output_dir_manual = "", output_dir_comment = "",
     video = 1,
+    Plot_log_level=1, # Added Plot_log_level argument
     ):
 
     """
@@ -63,6 +64,9 @@ def plotter_2_CPvsA11(input_dir, # Format_1 requires input_dir
     video : int, optional
         If 1, creates a video from the generated plot images using `video_maker_1.create_video_from_images`.
         If 0, only saves the individual plot images. Defaults to 1.
+    Plot_log_level : int, optional
+        Controls the verbosity of logging for this plotting function.
+        Currently not implemented beyond accepting the parameter. Defaults to 1.
 
     Returns
     -------
@@ -383,4 +387,5 @@ def plotter_2_CPvsA11(input_dir, # Format_1 requires input_dir
 
     #################################################### return
     
+    print(f"Plotter 2 (CPvsA11) finished. Output in {output_dir}")
     return output_dir # Format_1 requires outpu_dir as first return

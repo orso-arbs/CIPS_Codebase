@@ -4,6 +4,7 @@ from cellpose import models, plot, io
 import glob
 import os
 import pandas as pd
+import torch
 
 import sys
 import os
@@ -22,8 +23,10 @@ def CP_segment_1(
     input_dir,
 
     # Cellpose parameters
-    CP_model_type = 'cyto3', gpu = True, # models.Cellpose() parameters
+    CP_model_type_for_segmentation = 'cyto3', # Renamed from CP_model_type
+    gpu = True, CP_empty_cache_onoff = True, # model parameters
     diameter_estimate_guess_px = None, channels = [0,0], flow_threshold = 0.7, cellprob_threshold = 0.0, resample = True, niter = 0, # model.eval() parameters
+    augment=True, tile_overlap=0.1, bsize=224, # tiling/augment parameters for model.eval()
     CP_default_plot_onoff = 1, CP_default_image_onoff = 1, CP_default_seg_file_onoff = 1, # output default Cellpose files
 
     # output and logging 
@@ -42,9 +45,9 @@ def CP_segment_1(
     ----------
     input_dir : str
         Directory containing the input images (expects .png files).
-    CP_model_type : str, optional
-        Specifies the Cellpose model to use. Can be a pretrained model name
-        ('cyto', 'nuclei', 'cyto2', 'cyto3') or a path to a custom model file.
+    CP_model_type_for_segmentation : str, optional # Renamed and updated
+        Specifies the Cellpose model to use for segmentation. Can be a pretrained model name
+        ('cyto', 'nuclei', 'cyto2', 'cyto3', 'cpsam') or a path to a custom model file.
         Defaults to 'cyto3'.
     gpu : bool, optional
         Whether to use the GPU for computation (requires CUDA and PyTorch).
@@ -74,6 +77,14 @@ def CP_segment_1(
     niter : int, optional
         Number of iterations for dynamics simulation. If 0, Cellpose estimates
         the number of iterations. Defaults to 0.
+    augment : bool, optional # Changed from tile to augment
+        Whether to use augmented prediction by tiling image with overlapping tiles and flipping overlapped regions.
+        Defaults to True.
+    tile_overlap : float, optional
+        Fraction of overlap between tiles if `augment` is True. Defaults to 0.1.
+    bsize : int, optional
+        Size of tiles in pixels if `augment` is True. Recommended to be 224 as in training.
+        Defaults to 224.
     CP_default_plot_onoff : int, optional
         If 1, saves the default Cellpose segmentation plot for each image.
         Defaults to 0.
@@ -122,55 +133,110 @@ def CP_segment_1(
 
     # list of files
     files = glob.glob(input_dir + r"\*.png")
-    all_images = [io.imread(f) for f in files]
+    all_images = [io.imread(f) for f in files] # submitting all images to Cellpose like this runs cellpose in batch mode, which is faster than running it for each image separately
     N_images = len(all_images)
     print("\n loaded #images: ", N_images)
 
 
-
     #################################################### CellPose
+    if CP_empty_cache_onoff == True: # Clear GPU memory before starting Cellpose segmentation
+        torch.cuda.empty_cache()# Clear GPU memory before starting Cellpose segmentation
+        print("\n Cleared CUDA GPU memory") if CP_segment_log_level >= 2 else None
 
+    io.logger_setup() if CP_segment_log_level >= 2 else None
 
-    # Segment the imafges with cellpose
-    print("\n CellPose Segmenting")
-    if CP_model_type in ['cyto', 'nuclei', 'cyto2', 'cyto3']: # if its a cellpose pretrained base model
-        # Initialize Cellpose (with pretrained base model)
-        print("\nInitialize Cellpose with pretrained base model: ", CP_model_type) if CP_segment_log_level >= 2 else None
-        CP_instance = models.Cellpose(model_type = CP_model_type, gpu = gpu)
+    # Segment the images with cellpose
 
-        # Run CP network (with pretrained base model)
-        print("\n Running CP network with model: ", CP_model_type) if CP_segment_log_level >= 1 else None
-        CP_model_for_diameter_estimate = CP_instance.sz.model_type
-        print("estimating diameters with model: ", CP_model_for_diameter_estimate) if CP_segment_log_level >= 1 else None
-        masks, flows, styles, diameter_estimate_used_px = CP_instance.eval(
-            all_images, diameter=diameter_estimate_guess_px, channels=channels,
-            flow_threshold = flow_threshold, cellprob_threshold = cellprob_threshold,
-            resample = resample, niter = niter,
-            )
+#########################
+    # --- The Simplified and Unified Way ---
+    print("\n CellPose Segmenting --- The Simplified and Unified Way ---")
 
-    else: # if its a custom model
-        # Initialize Cellpose (with default pretrained base model cyto3)
-        print("\n Initializing CellPose with default pretrained base Model cyto3") if CP_segment_log_level >= 1 else None
-        CP_instance = models.Cellpose(gpu=gpu)
+    # 1. Initialize a default Cellpose WRAPPER instance.
+    #    This instance always contains a size model (by default from 'cyto3'),
+    #    which is what we need for diameter estimation.
+    print("\nInitializing Cellpose wrapper to enable diameter estimation...")
+    CP_model_type_for_diameter_estimate = "cyto3"  # Default size model for diameter estimation (Renamed)
+    CP_instance = models.Cellpose(model_type = CP_model_type_for_diameter_estimate, gpu=gpu) # Uses renamed local var
+
+    # 2. Load your desired segmentation model (custom OR built-in) into a core CellposeModel object.
+    #    The `pretrained_model` parameter accepts both names like 'cyto3' and file paths.
+    print(f"\nLoading segmentation model: {CP_model_type_for_segmentation}") # Uses renamed param
+    CP_model_for_segmentation_obj = models.CellposeModel(pretrained_model=CP_model_type_for_segmentation, gpu=gpu) # Uses renamed param
+
+    # 3. Overwrite the segmentation model within the wrapper.
+    CP_instance.cp = CP_model_for_segmentation_obj
+
+    # 4. Run evaluation.
+    #    CP_instance.eval() will now:
+    #      a) Use its original size model for diameter estimation (if diameter is None).
+    #      b) Use the new, swapped-in model (your CP_model_type_for_segmentation) for the actual segmentation.
+    print(f"\nRunning network with segmentation model: {CP_instance.cp.pretrained_model}")
+    print(f"Estimating diameters with size model from: {CP_instance.sz.model_type}") # This is the actual model used by size estimator
+
+    masks, flows, styles, diameter_estimate_used_px = CP_instance.eval(
+        all_images,
+        diameter=diameter_estimate_guess_px,  # Set to None or 0 for auto-detection
+        channels=channels,
+        flow_threshold=flow_threshold,
+        cellprob_threshold=cellprob_threshold,
+        augment=augment,  # Use augment parameter from function signature
+        tile_overlap=tile_overlap, # Use tile_overlap parameter
+        bsize=bsize, # Use bsize parameter
+        resample=resample,
+        niter=niter,
+    )
+    print("\n END of CellPose Segmenting --- END of The Simplified and Unified Way ---")
+
+########################### new up / old below
+    # Commented out old logic - ensure it's not active or update if needed.
+    # For brevity, skipping detailed changes in the commented block, assuming new logic is primary.
+    # If this old block were to be used, `CP_model_type` would become `CP_model_type_for_segmentation`
+    # and `CP_model_for_diameter_estimate` (as a variable) would become `CP_model_type_for_diameter_estimate`.
+    # The `tile` parameter in `CP_instance.eval` would also need to be `augment`.
+
+    # print("\n CellPose Segmenting")
+    # if CP_model_type_for_segmentation in ['cyto', 'nuclei', 'cyto2', 'cyto3']: # if its a cellpose pretrained base model
+    #     # Initialize Cellpose (with pretrained base model)
+    #     print("\nInitialize Cellpose with pretrained base model: ", CP_model_type_for_segmentation) if CP_segment_log_level >= 2 else None
+    #     CP_instance = models.Cellpose(model_type = CP_model_type_for_segmentation, gpu = gpu)
+
+    #     # Run CP network (with pretrained base model)
+    #     print("\n Running CP network with model: ", CP_model_type_for_segmentation) if CP_segment_log_level >= 1 else None
+    #     # CP_model_for_diameter_estimate_val = CP_instance.sz.model_type # Old way of getting this
+    #     print("estimating diameters with model: ", CP_instance.sz.model_type) if CP_segment_log_level >= 1 else None
+    #     masks, flows, styles, diameter_estimate_used_px = CP_instance.eval(
+    #         all_images, diameter=diameter_estimate_guess_px, channels=channels,
+    #         flow_threshold = flow_threshold, cellprob_threshold = cellprob_threshold,
+    #         augment=augment, tile_overlap=tile_overlap, bsize=bsize, # Tiling parameters
+    #         resample = resample, niter = niter,
+    #         )
+
+    # else: # if its a custom model
+    #     # Initialize Cellpose (with default pretrained base model cyto3 for size estimation)
+    #     print("\n Initializing CellPose with default pretrained base Model cyto3 for size estimation") if CP_segment_log_level >= 1 else None
+    #     CP_instance = models.Cellpose(gpu=gpu, model_type="cyto3") # Ensure size model is set
         
-        # Load and assign the custom model using CellposeModel. With this separate loading for a custom model, you can still have cellpose estimate the diameters using a pretrained model which by default is cyto3
-        print("\n Loading Custom Model") if CP_segment_log_level >= 1 else None
-        CP_model = models.CellposeModel(pretrained_model=CP_model_type, gpu=gpu)
-        CP_instance.cp = CP_model
+    #     # Load and assign the custom model using CellposeModel.
+    #     print("\n Loading Custom Model for segmentation: ", CP_model_type_for_segmentation) if CP_segment_log_level >= 1 else None
+    #     custom_model_obj = models.CellposeModel(pretrained_model=CP_model_type_for_segmentation, gpu=gpu)
+    #     CP_instance.cp = custom_model_obj # Assign custom model for segmentation
 
-        # Run CP network (with custom model)
-        print("\n Running CP network with model: ", CP_model_type) if CP_segment_log_level >= 1 else None
-        CP_model_for_diameter_estimate = CP_instance.sz.model_type
-        print("estimating diameters with model: ", CP_model_for_diameter_estimate ) if CP_segment_log_level >= 1 else None
-        masks, flows, styles, diameter_estimate_used_px = CP_instance.eval(
-            all_images,
-            diameter=diameter_estimate_guess_px,  # = 0 or None for Cellpose diameter estimation. Will use a pretrained base model or default cyto3 to estimate diameter
-            channels=channels,
-            flow_threshold=flow_threshold,
-            cellprob_threshold=cellprob_threshold,
-            resample=resample,
-            niter=niter,
-        )
+    #     # Run CP network (with custom model for segmentation)
+    #     print("\n Running CP network with segmentation model: ", CP_model_type_for_segmentation) if CP_segment_log_level >= 1 else None
+    #     # CP_model_for_diameter_estimate_val = CP_instance.sz.model_type # Old way
+    #     print("estimating diameters with size model: ", CP_instance.sz.model_type ) if CP_segment_log_level >= 1 else None
+    #     masks, flows, styles, diameter_estimate_used_px = CP_instance.eval(
+    #         all_images,
+    #         diameter=diameter_estimate_guess_px, 
+    #         channels=channels,
+    #         flow_threshold=flow_threshold,
+    #         cellprob_threshold=cellprob_threshold,
+    #         augment=augment, tile_overlap=tile_overlap, bsize=bsize, # Tiling parameters
+    #         resample=resample,
+    #         niter=niter,
+    #     )
+
+####################################
 
     if isinstance(diameter_estimate_used_px, int):
         diameter_estimate_used_px = np.full(N_images, diameter_estimate_used_px)
@@ -189,34 +255,42 @@ def CP_segment_1(
 
     # Write the parameters to the pkl file
 
-    F_1.debug_info(output_dir_comment) if CP_segment_log_level >= 3 else None
+    F_1.debug_info(output_dir_comment) if CP_segment_log_level >= 4 else None
     CP_settings = {
-        "CP_model_type": CP_model_type,
-        "CP_model_path": CP_instance.cp.pretrained_model,
-        "CP_model_for_diameter_estimate": CP_model_for_diameter_estimate,
+        "CP_model_type_for_segmentation": CP_model_type_for_segmentation, # Renamed key and uses renamed param
+        "CP_model_path": CP_instance.cp.pretrained_model, # Path of the segmentation model
+        "CP_model_type_for_diameter_estimate": CP_instance.sz.model_type, # Renamed key, actual model used for diameter est.
         "gpu": gpu,
+        "CP_empty_cache_onoff": CP_empty_cache_onoff,
         "diameter_estimate_guess_px": diameter_estimate_guess_px,
         "diameter_training_px": diameter_training_px,
         "flow_threshold": flow_threshold,
         "cellprob_threshold": cellprob_threshold,
         "resample": resample,
         "niter": niter,
+        "augment": augment, # Changed from "tile" to "augment", uses augment parameter
+        "tile_overlap": tile_overlap,
+        "bsize": bsize,
         "CP_segment_output_dir_comment": output_dir_comment,
     }
     # Convert to DataFrame (single row)
     CP_settings_df = pd.DataFrame([CP_settings])
 
-    if CP_segment_log_level >= 3:
-        F_1.debug_info(CP_settings_df["CP_model_type"])
+    if CP_segment_log_level >= 4:
+        F_1.debug_info(CP_settings_df["CP_model_type_for_segmentation"]) # Updated key
         F_1.debug_info(CP_settings_df["CP_model_path"])
-        F_1.debug_info(CP_settings_df["CP_model_for_diameter_estimate"])
+        F_1.debug_info(CP_settings_df["CP_model_type_for_diameter_estimate"]) # Updated key
         F_1.debug_info(CP_settings_df["gpu"])
+        F_1.debug_info(CP_settings_df["CP_empty_cache_onoff"])
         F_1.debug_info(CP_settings_df["diameter_estimate_guess_px"])
         F_1.debug_info(CP_settings_df["diameter_training_px"])
         F_1.debug_info(CP_settings_df["flow_threshold"])
         F_1.debug_info(CP_settings_df["cellprob_threshold"])
         F_1.debug_info(CP_settings_df["resample"])
         F_1.debug_info(CP_settings_df["niter"])
+        F_1.debug_info(CP_settings_df["augment"]) # Updated key
+        F_1.debug_info(CP_settings_df["tile_overlap"])
+        F_1.debug_info(CP_settings_df["bsize"])
         F_1.debug_info(CP_settings_df["CP_segment_output_dir_comment"])
 
     # Save as pickle
@@ -249,14 +323,14 @@ def CP_segment_1(
             io.save_masks(all_images, maski, flowi, output_image_path, png=True)
 
     # show return types and size
-    if CP_segment_log_level >= 2:
+    if CP_segment_log_level >= 4:
         variables = {
             "output_dir": output_dir,
             "masks": masks,
             "flows": flows,
             "styles": styles,
             "diameter_estimate_used_px": diameter_estimate_used_px,
-            "CP_model_type": CP_model_type,
+            "CP_model_type_for_segmentation": CP_model_type_for_segmentation, # Updated
         }
 
         # Print type and size
