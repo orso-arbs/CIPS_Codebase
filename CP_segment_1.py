@@ -27,7 +27,7 @@ def CP_segment_1(
     CP_model_type_for_diameter_estimation = 'cyto3', # New parameter for diameter estimation model
     gpu = True, CP_empty_cache_onoff = True, # model parameters
     diameter_estimate_guess_px = None, channels = [0,0], flow_threshold = 0.7, cellprob_threshold = 0.0, resample = True, niter = 0, # model.eval() parameters
-    augment=True, tile_overlap=0.1, bsize=224, # tiling/augment parameters for model.eval()
+    augment=True, tile_overlap=0.1, bsize=8, # tiling/augment parameters for model.eval()
     CP_default_plot_onoff = 1, CP_default_image_onoff = 1, CP_default_seg_file_onoff = 1, # output default Cellpose files
 
     # output and logging 

@@ -92,7 +92,7 @@ def CIPS_pipeline(
     cps_niter=0,
     cps_augment=True, # New
     cps_tile_overlap=0.1, # New
-    cps_bsize=224, # New
+    cps_bsize=8, # New
     cps_CP_default_plot_onoff=0, 
     cps_CP_default_image_onoff=0, 
     cps_CP_default_seg_file_onoff=1,
@@ -526,7 +526,7 @@ def CIPS_pipeline(
                 "plot_input_dir": plot_input_dir
             }
             results = list(results_dict.values())
-            
+
         except Exception as e:
             print(f"\n!!! EXCEPTION OCCURRED IN CIPS_pipeline !!!", file=sys.stderr) # Will go to Tee (log and console)
             traceback.print_exc(file=sys.stderr) # Will go to Tee (log and console)
@@ -606,9 +606,9 @@ if __name__ == "__main__":
         run_visit_projector = False, 
         
         # S 0 and 50 from visit
-        cips_VP1_output_dir_override = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\SF_CP_analysis_pipeline_data\Visit_Projector_1_2025-05-10_19-02-28_A11_2_states",
+        #cips_VP1_output_dir_override = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\SF_CP_analysis_pipeline_data\Visit_Projector_1_2025-05-10_19-02-28_A11_2_states",
         # BW visit output below
-        #cips_VP1_output_dir_override = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_variations\20250607_2240236\20250607_2240236\20250607_2240246",
+        cips_VP1_output_dir_override = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_variations\20250607_2240236\20250607_2240236\20250607_2240246",
         
         run_cp_segment=True,
         run_plotter_6_colortables=True, # New
