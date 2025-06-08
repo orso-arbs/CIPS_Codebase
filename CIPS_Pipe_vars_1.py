@@ -11,7 +11,7 @@ def CIPS_variation_1(
     # General control
     input_dir=r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_variations",
     cips_variation_output_dir_manual="",
-    cips_variation_output_dir_comment="ColorTables_BW_test", 
+    cips_variation_output_dir_comment="ColorTables_BW_variations_2000px", 
 ):
     #################################################### I/O
     cips_variations_1_output_dir = F_1.F_out_dir(input_dir = input_dir, script_path = __file__, output_dir_comment = cips_variation_output_dir_comment, output_dir_manual = cips_variation_output_dir_manual)
@@ -25,29 +25,97 @@ def CIPS_variation_1(
     # Define parameter variations
     variations = [
         {
-            "cips_pipeline_output_dir_comment": "WGGGB",
+            "cips_pipeline_output_dir_comment": "BW",
             "vp_output_dir_comment": "PointWiseCustom",
             "vp_Pseudocolor_colortable": "PointWise",
             "vp_invertColorTable": 0,
             "pointwise_color_points": [
-                [0.0, 255, 255, 255, 255],  # White at bottom
-                [0.25, 200, 200, 200, 255], 
-                [0.5, 100, 100, 100, 255],  
-                [0.75, 50, 50, 50, 255],   
-                [1.0, 0, 0, 0, 255]       # Black at top
+                [0.0, 0, 0, 0, 255], # Black
+                [1.0, 255, 255, 255, 255],  # White
             ]
         },
         {
-            "cips_pipeline_output_dir_comment": "BGGGB",
+            "cips_pipeline_output_dir_comment": "BBWW",
             "vp_output_dir_comment": "PointWiseCustom",
             "vp_Pseudocolor_colortable": "PointWise",
             "vp_invertColorTable": 0,
             "pointwise_color_points": [
-                [0.0, 0, 0, 0, 255],  # Black at bottom
-                [0.25, 100, 100, 100, 255], 
-                [0.5, 255, 255, 255, 255],  
-                [0.75, 100, 100, 100, 255],   
-                [1.0, 0, 0, 0, 255]       # Black at top
+                [0.0, 0, 0, 0, 255], # Black
+                [0.3, 0, 0, 0, 255], # Black
+                [0.7, 255, 255, 255, 255],  # White
+                [1.0, 255, 255, 255, 255],  # White
+            ]
+        },
+        {
+            "cips_pipeline_output_dir_comment": "WB",
+            "vp_output_dir_comment": "PointWiseCustom",
+            "vp_Pseudocolor_colortable": "PointWise",
+            "vp_invertColorTable": 0,
+            "pointwise_color_points": [
+                [0.0, 255, 255, 255, 255],  # White
+                [1.0, 0, 0, 0, 255], # Black
+            ]
+        },
+        {
+            "cips_pipeline_output_dir_comment": "WWBB",
+            "vp_output_dir_comment": "PointWiseCustom",
+            "vp_Pseudocolor_colortable": "PointWise",
+            "vp_invertColorTable": 0,
+            "pointwise_color_points": [
+                [0.0, 255, 255, 255, 255],  # White
+                [0.3, 255, 255, 255, 255],  # White
+                [0.7, 0, 0, 0, 255], # Black
+                [1.0, 0, 0, 0, 255], # Black
+            ]
+        },
+        {
+            "cips_pipeline_output_dir_comment": "WBW",
+            "vp_output_dir_comment": "PointWiseCustom",
+            "vp_Pseudocolor_colortable": "PointWise",
+            "vp_invertColorTable": 0,
+            "pointwise_color_points": [
+                [0.0, 255, 255, 255, 255],  # White
+                [0.5, 0, 0, 0, 255], # Black
+                [1.0, 255, 255, 255, 255],  # White
+            ]
+        },
+        {
+            "cips_pipeline_output_dir_comment": "WWBBWW",
+            "vp_output_dir_comment": "PointWiseCustom",
+            "vp_Pseudocolor_colortable": "PointWise",
+            "vp_invertColorTable": 0,
+            "pointwise_color_points": [
+                [0.0, 255, 255, 255, 255],  # White
+                [0.3, 255, 255, 255, 255],  # White
+                [0.45, 0, 0, 0, 255], # Black
+                [0.55, 0, 0, 0, 255], # Black
+                [0.7, 255, 255, 255, 255],  # White
+                [1.0, 255, 255, 255, 255],  # White
+            ]
+        },
+        {
+            "cips_pipeline_output_dir_comment": "BWB",
+            "vp_output_dir_comment": "PointWiseCustom",
+            "vp_Pseudocolor_colortable": "PointWise",
+            "vp_invertColorTable": 0,
+            "pointwise_color_points": [
+                [0.0, 0, 0, 0, 255], # Black
+                [0.5, 255, 255, 255, 255],  # White
+                [1.0, 0, 0, 0, 255], # Black
+            ]
+        },
+        {
+            "cips_pipeline_output_dir_comment": "BBWWBB",
+            "vp_output_dir_comment": "PointWiseCustom",
+            "vp_Pseudocolor_colortable": "PointWise",
+            "vp_invertColorTable": 0,
+            "pointwise_color_points": [
+                [0.0, 0, 0, 0, 255],  # Black
+                [0.3, 0, 0, 0, 255],   # Black
+                [0.45, 255, 255, 255, 255],  # White
+                [0.55, 255, 255, 255, 255],  # White
+                [0.7, 0, 0, 0, 255],     # Black
+                [1.0, 0, 0, 0, 255]    # Black
             ]
         },
     ]

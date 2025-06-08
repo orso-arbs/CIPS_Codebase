@@ -188,7 +188,7 @@ def create_periodic_bw_color_table(num_periods, distance_ww, distance_wb, distan
     print(f"Color table 'PeriodicBW' created and saved to {colortable_output_dir}")
 
 def create_pointwise_bw_color_table(points_list, visit_module_ref, colortable_output_dir, 
-                                   name="PointwiseBW", width=100, height=400, 
+                                   name="PointWise", width=100, height=400, 
                                    show_markers=True, show_wb_curve=False,
                                    curve_width=60, label_fontsize=12, curve_color='red'):
     """
@@ -202,7 +202,7 @@ def create_pointwise_bw_color_table(points_list, visit_module_ref, colortable_ou
                           r, g, b, a are color values between 0-255
         visit_module_ref: Reference to the VisIt Python module.
         colortable_output_dir (str): Directory to save the color table JSON and preview image.
-        name (str): Name for the color table in VisIt (default: "PointwiseBW")
+        name (str): Name for the color table in VisIt (default: "PointWise")
         width (int): Width of the preview image in pixels (default: 100)
         height (int): Height of the preview image in pixels (default: 400)
         show_markers (bool): Whether to show position markers and labels (default: True)
@@ -301,6 +301,7 @@ def create_pointwise_bw_color_table(points_list, visit_module_ref, colortable_ou
     
     # UNLABELED COLORBAR
     fig_unlabeled, ax_unlabeled = plt.subplots(figsize=(width/100, height/100))
+    fig_unlabeled.patch.set_alpha(0)  # Make figure background transparent
     
     # Create a vertical colorbar
     norm = mcolors.Normalize(vmin=0, vmax=1)
@@ -310,8 +311,10 @@ def create_pointwise_bw_color_table(points_list, visit_module_ref, colortable_ou
         orientation='vertical'
     )
     
-    # Remove ticks
+    # Remove ticks and set transparent background
     cb.set_ticks([])
+    cb.outline.set_visible(False)  # Remove colorbar outline
+    ax_unlabeled.patch.set_alpha(0)  # Make axes background transparent
     
     # Add a black box around the colorbar
     ax_unlabeled.set_frame_on(True)
@@ -319,15 +322,16 @@ def create_pointwise_bw_color_table(points_list, visit_module_ref, colortable_ou
         spine.set_color('black')
         spine.set_linewidth(0.5)
     
-    # Save unlabeled color bar
+    # Save unlabeled color bar with transparent background
     unlabeled_path = os.path.join(colortable_output_dir, f"{name}_colorbar_unlabeled.png")
-    fig_unlabeled.savefig(unlabeled_path, bbox_inches='tight', dpi=100)
+    fig_unlabeled.savefig(unlabeled_path, bbox_inches='tight', dpi=100, transparent=True)
     plt.close(fig_unlabeled)
     
     # LABELED COLORBAR WITH WHITENESS/BLACKNESS CURVE
     if show_wb_curve:
         # Create figure for labeled colorbar
-        fig_labeled, ax_labeled = plt.subplots(figsize=(width/100 * 1, height/100))
+        fig_labeled, ax_labeled = plt.subplots(figsize=(width/100 * 1.0, height/100))
+        fig_labeled.patch.set_alpha(0)  # Make figure background transparent
         
         # Create the colorbar
         cb_labeled = plt.colorbar(
@@ -336,14 +340,10 @@ def create_pointwise_bw_color_table(points_list, visit_module_ref, colortable_ou
             orientation='vertical'
         )
         
-        # Remove ticks
+        # Remove ticks and set transparent background
         cb_labeled.set_ticks([])
-        
-        # Add a black box around the colorbar
-        ax_labeled.set_frame_on(True)
-        for spine in ax_labeled.spines.values():
-            spine.set_color('black')
-            spine.set_linewidth(0.5)
+        cb_labeled.outline.set_visible(False)  # Remove colorbar outline
+        ax_labeled.patch.set_alpha(0)  # Make axes background transparent
         
         # Plot the whiteness/blackness curve
         # Position the curve on top of the colorbar
@@ -386,9 +386,9 @@ def create_pointwise_bw_color_table(points_list, visit_module_ref, colortable_ou
         ax_curve.text(0.1, 0.02, r'$\mathbf{B}$', color=curve_color, 
                      ha='center', va='bottom', fontsize=label_fontsize)
         
-        # Save labeled color bar
+        # Save labeled color bar with transparent background
         labeled_path = os.path.join(colortable_output_dir, f"{name}_colorbar_labeled.png")
-        fig_labeled.savefig(labeled_path, bbox_inches='tight', dpi=100)
+        fig_labeled.savefig(labeled_path, bbox_inches='tight', dpi=100, transparent=True)
         plt.close(fig_labeled)
     
     print(f"Color table visualizations saved to {colortable_output_dir}")

@@ -38,7 +38,6 @@ Note: The code has been checked for functionality only in Windows 11 with Visit 
 
 ## Usage
 
-
 1. Installation
 2. Activate the python environment
    1. Open a terminal and run:

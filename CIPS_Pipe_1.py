@@ -18,13 +18,13 @@ def CIPS_pipeline(
     # General control
     input_dir=r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_Pipe_Default_dir",
     cips_pipeline_output_dir_manual="",
-    cips_pipeline_output_dir_comment="Resolution 3000px2", 
+    cips_pipeline_output_dir_comment="", 
     cips_pipeline_global_log_level=None,  # Added global log level parameter
 
     # Visit_projector_1 args
     vp_input_dir="",
     vp_Database=r"euler.ethz.ch:/cluster/scratch/orsob/orsoMT_orsob/A11_states/A11_all_states.visit",
-    vp_State_range_manual=[100],
+    vp_State_range_manual=[],
     vp_Plots=["Pseudocolor - Isosurface"],
     vp_Pseudocolor_Variable="velocity_magnitude", # "temperature", "density", "pressure", "velocity_magnitude"
                             # s1 :  H2      s10: HRR            s19: omega_x
@@ -56,9 +56,9 @@ def CIPS_pipeline(
     vp_imageZoom=1,
     vp_parallelScale=80,
     vp_perspective=0,
-    vp_WindowWidth = 3000, # Window size in px
-    vp_WindowHeight = 3000, # Window size in px
-    vp_Visit_projector_1_log_level=1,
+    vp_WindowWidth = 1000, # Window size in px
+    vp_WindowHeight = 1000, # Window size in px
+    vp_Visit_projector_1_log_level=2,
     vp_Visit_projector_1_show_windows=0,
     vp_output_dir_manual="",
     vp_output_dir_comment="",

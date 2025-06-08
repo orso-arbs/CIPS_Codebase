@@ -189,7 +189,7 @@ def CP_segment_1(
 
     # Write the parameters to the pkl file
 
-    F_1.debug_info(output_dir_comment) if CP_segment_log_level >= 2 else None
+    F_1.debug_info(output_dir_comment) if CP_segment_log_level >= 3 else None
     CP_settings = {
         "CP_model_type": CP_model_type,
         "CP_model_path": CP_instance.cp.pretrained_model,
@@ -206,7 +206,7 @@ def CP_segment_1(
     # Convert to DataFrame (single row)
     CP_settings_df = pd.DataFrame([CP_settings])
 
-    if CP_segment_log_level >= 2:
+    if CP_segment_log_level >= 3:
         F_1.debug_info(CP_settings_df["CP_model_type"])
         F_1.debug_info(CP_settings_df["CP_model_path"])
         F_1.debug_info(CP_settings_df["CP_model_for_diameter_estimate"])
