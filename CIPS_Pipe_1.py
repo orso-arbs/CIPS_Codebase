@@ -86,13 +86,13 @@ def CIPS_pipeline(
     cps_CP_empty_cache_onoff=True, 
     cps_diameter_estimate_guess_px=None,
     cps_channels=[0,0], 
-    cps_flow_threshold=0.7, 
+    cps_flow_threshold=0.5, 
     cps_cellprob_threshold=0.0, 
     cps_resample=True, 
     cps_niter=0,
     cps_augment=True, # New
     cps_tile_overlap=0.1, # New
-    cps_bsize=8, # New
+    cps_bsize=160, # Stick to multiples of 16. Cellpose uses 224 by default.
     cps_CP_default_plot_onoff=0, 
     cps_CP_default_image_onoff=0, 
     cps_CP_default_seg_file_onoff=1,
@@ -147,11 +147,17 @@ def CIPS_pipeline(
     p6c_output_dir_comment="",
     p6c_show_plot=0,
     p6c_Plot_log_level=1,
-    p6c_color_bar_width_ratio=0.1,
-    p6c_image_width_ratio=0.45,
-    p6c_plot_width_ratio=0.45,
-    p6c_ScaleFactor=1.5,
-    p6c_figsize=(18, 6),
+    p6c_image_width_ratio=0.5,     # Width ratio for combined image subplot
+    p6c_plot_width_ratio=0.5,      # Width ratio for property plot subplot
+    p6c_plot_spacing=0.0,          # Horizontal spacing between plots
+    p6c_colorbar_width=0.1,        # Width of colorbar relative to subplot width
+    p6c_colorbar_height=0.6,       # Height of colorbar relative to subplot height
+    p6c_colorbar_x_pos=0.1,        # X position of colorbar relative to subplot width
+    p6c_ScaleFactor=1.5,           # Scale factor for zooming in on the spherical flame
+    p6c_figsize=(18, 6),           # Figure size (width, height) in inches
+    p6c_FontSizeFactor_Legends=1.4, # Factor to adjust font size for legends
+    p6c_FontSizeFactor_Axis=1.0,   # Factor to adjust font size for axes labels
+    p6c_Legend_y_offset=1.3,       # Y offset for legends
     p6c_dpi=100,
     p6c_save_fig=True,
     p6c_video=False,
@@ -236,16 +242,28 @@ def CIPS_pipeline(
         Whether to display the plot (1) or not (0) for plotter_6_colortables. Default is 0.
     p6c_Plot_log_level : int, optional
         Logging level for plotter_6_colortables. Default is 1.
-    p6c_color_bar_width_ratio : float, optional
-        Width ratio for the colorbar subplot in plotter_6_colortables. Default is 0.1.
     p6c_image_width_ratio : float, optional
         Width ratio for the image subplot in plotter_6_colortables. Default is 0.45.
     p6c_plot_width_ratio : float, optional
         Width ratio for the property plot subplot in plotter_6_colortables. Default is 0.45.
+    p6c_plot_spacing : float, optional
+        Horizontal spacing between plots in plotter_6_colortables. Default is 0.0.
+    p6c_colorbar_width : float, optional
+        Width of colorbar relative to subplot width in plotter_6_colortables. Default is 0.1.
+    p6c_colorbar_height : float, optional
+        Height of colorbar relative to subplot height in plotter_6_colortables. Default is 0.6.
+    p6c_colorbar_x_pos : float, optional
+        X position of colorbar relative to subplot width in plotter_6_colortables. Default is 0.1.
     p6c_ScaleFactor : float, optional
         Scale factor for zooming in on the spherical flame in plotter_6_colortables. Default is 1.5.
     p6c_figsize : tuple, optional
         Figure size (width, height) in inches for plotter_6_colortables. Default is (18, 6).
+    p6c_FontSizeFactor_Legends : float, optional
+        Factor to adjust font size for legends in plotter_6_colortables. Default is 1.4.
+    p6c_FontSizeFactor_Axis : float, optional
+        Factor to adjust font size for axes labels in plotter_6_colortables. Default is 1.0.
+    p6c_Legend_y_offset : float, optional
+        Y offset for legends in plotter_6_colortables. Default is 1.3.
     p6c_dpi : int, optional
         DPI for the figure in plotter_6_colortables. Default is 100.
     p6c_save_fig : bool, optional
@@ -382,29 +400,6 @@ def CIPS_pipeline(
                 else:
                     print(f"--- Skipping CP_segment_1 --- No valid override directory provided. Subsequent steps requiring its output may be skipped.")
 
-            #########################################        Plotter 6 Colortables
-            if run_plotter_6_colortables:
-                if CPs1_output_dir: # Proceed only if CP_segment output exists
-                    print(f"--- Running plotter_6_colortables ---")
-                    p6c_output_dir = p6c.plotter_6_colortables(
-                        input_dir=CPs1_output_dir, # Input is the output of CP_segment_1
-                        output_dir_manual=p6c_output_dir_manual,
-                        output_dir_comment=p6c_output_dir_comment,
-                        show_plot=p6c_show_plot,
-                        Plot_log_level=p6c_Plot_log_level,
-                        color_bar_width_ratio=p6c_color_bar_width_ratio,
-                        image_width_ratio=p6c_image_width_ratio,
-                        plot_width_ratio=p6c_plot_width_ratio,
-                        ScaleFactor=p6c_ScaleFactor,
-                        figsize=p6c_figsize,
-                        dpi=p6c_dpi,
-                        save_fig=p6c_save_fig,
-                        video=p6c_video
-                    )
-                else:
-                    print("--- Skipping plotter_6_colortables (missing CP_segment_1 output) ---")
-            else:
-                print("--- Skipping plotter_6_colortables ---")
             
             #########################################        Process Data
             if run_cp_extract:
@@ -512,6 +507,36 @@ def CIPS_pipeline(
             else:
                 print("--- Skipping plotter_3_CPvsA11_Panel ---")
 
+            #########################################        Plotter 6 Colortables
+            if run_plotter_6_colortables:
+                if CPe1_output_dir:
+                    print(f"--- Running plotter_6_colortables ---")
+                    p6c_output_dir = p6c.plotter_6_colortables(
+                        input_dir=CPe1_output_dir,
+                        output_dir_manual=p6c_output_dir_manual,
+                        output_dir_comment=p6c_output_dir_comment,
+                        show_plot=p6c_show_plot,
+                        Plot_log_level=p6c_Plot_log_level,
+                        image_width_ratio=p6c_image_width_ratio,
+                        plot_width_ratio=p6c_plot_width_ratio,
+                        plot_spacing=p6c_plot_spacing,
+                        colorbar_width=p6c_colorbar_width,
+                        colorbar_height=p6c_colorbar_height,
+                        colorbar_x_pos=p6c_colorbar_x_pos,
+                        ScaleFactor=p6c_ScaleFactor,
+                        figsize=p6c_figsize,
+                        FontSizeFactor_Legends=p6c_FontSizeFactor_Legends,
+                        FontSizeFactor_Axis=p6c_FontSizeFactor_Axis,
+                        Legend_y_offset=p6c_Legend_y_offset,
+                        dpi=p6c_dpi,
+                        save_fig=p6c_save_fig,
+                        video=p6c_video
+                    )
+                else:
+                    print("--- Skipping plotter_6_colortables (missing CP_segment_1 output) ---")
+            else:
+                print("--- Skipping plotter_6_colortables ---")
+
             ######################################################## end
             F_1.ding()
 
@@ -608,16 +633,18 @@ if __name__ == "__main__":
         # S 0 and 50 from visit
         #cips_VP1_output_dir_override = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\SF_CP_analysis_pipeline_data\Visit_Projector_1_2025-05-10_19-02-28_A11_2_states",
         # BW visit output below
-        cips_VP1_output_dir_override = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_variations\20250607_2240236\20250607_2240236\20250607_2240246",
-        
+        #cips_VP1_output_dir_override = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_variations\20250607_2240236\20250607_2240236\20250607_2240246",
+        # WBW visit output below
+        cips_VP1_output_dir_override = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_variations\20250609_0028398\20250609_0028398\20250609_0028408",
+
         run_cp_segment=True,
-        run_plotter_6_colortables=True, # New
         run_cp_extract=True,
         run_dimentionalise=True,
         run_plotter_1=True,
         run_plotter_4=True,
         run_plotter_2=True,
         run_plotter_3_panel=True,
+        run_plotter_6_colortables=True, # New
     )
 
     print("CIPS-Pipeline run finished.")
