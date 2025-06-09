@@ -625,18 +625,35 @@ if __name__ == "__main__":
     # )
 
     # Example: Skip Visit_Projector, use its existing output, and run the rest
-    CIPS_pipeline(
-        cips_pipeline_global_log_level=None, # Example: Set global log level
+    # CIPS_pipeline(
+    #     cips_pipeline_global_log_level=None, # Example: Set global log level
         
-        run_visit_projector = False, 
+    #     run_visit_projector = False, 
         
-        # S 0 and 50 from visit
-        #cips_VP1_output_dir_override = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\SF_CP_analysis_pipeline_data\Visit_Projector_1_2025-05-10_19-02-28_A11_2_states",
-        # BW visit output below
-        #cips_VP1_output_dir_override = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_variations\20250607_2240236\20250607_2240236\20250607_2240246",
-        # WBW visit output below
-        cips_VP1_output_dir_override = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_variations\20250609_0028398\20250609_0028398\20250609_0028408",
+    #     # S 0 and 50 from visit
+    #     cips_VP1_output_dir_override = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\SF_CP_analysis_pipeline_data\Visit_Projector_1_2025-05-10_19-02-28_A11_2_states",
+    #     # BW visit output below
+    #     #cips_VP1_output_dir_override = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_variations\20250607_2240236\20250607_2240236\20250607_2240246",
+    #     # WBW visit output below
+    #     #cips_VP1_output_dir_override = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_variations\20250609_0028398\20250609_0028398\20250609_0028408",
 
+    #     run_cp_segment=True,
+    #     run_cp_extract=True,
+    #     run_dimentionalise=True,
+    #     run_plotter_1=True,
+    #     run_plotter_4=True,
+    #     run_plotter_2=True,
+    #     run_plotter_3_panel=True,
+    #     run_plotter_6_colortables=True, # New
+    # )
+
+
+    CIPS_pipeline(
+        cips_pipeline_output_dir_comment="S0a50", 
+        cips_pipeline_global_log_level=None, # Example: Set global log level
+
+        vp_State_range_manual = [0,50], # Example: Specify state range for Visit_Projector_1
+        run_visit_projector = True, 
         run_cp_segment=True,
         run_cp_extract=True,
         run_dimentionalise=True,
@@ -646,6 +663,8 @@ if __name__ == "__main__":
         run_plotter_3_panel=True,
         run_plotter_6_colortables=True, # New
     )
+
+
 
     print("CIPS-Pipeline run finished.")
 

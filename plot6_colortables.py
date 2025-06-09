@@ -147,6 +147,7 @@ def plotter_6_colortables(
         else:
             if Plot_log_level >= 1: print(f"Warning: No colorbar image found in {colortable_dir}.")
 
+
     # Process each image in the DataFrame
     for idx, row in df.iterrows():
         if Plot_log_level >= 1:
@@ -157,7 +158,23 @@ def plotter_6_colortables(
             image_file_path = row['image_file_path']
             mask_from_df = row['masks'] # Get mask from DataFrame
             D_SF_px = row['D_SF_px']
-            current_time = df.iloc[idx]['Time_VisIt']
+            current_time = df.iloc[idx]['Time_VisIt'] # df.iloc[idx] is correct here for current_time based on overall df
+
+            # Get min and max values for colorbar annotation from the current row
+            min_val_colorbar_col = 'Min_Psuedocolored_variable_SF_VisIt'
+            max_val_colorbar_col = 'Max_Psuedocolored_variable_SF_VisIt'
+            
+            if min_val_colorbar_col in row.index and max_val_colorbar_col in row.index: # Check if columns exist in the row's Series index
+                min_val_colorbar = row[min_val_colorbar_col]
+                max_val_colorbar = row[max_val_colorbar_col]
+                if Plot_log_level >= 1: # Changed to level 2 to reduce verbosity for per-row print
+                    print(f"  Using Min/Max from current row for colorbar: {min_val_colorbar}, {max_val_colorbar}")
+            else:
+                min_val_colorbar = 101
+                max_val_colorbar = 102
+                if Plot_log_level >= 1:
+                    print(f"  Warning: Min/Max columns for colorbar not found in current row. Using defaults: {min_val_colorbar}, {max_val_colorbar}")
+
 
             if Plot_log_level >= 2: 
                 print(f"  Image: {image_num}, File: {image_file_path}, D_SF_px: {D_SF_px}")
@@ -184,6 +201,21 @@ def plotter_6_colortables(
                 ax_colorbar.imshow(np.array(colorbar_image))
                 #ax_colorbar.set_title("Color Table", fontsize=LATEX_FONT_SIZE)
                 ax_colorbar.axis('off')
+
+                # Add Min/Max annotations to the colorbar
+                try:
+                    max_text = f"max: {float(max_val_colorbar):.1f}" if pd.notna(max_val_colorbar) else f"max: {str(max_val_colorbar)}"
+                    min_text = f"min: {float(min_val_colorbar):.1f}" if pd.notna(min_val_colorbar) else f"min: {str(min_val_colorbar)}"
+                except (ValueError, TypeError): # Handle cases where conversion to float might fail or value is not numeric
+                    max_text = f"max: {str(max_val_colorbar)}"
+                    min_text = f"min: {str(min_val_colorbar)}"
+
+                ax_colorbar.text(0.5, 1.02, max_text, 
+                                 ha='center', va='bottom', transform=ax_colorbar.transAxes, 
+                                 fontsize=LATEX_FONT_SIZE * 0.7, color='black')
+                ax_colorbar.text(0.5, -0.02, min_text, 
+                                 ha='center', va='top', transform=ax_colorbar.transAxes, 
+                                 fontsize=LATEX_FONT_SIZE * 0.7, color='black')
             
             # Display the flame image in the main left subplot
             try:
@@ -392,7 +424,7 @@ if __name__ == "__main__":
     
     plotter_6_colortables(
         # BBWW extract 
-        input_dir = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_variations\20250607_2240236\20250608_0303173\20250608_0303173\20250608_0409296\20250608_0643128",
+        input_dir = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_Pipe_Default_dir\20250609_2008055\20250609_2008066\20250609_2013422\20250609_2014114",
         output_dir_manual="",
         output_dir_comment="",
         show_plot=0,

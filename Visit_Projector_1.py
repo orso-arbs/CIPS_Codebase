@@ -160,8 +160,8 @@ def Visit_projector_1(
     launch_profile = p.GetLaunchProfiles(p.activeProfile) # Get the active profile directly
     launch_profile.numProcessors = 4
     launch_profile.numNodes = 1
-    launch_profile.timeLimit = "20:00:00"
-    additional_args = f"--mem-per-cpu=8G --tmp=8G --output=/cluster/scratch/orsob/orsoMT_orsob/VisIt_logs_and_error_output/%j_visit.out --error=/cluster/scratch/orsob/orsoMT_orsob/VisIt_logs_and_error_output/%j_visit.err"
+    launch_profile.timeLimit = "05:00:00"
+    additional_args = f"--mem-per-cpu=2G --tmp=2G --output=/cluster/scratch/orsob/orsoMT_orsob/VisIt_logs_and_error_output/%j_visit.out --error=/cluster/scratch/orsob/orsoMT_orsob/VisIt_logs_and_error_output/%j_visit.err"
     launch_profile.launchArgs = additional_args # Set launchArgs on the retrieved profile object
     print(f"Updated launchArgs: {launch_profile.launchArgs}") if Visit_projector_1_log_level >= 2 else None
     
@@ -399,6 +399,8 @@ def Visit_projector_1(
     Image_filenames_VisIt = []
     Times_VisIt = []
     R_SF_Average_VisIt = []
+    Min_Psuedocolored_variable_SF_VisIt = []
+    Max_Psuedocolored_variable_SF_VisIt = []
 
     start_time_loop = time.time() if Visit_projector_1_log_level >= 1 else None
 
@@ -426,8 +428,13 @@ def Visit_projector_1(
             Time_state = vi.GetQueryOutputValue()
             Times_VisIt.append(Time_state)
 
-            # Ensure the Pseudocolor plot is active before changing its variable
+            # Ensure the Pseudocolor plot is active
             vi.SetActivePlots(0) # Assuming Pseudocolor is plot 0
+            vi.Query("MinMax")
+            obj = vi.GetQueryOutputObject()
+            Min_Psuedocolored_variable_SF_VisIt.append(obj["min"])
+            Max_Psuedocolored_variable_SF_VisIt.append(obj["max"])
+            print(f"Min_Psuedocolored_variable_SF_VisIt = {obj['min']}, Max_Psuedocolored_variable_SF_VisIt = {obj['max']}") if Visit_projector_1_log_level >= 2 else None
             vi.ChangeActivePlotsVar("R")
             vi.Query("Average Value") # This query might not exist. Common queries are "Min", "Max", "Weighted Variable Sum"
             R_SF_Average_state = vi.GetQueryOutputValue()
@@ -468,11 +475,13 @@ def Visit_projector_1(
     #################################################### save data
 
     VisIt_data_df = pd.DataFrame({
-        'Plot_VisIt': [Plots[0]] * len(State_range) if State_range else [], # Handle empty State_range
+        'Plot_VisIt': [Plots[0]] * len(State_range) if State_range else [],
         'Image_filename_VisIt': Image_filenames_VisIt,
         'State_range_VisIt': list(State_range), # Convert range to list for DataFrame
         'Time_VisIt': Times_VisIt,
         'R_SF_Average_VisIt': R_SF_Average_VisIt,
+        'Min_Psuedocolored_variable_SF_VisIt': Min_Psuedocolored_variable_SF_VisIt,
+        'Max_Psuedocolored_variable_SF_VisIt': Max_Psuedocolored_variable_SF_VisIt,
         })
     print(VisIt_data_df)
 

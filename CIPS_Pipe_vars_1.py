@@ -46,17 +46,17 @@ def CIPS_variation_1(
         #         [1.0, 255, 255, 255, 255],  # White
         #     ]
         # },
-        {
-            "cips_pipeline_output_dir_comment": "WBW",
-            "vp_output_dir_comment": "PointWiseCustom",
-            "vp_Pseudocolor_colortable": "PointWise",
-            "vp_invertColorTable": 0,
-            "pointwise_color_points": [
-                [0.0, 255, 255, 255, 255],  # White
-                [0.5, 0, 0, 0, 255], # Black
-                [1.0, 255, 255, 255, 255],  # White
-            ]
-        },
+        # {
+        #     "cips_pipeline_output_dir_comment": "WBW",
+        #     "vp_output_dir_comment": "PointWiseCustom",
+        #     "vp_Pseudocolor_colortable": "PointWise",
+        #     "vp_invertColorTable": 0,
+        #     "pointwise_color_points": [
+        #         [0.0, 255, 255, 255, 255],  # White
+        #         [0.5, 0, 0, 0, 255], # Black
+        #         [1.0, 255, 255, 255, 255],  # White
+        #     ]
+        # },
         {
             "cips_pipeline_output_dir_comment": "WWBBWW",
             "vp_output_dir_comment": "PointWiseCustom",

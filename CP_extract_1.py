@@ -290,11 +290,14 @@ def CP_extract_1(
 
         ### Fill a DataFrame row
         # Data from VisIt
-        extracted_df.at[i, 'Plot_VisIt']                = VisIt_data_df.at[i, 'Plot_VisIt']
-        extracted_df.at[i, 'Image_filename_VisIt']      = VisIt_data_df.at[i, 'Image_filename_VisIt']
-        extracted_df.at[i, 'State_range_VisIt']         = VisIt_data_df.at[i, 'State_range_VisIt']
-        extracted_df.at[i, 'Time_VisIt']                = VisIt_data_df.at[i, 'Time_VisIt']
-        extracted_df.at[i, 'R_SF_Average_VisIt']        = VisIt_data_df.at[i, 'R_SF_Average_VisIt']
+        extracted_df.at[i, 'Plot_VisIt']                            = VisIt_data_df.at[i, 'Plot_VisIt']
+        extracted_df.at[i, 'Image_filename_VisIt']                  = VisIt_data_df.at[i, 'Image_filename_VisIt']
+        extracted_df.at[i, 'State_range_VisIt']                     = VisIt_data_df.at[i, 'State_range_VisIt']
+        extracted_df.at[i, 'Time_VisIt']                            = VisIt_data_df.at[i, 'Time_VisIt']
+        extracted_df.at[i, 'R_SF_Average_VisIt']                    = VisIt_data_df.at[i, 'R_SF_Average_VisIt']
+        extracted_df.at[i, 'Min_Psuedocolored_variable_SF_VisIt']   = VisIt_data_df.at[i, 'Min_Psuedocolored_variable_SF_VisIt']
+        extracted_df.at[i, 'Max_Psuedocolored_variable_SF_VisIt']   = VisIt_data_df.at[i, 'Max_Psuedocolored_variable_SF_VisIt']
+
         # Data from Images
         extracted_df.at[i, 'image_file_name'] = os.path.basename(image_files[i]) # Store only filename
         extracted_df.at[i, 'image_file_path'] = image_files[i]
