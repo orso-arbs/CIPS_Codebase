@@ -11,7 +11,7 @@ def CIPS_variation_1(
     # General control
     input_dir=r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_variations",
     cips_variation_output_dir_manual="",
-    cips_variation_output_dir_comment="ColorTables_BW_variations_2000px", 
+    cips_variation_output_dir_comment="ColorTables_BW_variations_2000px_tlowthresh0p5", 
 ):
     #################################################### I/O
     cips_variations_1_output_dir = F_1.F_out_dir(input_dir = input_dir, script_path = __file__, output_dir_comment = cips_variation_output_dir_comment, output_dir_manual = cips_variation_output_dir_manual)

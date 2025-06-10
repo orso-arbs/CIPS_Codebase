@@ -5,6 +5,7 @@ import glob
 import os
 import pandas as pd
 import torch
+import gc
 
 import sys
 import os
@@ -27,7 +28,7 @@ def CP_segment_1(
     CP_model_type_for_diameter_estimation = 'cyto3', # New parameter for diameter estimation model
     gpu = True, CP_empty_cache_onoff = True, # model parameters
     diameter_estimate_guess_px = None, channels = [0,0], flow_threshold = 0.7, cellprob_threshold = 0.0, resample = True, niter = 0, # model.eval() parameters
-    augment=True, tile_overlap=0.1, bsize=8, # tiling/augment parameters for model.eval()
+    batch_size=8, augment=True, tile_overlap=0.1, bsize=8, # tiling/augment parameters for model.eval()
     CP_default_plot_onoff = 1, CP_default_image_onoff = 1, CP_default_seg_file_onoff = 1, # output default Cellpose files
 
     # output and logging 
@@ -145,8 +146,9 @@ def CP_segment_1(
 
     #################################################### CellPose
     if CP_empty_cache_onoff == True: # Clear GPU memory before starting Cellpose segmentation
+        gc.collect() # Collect garbage to free up memory
         torch.cuda.empty_cache()# Clear GPU memory before starting Cellpose segmentation
-        print("\n Cleared CUDA GPU memory") if CP_segment_log_level >= 2 else None
+        print("\n Cleared CUDA GPU memory") if CP_segment_log_level >= 1 else None
 
     io.logger_setup() if CP_segment_log_level >= 2 else None
 
@@ -184,6 +186,7 @@ def CP_segment_1(
         channels=channels,
         flow_threshold=flow_threshold,
         cellprob_threshold=cellprob_threshold,
+        batch_size = batch_size, # number of 224x224 patches to run simultaneously on the GPU. Reducing can reduce RAM memory usage
         augment=augment,  # Use augment parameter from function signature
         tile_overlap=tile_overlap, # Use tile_overlap parameter
         bsize=bsize, # Use bsize parameter

@@ -161,7 +161,7 @@ def Visit_projector_1(
     launch_profile.numProcessors = 4
     launch_profile.numNodes = 1
     launch_profile.timeLimit = "05:00:00"
-    additional_args = f"--mem-per-cpu=2G --tmp=2G --output=/cluster/scratch/orsob/orsoMT_orsob/VisIt_logs_and_error_output/%j_visit.out --error=/cluster/scratch/orsob/orsoMT_orsob/VisIt_logs_and_error_output/%j_visit.err"
+    additional_args = f"--mem-per-cpu=6G --tmp=6G --output=/cluster/scratch/orsob/orsoMT_orsob/VisIt_logs_and_error_output/%j_visit.out --error=/cluster/scratch/orsob/orsoMT_orsob/VisIt_logs_and_error_output/%j_visit.err"
     launch_profile.launchArgs = additional_args # Set launchArgs on the retrieved profile object
     print(f"Updated launchArgs: {launch_profile.launchArgs}") if Visit_projector_1_log_level >= 2 else None
     

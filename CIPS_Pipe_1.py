@@ -90,9 +90,10 @@ def CIPS_pipeline(
     cps_cellprob_threshold=0.0, 
     cps_resample=True, 
     cps_niter=0,
+    cps_batch_size=6,
     cps_augment=True, # New
     cps_tile_overlap=0.1, # New
-    cps_bsize=160, # Stick to multiples of 16. Cellpose uses 224 by default.
+    cps_bsize=224, # Stick to multiples of 16. Cellpose uses 224 by default.
     cps_CP_default_plot_onoff=0, 
     cps_CP_default_image_onoff=0, 
     cps_CP_default_seg_file_onoff=1,
@@ -381,6 +382,7 @@ def CIPS_pipeline(
                         cellprob_threshold=cps_cellprob_threshold,
                         resample=cps_resample,
                         niter=cps_niter,
+                        batch_size=cps_batch_size,
                         augment=cps_augment, # New
                         tile_overlap=cps_tile_overlap, # New
                         bsize=cps_bsize, # New
@@ -625,35 +627,21 @@ if __name__ == "__main__":
     # )
 
     # Example: Skip Visit_Projector, use its existing output, and run the rest
-    # CIPS_pipeline(
-    #     cips_pipeline_global_log_level=None, # Example: Set global log level
-        
-    #     run_visit_projector = False, 
-        
-    #     # S 0 and 50 from visit
-    #     cips_VP1_output_dir_override = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\SF_CP_analysis_pipeline_data\Visit_Projector_1_2025-05-10_19-02-28_A11_2_states",
-    #     # BW visit output below
-    #     #cips_VP1_output_dir_override = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_variations\20250607_2240236\20250607_2240236\20250607_2240246",
-    #     # WBW visit output below
-    #     #cips_VP1_output_dir_override = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_variations\20250609_0028398\20250609_0028398\20250609_0028408",
-
-    #     run_cp_segment=True,
-    #     run_cp_extract=True,
-    #     run_dimentionalise=True,
-    #     run_plotter_1=True,
-    #     run_plotter_4=True,
-    #     run_plotter_2=True,
-    #     run_plotter_3_panel=True,
-    #     run_plotter_6_colortables=True, # New
-    # )
-
-
     CIPS_pipeline(
-        cips_pipeline_output_dir_comment="S0a50", 
         cips_pipeline_global_log_level=None, # Example: Set global log level
+        
+        run_visit_projector = False, 
+        
+        # S 0 and 50 from visit
+        #cips_VP1_output_dir_override = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_Pipe_Default_dir\20250609_2255090\20250609_2255114",
+        # BW visit output below
+        #cips_VP1_output_dir_override = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_variations\20250607_2240236\20250607_2240236\20250607_2240246",
+        # WBW visit output below
+        #cips_VP1_output_dir_override = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_variations\20250609_0028398\20250609_0028398\20250609_0028408",
 
-        vp_State_range_manual = [0,50], # Example: Specify state range for Visit_Projector_1
-        run_visit_projector = True, 
+        #WWBBWW
+        cips_VP1_output_dir_override = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_variations\20250610_0004544\20250610_0004544\20250610_0004569",
+
         run_cp_segment=True,
         run_cp_extract=True,
         run_dimentionalise=True,
@@ -663,6 +651,23 @@ if __name__ == "__main__":
         run_plotter_3_panel=True,
         run_plotter_6_colortables=True, # New
     )
+
+
+    # CIPS_pipeline(
+    #     cips_pipeline_output_dir_comment="", 
+    #     cips_pipeline_global_log_level=None,
+
+    #     vp_State_range_manual = [],
+    #     run_visit_projector = True, 
+    #     run_cp_segment=True,
+    #     run_cp_extract=True,
+    #     run_dimentionalise=True,
+    #     run_plotter_1=True,
+    #     run_plotter_4=True,
+    #     run_plotter_2=True,
+    #     run_plotter_3_panel=True,
+    #     run_plotter_6_colortables=True,
+    # )
 
 
 
