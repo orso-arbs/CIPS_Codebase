@@ -16,6 +16,7 @@ import plot2_CPvsA11 as p2
 import plot3_CPvsA11_Panel as p3_panel
 import plot4_dimentions as p4
 import plot6_colortables as p6c # Import for the new plotter_6_colortables
+import Spherical_Reconstruction_1 as SR1  # Import the new spherical reconstruction module
 
 
 @F_1.ParameterLog(max_size = 1024 * 10) # 10KB 
@@ -31,6 +32,7 @@ def CIPS_pipeline(
     cips_CPs1_output_dir_override="",
     cips_CPe1_output_dir_override="",
     cips_d2_output_dir_override="",
+    cips_SR1_output_dir_override="",  # New override for spherical reconstruction stage
 
     # Visit_projector_1 args
     vp_input_dir="",
@@ -93,7 +95,8 @@ def CIPS_pipeline(
     cps_batch_size=6,
     cps_augment=True, # New
     cps_tile_overlap=0.1, # New
-    cps_bsize=224, # Stick to multiples of 16. Cellpose uses 224 by default.
+    cps_bsize=160, # Stick to multiples of 16. Cellpose uses 224 by default.
+    cps_max_images_per_batch=40,  # New parameter for manual batch size
     cps_CP_default_plot_onoff=0, 
     cps_CP_default_image_onoff=0, 
     cps_CP_default_seg_file_onoff=1,
@@ -111,6 +114,13 @@ def CIPS_pipeline(
     d2_output_dir_comment="",    
     d2_CP_dimentionalise_log_level=1,
 
+    # Spherical_Reconstruction_1 args
+    sr_output_dir_manual="",
+    sr_output_dir_comment="",
+    sr_Spherical_Reconstruction_log_level=2,
+    sr_show_plots=False,
+    sr_plot_CST_detJ=False,
+    
     # plotter_1 args
     p1_output_dir_manual="",
     p1_output_dir_comment="",
@@ -166,9 +176,10 @@ def CIPS_pipeline(
     # Control flags for pipeline sections
     run_visit_projector=True,
     run_cp_segment=True,
-    run_plotter_6_colortables=True, # New control flag
+    run_plotter_6_colortables=True,
     run_cp_extract=True,
     run_dimentionalise=True,
+    run_spherical_reconstruction=True,  # New control flag
     run_plotter_1=True,
     run_plotter_4=True,
     run_plotter_2=True,
@@ -214,6 +225,11 @@ def CIPS_pipeline(
         Fraction of overlap between tiles if cps_tile is True. Default is 0.1.
     cps_bsize : int, optional
         Size of tiles in pixels if cps_tile is True. Default is 224.
+    cps_max_images_per_batch : int or None, optional
+        Maximum number of images to process in a single batch for CP_segment_1.
+        If None, all images are processed in one batch. If the number of images
+        exceeds this value, they will be processed in multiple batches.
+        This helps manage memory usage for large datasets. Default is None.
     cps_CP_default_plot_onoff : int, optional
         Default plot on/off for CP_segment_1. Default is 1.
     cps_CP_default_image_onoff : int, optional
@@ -228,6 +244,10 @@ def CIPS_pipeline(
         Output directory comment for CP_extract_1. Default is "".
     d2_output_dir_manual : str, optional
         Manual output directory for dimentionalise_2_from_VisIt_R_Average. Default is "".
+    sr_output_dir_manual : str, optional
+        Manual output directory for Spherical_Reconstruction_1. Default is "".
+    sr_output_dir_comment : str, optional
+        Output directory comment for Spherical_Reconstruction_1. Default is "".
     p1_Plot_log_level : int, optional
         Log level for plotter_1. Default is 1.
     p2_Plot_log_level : int, optional
@@ -280,6 +300,8 @@ def CIPS_pipeline(
         If run_cp_extract is False, use this path as CPe1.CP_extract_1 output. Default is "".
     cips_d2_output_dir_override : str, optional
         If run_dimentionalise is False, use this path as d2.dimentionalise_2_from_VisIt_R_Average output. Default is "".
+    cips_SR1_output_dir_override : str, optional
+        If run_spherical_reconstruction is False, use this path as SR1.Spherical_Reconstruction_1 output. Default is "".
     """
 
     original_stdout = sys.stdout
@@ -327,6 +349,7 @@ def CIPS_pipeline(
             CPe1_output_dir = None
             d2_output_dir = None
             p6c_output_dir = None # New
+            SR1_output_dir = None # New
 
             #########################################        Visit
 
@@ -386,6 +409,7 @@ def CIPS_pipeline(
                         augment=cps_augment, # New
                         tile_overlap=cps_tile_overlap, # New
                         bsize=cps_bsize, # New
+                        max_images_per_batch=cps_max_images_per_batch,  # New parameter
                         CP_default_plot_onoff=cps_CP_default_plot_onoff,
                         CP_default_image_onoff=cps_CP_default_image_onoff,
                         CP_default_seg_file_onoff=cps_CP_default_seg_file_onoff,
@@ -440,8 +464,30 @@ def CIPS_pipeline(
                 else:
                     print(f"--- Skipping dimentionalise_2_from_VisIt_R_Average --- No valid override directory provided. Subsequent steps requiring its output may be skipped.")
 
-            # At this point, d2_output_dir is equivalent to d1_output_dir in the original script for plotting
-            plot_input_dir = d2_output_dir
+            #########################################        Spherical Reconstruction
+            if run_spherical_reconstruction:
+                if d2_output_dir:
+                    print(f"--- Running Spherical_Reconstruction_1 ---")
+                    SR1_output_dir = SR1.Spherical_Reconstruction_1(
+                        input_dir=d2_output_dir,
+                        Spherical_Reconstruction_log_level=sr_Spherical_Reconstruction_log_level,
+                        output_dir_manual=sr_output_dir_manual,
+                        output_dir_comment=sr_output_dir_comment,
+                        show_plots=sr_show_plots,
+                        plot_CST_detJ=sr_plot_CST_detJ,
+                    )
+                else:
+                    print("--- Skipping Spherical_Reconstruction_1 (missing dimentionalisation output) ---")
+            else:
+                if cips_SR1_output_dir_override and os.path.isdir(cips_SR1_output_dir_override):
+                    SR1_output_dir = cips_SR1_output_dir_override
+                    print(f"--- Skipping Spherical_Reconstruction_1 --- Using provided output directory: {SR1_output_dir}")
+                else:
+                    print(f"--- Skipping Spherical_Reconstruction_1 --- No valid override directory provided.")
+                    SR1_output_dir = None
+
+            # Use SR1_output_dir for downstream processing if available, otherwise fall back to d2_output_dir
+            plot_input_dir = SR1_output_dir if SR1_output_dir else d2_output_dir
 
             #########################################        Plot
             if run_plotter_1:
@@ -547,9 +593,10 @@ def CIPS_pipeline(
                 "cips_pipeline_output_dir": cips_pipeline_output_dir,
                 "VP1_output_dir": VP1_output_dir,
                 "CPs1_output_dir": CPs1_output_dir,
-                "p6c_output_dir": p6c_output_dir, # New
+                "p6c_output_dir": p6c_output_dir,
                 "CPe1_output_dir": CPe1_output_dir,
-                "d2_output_dir": d2_output_dir, 
+                "d2_output_dir": d2_output_dir,
+                "SR1_output_dir": SR1_output_dir,  # Add SR1 output to results
                 "plot_input_dir": plot_input_dir
             }
             results = list(results_dict.values())
@@ -608,68 +655,36 @@ def CIPS_pipeline(
 if __name__ == "__main__":
     print("Running CIPS-Pipeline.")
     
-    # Example of running from a pre-existing Visit_Projector_1 output
-    # Set run_visit_projector=False and provide the path to cips_VP1_output_dir_override
-    # All subsequent steps will run based on this provided directory.
-    
-    # To run all stages:
-    # CIPS_pipeline(
-    #     cips_pipeline_global_log_level=None,
-
-    #     run_visit_projector=True,
-    #     run_cp_segment=True,
-    #     run_cp_extract=True,
-    #     run_dimentionalise=True,
-    #     run_plotter_1=True,
-    #     run_plotter_4=True,
-    #     run_plotter_2=True,
-    #     run_plotter_3_panel=True,
-    # )
-
     # Example: Skip Visit_Projector, use its existing output, and run the rest
     CIPS_pipeline(
         cips_pipeline_global_log_level=None, # Example: Set global log level
-        
+        cips_pipeline_output_dir_comment="",
         run_visit_projector = False, 
         
-        # S 0 and 50 from visit
-        #cips_VP1_output_dir_override = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_Pipe_Default_dir\20250609_2255090\20250609_2255114",
-        # BW visit output below
-        #cips_VP1_output_dir_override = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_variations\20250607_2240236\20250607_2240236\20250607_2240246",
-        # WBW visit output below
-        #cips_VP1_output_dir_override = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_variations\20250609_0028398\20250609_0028398\20250609_0028408",
+        # 7 images
+        #cips_VP1_output_dir_override = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_misc\VisIt_output_test_7_images",
 
-        #WWBBWW
+        # WWBBWW
         cips_VP1_output_dir_override = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_variations\20250610_0004544\20250610_0004544\20250610_0004569",
+        
+        # batch processing
+        cps_max_images_per_batch=40,
+        cps_batch_size=4,
+        cps_augment=True, # New
+        cps_tile_overlap=0.1, # New
+        cps_bsize=160, # Stick to multiples of 16. Cellpose uses 224 by default.
 
+        cps_output_dir_comment="2000px_manualbatch40_batchsize6_bsize160",
         run_cp_segment=True,
         run_cp_extract=True,
         run_dimentionalise=True,
+        run_spherical_reconstruction=True,  # Run the new spherical reconstruction stage
         run_plotter_1=True,
         run_plotter_4=True,
         run_plotter_2=True,
         run_plotter_3_panel=True,
         run_plotter_6_colortables=True, # New
     )
-
-
-    # CIPS_pipeline(
-    #     cips_pipeline_output_dir_comment="", 
-    #     cips_pipeline_global_log_level=None,
-
-    #     vp_State_range_manual = [],
-    #     run_visit_projector = True, 
-    #     run_cp_segment=True,
-    #     run_cp_extract=True,
-    #     run_dimentionalise=True,
-    #     run_plotter_1=True,
-    #     run_plotter_4=True,
-    #     run_plotter_2=True,
-    #     run_plotter_3_panel=True,
-    #     run_plotter_6_colortables=True,
-    # )
-
-
 
     print("CIPS-Pipeline run finished.")
 

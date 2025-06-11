@@ -65,36 +65,33 @@ def Trackastra_tracking_1(
     
     try:
         with open(df_path, 'rb') as f:
-            df = pickle.load(f)
+            CIPS_DataFrame = pickle.load(f)
             
         if Trackastra_tracking_log_level >= 1:
             print(f"Loaded DataFrame from {df_path}")
-            print(f"DataFrame contains {len(df)} rows")
+            print(f"DataFrame contains {len(CIPS_DataFrame)} rows")
     except Exception as e:
         print(f"Error loading DataFrame from {df_path}: {e}")
         return output_dir
     
     # We know the structure of the DataFrame from CP_extract_1 function
-    # The key columns we need are: 'image_number'/'image_num' and 'masks'
+    # The key columns we need are: 'image_number' and 'masks'
     
-    # Check which column name is used for image number
-    image_num_col = 'image_number' if 'image_number' in df.columns else 'image_num'
-    
-    if image_num_col not in df.columns or 'masks' not in df.columns:
-        print(f"Error: DataFrame is missing required columns. Expected 'image_number'/'image_num' and 'masks'.")
-        print(f"Available columns: {df.columns.tolist()}")
+    if 'image_number' not in CIPS_DataFrame.columns or 'masks' not in CIPS_DataFrame.columns:
+        print(f"Error: DataFrame is missing required columns. Expected 'image_number' and 'masks'.")
+        print(f"Available columns: {CIPS_DataFrame.columns.tolist()}")
         return output_dir
     
     # Create input data for trackastra
     tracking_data = []
     
-    for idx, row in df.iterrows():
-        image_num = row[image_num_col]
+    for idx, row in CIPS_DataFrame.iterrows():
+        image_number = row['image_number']
         masks = row['masks']
         
         if masks is None or not isinstance(masks, np.ndarray):
             if Trackastra_tracking_log_level >= 1:
-                print(f"Warning: No valid mask data for image {image_num}, skipping")
+                print(f"Warning: No valid mask data for image {image_number}, skipping")
             continue
         
         # Find unique cell IDs in the mask (excluding background 0)
@@ -113,12 +110,12 @@ def Trackastra_tracking_1(
             centroid_y = np.mean(y_coords)
             centroid_x = np.mean(x_coords)
             
-            # Calculate area
+            # Calculate area (number of pixels that are not 0 in the mask)
             area = len(y_coords)
             
             # Store tracking data for this cell
             tracking_data.append({
-                'frame': image_num,
+                'frame': image_number,
                 'x': centroid_x,
                 'y': centroid_y,
                 'area': area,
@@ -130,26 +127,23 @@ def Trackastra_tracking_1(
         return output_dir
     
     # Convert to DataFrame for trackastra
-    tracking_df = pd.DataFrame(tracking_data)
+    raw_tracking_data_df = pd.DataFrame(tracking_data)
     
     if Trackastra_tracking_log_level >= 2:
-        print(f"Created tracking data with {len(tracking_df)} cell positions")
+        print(f"Created tracking data with {len(raw_tracking_data_df)} cell positions")
     
     # Save the raw tracking data
     tracking_df_path = os.path.join(output_dir, "raw_tracking_data.csv")
-    tracking_df.to_csv(tracking_df_path, index=False)
+    raw_tracking_data_df.to_csv(tracking_df_path, index=False)
     
+    
+    # tracking
     try:
-        # Setup device
-        device = "cuda" if torch.cuda.is_available() else "cpu"
-        if Trackastra_tracking_log_level >= 1:
-            print(f"Using device: {device}")
 
-        # Initialize trackastra tracker with pre-trained model
-        model = Trackastra.from_pretrained("general_2d", device=device)
-        
+        ########### Prepare data for tracking ##########
+
         # Prepare masks array (time, y, x)
-        masks_list = [row['masks'] for _, row in df.iterrows() if isinstance(row['masks'], np.ndarray)]
+        masks_list = [row['masks'] for _, row in CIPS_DataFrame.iterrows() if isinstance(row['masks'], np.ndarray)]
         masks_array = np.stack(masks_list)
         
         # Create dummy images array if needed for the model
@@ -158,9 +152,21 @@ def Trackastra_tracking_1(
         if Trackastra_tracking_log_level >= 1:
             print("Running trackastra tracking algorithm...")
         
+        # Setup device
+        device = "cuda" if torch.cuda.is_available() else "cpu"
+        if Trackastra_tracking_log_level >= 1:
+            print(f"Using device: {device}")
+
+        # Initialize trackastra tracker with pre-trained model
+        model = Trackastra.from_pretrained("general_2d", device=device)
+
         # Track the cells
         track_graph = model.track(images_array, masks_array, mode="greedy")
         
+
+
+        ########### Save tracking results ###########
+
         # Generate CTC format tracking results
         ctc_tracks, masks_tracked = graph_to_ctc(
             track_graph,
@@ -184,7 +190,7 @@ def Trackastra_tracking_1(
             print(f"Number of tracks: {len(ctc_tracks)}")
         
         # Create a tracked DataFrame with the original data and tracking results
-        tracked_df = df.copy()
+        tracked_df = CIPS_DataFrame.copy()
         tracked_df['tracks'] = pd.Series(ctc_tracks)
         tracked_df['masks_tracked'] = pd.Series([m for m in masks_tracked])
         
@@ -203,27 +209,8 @@ def Trackastra_tracking_1(
     return output_dir
 
 if __name__ == "__main__":
-    # Example usage when run as a script
-    import argparse
-    
-    parser = argparse.ArgumentParser(description="Track cells using trackastra")
-    parser.add_argument("--input_dir", required=True, help="Directory containing segmentation data")
-    parser.add_argument("--output_dir", default="", help="Output directory for tracking results")
-    parser.add_argument("--comment", default="", help="Comment for output directory name")
-    parser.add_argument("--max_distance", type=int, default=50, help="Maximum linking distance")
-    parser.add_argument("--min_track_length", type=int, default=5, help="Minimum track length to keep")
-    parser.add_argument("--track_type", choices=['tracklets', 'trajectories'], default='tracklets',
-                        help="Type of tracking to perform")
-    parser.add_argument("--log_level", type=int, default=2, help="Logging verbosity")
-    
-    args = parser.parse_args()
     
     Trackastra_tracking_1(
-        input_dir=args.input_dir,
-        output_dir_manual=args.output_dir,
-        output_dir_comment=args.comment,
-        max_distance=args.max_distance,
-        min_track_length=args.min_track_length,
-        track_type=args.track_type,
-        Trackastra_tracking_log_level=args.log_level
+        input_dir = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_variations\20250607_2240236\20250608_0303173\20250608_0303173\20250608_0409296\20250608_0643128",
+        Trackastra_tracking_log_level = 2
     )

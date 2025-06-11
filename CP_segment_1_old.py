@@ -29,7 +29,6 @@ def CP_segment_1(
     gpu = True, CP_empty_cache_onoff = True, # model parameters
     diameter_estimate_guess_px = None, channels = [0,0], flow_threshold = 0.7, cellprob_threshold = 0.0, resample = True, niter = 0, # model.eval() parameters
     batch_size=8, augment=True, tile_overlap=0.1, bsize=8, # tiling/augment parameters for model.eval()
-    max_images_per_batch=None, # New parameter for manual batch processing
     CP_default_plot_onoff = 1, CP_default_image_onoff = 1, CP_default_seg_file_onoff = 1, # output default Cellpose files
 
     # output and logging 
@@ -92,10 +91,6 @@ def CP_segment_1(
     bsize : int, optional
         Size of tiles in pixels if `augment` is True. Recommended to be 224 as in training.
         Defaults to 224.
-    max_images_per_batch : int or None, optional
-        Maximum number of images to process in a single batch. If None, all images are processed in one batch.
-        If the number of images exceeds this value, they will be processed in multiple batches.
-        This helps manage memory usage for large datasets. Defaults to None.
     CP_default_plot_onoff : int, optional
         If 1, saves the default Cellpose segmentation plot for each image.
         Defaults to 0.
@@ -176,77 +171,27 @@ def CP_segment_1(
     # 3. Overwrite the segmentation model within the wrapper.
     CP_instance.cp = CP_model_for_segmentation_obj
 
-    # 4. Run evaluation with batch processing
+    # 4. Run evaluation.
+    #    CP_instance.eval() will now:
+    #      a) Use its original size model for diameter estimation (if diameter is None).
+    #      b) Use the new, swapped-in model (your CP_model_type_for_segmentation) for the actual segmentation.
     print(f"\nRunning network with segmentation model: {CP_instance.cp.pretrained_model}")
-    print(f"Estimating diameters with size model from: {CP_instance.sz.model_type}")
-    
-    # Initialize variables for storing results
-    all_masks = []
-    all_flows = []
-    all_styles = []
-    all_diameter_estimates = []
-    
-    # Determine number of batches
-    if max_images_per_batch is None or max_images_per_batch >= N_images:
-        # Process all images in one batch
-        batch_indices = [(0, N_images)]
-    else:
-        # Create batches of max_images_per_batch size
-        batch_indices = [(i, min(i + max_images_per_batch, N_images)) 
-                         for i in range(0, N_images, max_images_per_batch)]
-    
-    # Process each batch
-    for batch_idx, (start_idx, end_idx) in enumerate(batch_indices):
-        batch_images = all_images[start_idx:end_idx]
-        batch_size_actual = len(batch_images)
-        
-        print(f"\nProcessing batch {batch_idx + 1}/{len(batch_indices)} with {batch_size_actual} images (indices {start_idx}-{end_idx-1})")
-        
-        # Clear GPU memory between batches if requested
-        if CP_empty_cache_onoff > 0:
-            gc.collect()
-            torch.cuda.empty_cache()
-            print("\n Cleared CUDA GPU memory between batches") if CP_segment_log_level >= 1 else None
-        
-        # Run Cellpose on this batch
-        masks_batch, flows_batch, styles_batch, diameter_estimate_used_px_batch = CP_instance.eval(
-            batch_images,
-            diameter=diameter_estimate_guess_px,  # Set to None or 0 for auto-detection
-            channels=channels,
-            flow_threshold=flow_threshold,
-            cellprob_threshold=cellprob_threshold,
-            batch_size=batch_size,  # This is the internal Cellpose batch size
-            augment=augment,
-            tile_overlap=tile_overlap,
-            bsize=bsize,
-            resample=resample,
-            niter=niter,
-        )
-        
-        # Store results from this batch
-        all_masks.extend(masks_batch)
-        all_flows.extend(flows_batch)
-        all_styles.extend(styles_batch)
-        
-        # Handle diameter estimates
-        if isinstance(diameter_estimate_used_px_batch, int):
-            # If a single value is returned for the whole batch
-            all_diameter_estimates.extend([diameter_estimate_used_px_batch] * batch_size_actual)
-        elif isinstance(diameter_estimate_used_px_batch, (list, np.ndarray)):
-            # If a list/array of values is returned
-            all_diameter_estimates.extend(diameter_estimate_used_px_batch)
-        else:
-            # Unexpected type, just store as is
-            all_diameter_estimates.append(diameter_estimate_used_px_batch)
-    
-    # Make sure all results have the correct length
-    masks = all_masks
-    flows = all_flows
-    styles = all_styles
-    diameter_estimate_used_px = np.array(all_diameter_estimates)
-    
-    print(f"\nProcessed a total of {len(masks)} images in {len(batch_indices)} batches")
-    print("\n END of CellPose Segmenting --- END of The Simplified and Unified Way with Batch Processing ---")
+    print(f"Estimating diameters with size model from: {CP_instance.sz.model_type}") # This is the actual model used by size estimator
+
+    masks, flows, styles, diameter_estimate_used_px = CP_instance.eval(
+        all_images,
+        diameter=diameter_estimate_guess_px,  # Set to None or 0 for auto-detection
+        channels=channels,
+        flow_threshold=flow_threshold,
+        cellprob_threshold=cellprob_threshold,
+        batch_size = batch_size, # number of 224x224 patches to run simultaneously on the GPU. Reducing can reduce RAM memory usage
+        augment=augment,  # Use augment parameter from function signature
+        tile_overlap=tile_overlap, # Use tile_overlap parameter
+        bsize=bsize, # Use bsize parameter
+        resample=resample,
+        niter=niter,
+    )
+    print("\n END of CellPose Segmenting --- END of The Simplified and Unified Way ---")
 
 ########################### new up / old below
     # Commented out old logic - ensure it's not active or update if needed.
@@ -333,7 +278,6 @@ def CP_segment_1(
         "augment": augment, # Changed from "tile" to "augment", uses augment parameter
         "tile_overlap": tile_overlap,
         "bsize": bsize,
-        "max_images_per_batch": max_images_per_batch, # Add new parameter to settings
         "CP_segment_output_dir_comment": output_dir_comment,
     }
     # Convert to DataFrame (single row)
@@ -355,7 +299,6 @@ def CP_segment_1(
         F_1.debug_info(CP_settings_df["augment"]) # Updated key
         F_1.debug_info(CP_settings_df["tile_overlap"])
         F_1.debug_info(CP_settings_df["bsize"])
-        F_1.debug_info(CP_settings_df["max_images_per_batch"]) # Log the new parameter
         F_1.debug_info(CP_settings_df["CP_segment_output_dir_comment"])
 
     # Save as pickle

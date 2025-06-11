@@ -11,7 +11,7 @@ def CIPS_variation_1(
     # General control
     input_dir=r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_variations",
     cips_variation_output_dir_manual="",
-    cips_variation_output_dir_comment="ColorTables_BW_variations_2000px_tlowthresh0p5", 
+    cips_variation_output_dir_comment="makeItRun_WWBBWW_2000px_tlowthresh0p5", 
 ):
     #################################################### I/O
     cips_variations_1_output_dir = F_1.F_out_dir(input_dir = input_dir, script_path = __file__, output_dir_comment = cips_variation_output_dir_comment, output_dir_manual = cips_variation_output_dir_manual)
@@ -24,121 +24,56 @@ def CIPS_variation_1(
 
     # Define parameter variations
     variations = [
-        # {
-        #     "cips_pipeline_output_dir_comment": "BW",
-        #     "vp_output_dir_comment": "PointWiseCustom",
-        #     "vp_Pseudocolor_colortable": "PointWise",
-        #     "vp_invertColorTable": 0,
-        #     "pointwise_color_points": [
-        #         [0.0, 0, 0, 0, 255], # Black
-        #         [1.0, 255, 255, 255, 255],  # White
-        #     ]
-        # },
-        # {
-        #     "cips_pipeline_output_dir_comment": "BBWW",
-        #     "vp_output_dir_comment": "PointWiseCustom",
-        #     "vp_Pseudocolor_colortable": "PointWise",
-        #     "vp_invertColorTable": 0,
-        #     "pointwise_color_points": [
-        #         [0.0, 0, 0, 0, 255], # Black
-        #         [0.3, 0, 0, 0, 255], # Black
-        #         [0.7, 255, 255, 255, 255],  # White
-        #         [1.0, 255, 255, 255, 255],  # White
-        #     ]
-        # },
-        # {
-        #     "cips_pipeline_output_dir_comment": "WBW",
-        #     "vp_output_dir_comment": "PointWiseCustom",
-        #     "vp_Pseudocolor_colortable": "PointWise",
-        #     "vp_invertColorTable": 0,
-        #     "pointwise_color_points": [
-        #         [0.0, 255, 255, 255, 255],  # White
-        #         [0.5, 0, 0, 0, 255], # Black
-        #         [1.0, 255, 255, 255, 255],  # White
-        #     ]
-        # },
         {
-            "cips_pipeline_output_dir_comment": "WWBBWW",
-            "vp_output_dir_comment": "PointWiseCustom",
-            "vp_Pseudocolor_colortable": "PointWise",
-            "vp_invertColorTable": 0,
-            "pointwise_color_points": [
-                [0.0, 255, 255, 255, 255],  # White
-                [0.3, 255, 255, 255, 255],  # White
-                [0.45, 0, 0, 0, 255], # Black
-                [0.55, 0, 0, 0, 255], # Black
-                [0.7, 255, 255, 255, 255],  # White
-                [1.0, 255, 255, 255, 255],  # White
-            ]
+            "cips_pipeline_output_dir_comment": "WWBBWW_2000px_manualbatch40_batchsize4_bsize160",
+            "run_visit_projector": False, 
+            "cips_VP1_output_dir_override": r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_variations\BW vars\20250610_0004544\20250610_0004569",
+            "cps_output_dir_comment": "WWBBWW_2000px_manualbatch40_batchsize4_bsize160",
+            "cps_batch_size": 4,
+            "cps_bsize": 160,
         },
         {
-            "cips_pipeline_output_dir_comment": "BWB",
-            "vp_output_dir_comment": "PointWiseCustom",
-            "vp_Pseudocolor_colortable": "PointWise",
-            "vp_invertColorTable": 0,
-            "pointwise_color_points": [
-                [0.0, 0, 0, 0, 255], # Black
-                [0.5, 255, 255, 255, 255],  # White
-                [1.0, 0, 0, 0, 255], # Black
-            ]
+            "cips_pipeline_output_dir_comment": "WWBBWW_2000px_manualbatch40_batchsize4_bsize80",
+            "run_visit_projector": False, 
+            "cips_VP1_output_dir_override": r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_variations\BW vars\20250610_0004544\20250610_0004569",
+            "cps_output_dir_comment": "WWBBWW_2000px_manualbatch40_batchsize4_bsize80",
+            "cps_batch_size": 4,
+            "cps_bsize": 80,
         },
         {
-            "cips_pipeline_output_dir_comment": "BBWWBB",
-            "vp_output_dir_comment": "PointWiseCustom",
-            "vp_Pseudocolor_colortable": "PointWise",
-            "vp_invertColorTable": 0,
-            "pointwise_color_points": [
-                [0.0, 0, 0, 0, 255],  # Black
-                [0.3, 0, 0, 0, 255],   # Black
-                [0.45, 255, 255, 255, 255],  # White
-                [0.55, 255, 255, 255, 255],  # White
-                [0.7, 0, 0, 0, 255],     # Black
-                [1.0, 0, 0, 0, 255]    # Black
-            ]
-        },
-
-#moved last as could be with inverted colors
-        {
-            "cips_pipeline_output_dir_comment": "WB",
-            "vp_output_dir_comment": "PointWiseCustom",
-            "vp_Pseudocolor_colortable": "PointWise",
-            "vp_invertColorTable": 0,
-            "pointwise_color_points": [
-                [0.0, 255, 255, 255, 255],  # White
-                [1.0, 0, 0, 0, 255], # Black
-            ]
+            "cips_pipeline_output_dir_comment": "WWBBWW_2000px_manualbatch40_batchsize2_bsize160",
+            "run_visit_projector": False, 
+            "cips_VP1_output_dir_override": r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_variations\BW vars\20250610_0004544\20250610_0004569",
+            "cps_output_dir_comment": "WWBBWW_2000px_manualbatch40_batchsize2_bsize160",
+            "cps_batch_size": 2,
+            "cps_bsize": 160,
         },
         {
-            "cips_pipeline_output_dir_comment": "WWBB",
-            "vp_output_dir_comment": "PointWiseCustom",
-            "vp_Pseudocolor_colortable": "PointWise",
-            "vp_invertColorTable": 0,
-            "pointwise_color_points": [
-                [0.0, 255, 255, 255, 255],  # White
-                [0.3, 255, 255, 255, 255],  # White
-                [0.7, 0, 0, 0, 255], # Black
-                [1.0, 0, 0, 0, 255], # Black
-            ]
+            "cips_pipeline_output_dir_comment": "WWBBWW_2000px_manualbatch40_batchsize2_bsize80",
+            "run_visit_projector": False, 
+            "cips_VP1_output_dir_override": r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_variations\BW vars\20250610_0004544\20250610_0004569",
+            "cps_output_dir_comment": "WWBBWW_2000px_manualbatch40_batchsize2_bsize80",
+            "cps_batch_size": 2,
+            "cps_bsize": 80,
         },
-
     ]
 
     # run variations
     for i, var_params in enumerate(variations):
-        print(f"\n\n\n--- Starting Variation {i+1}/{len(variations)}: {var_params['vp_output_dir_comment']} ---")
+        print(f"\n\n\n--- Starting Variation {i+1}/{len(variations)}: {var_params['cips_pipeline_output_dir_comment']} ---")
 
         # Prepare arguments for CIPS_pipeline
         pipeline_args = {
             'input_dir': cips_variations_1_output_dir,
             "cips_pipeline_output_dir_comment": var_params["cips_pipeline_output_dir_comment"],
 
-            # Visit_Projector_1 arguments
-            "vp_output_dir_comment": var_params["vp_output_dir_comment"],
-            "vp_Pseudocolor_colortable": var_params["vp_Pseudocolor_colortable"],
-            "vp_invertColorTable": var_params.get("vp_invertColorTable", 0),
-                        
-            # Add pointwise_color_points if present
-            "pointwise_color_points": var_params.get("pointwise_color_points", None),
+            # run segmentation only
+            "run_visit_projector": var_params["run_visit_projector"],
+            "cips_VP1_output_dir_override": var_params["cips_VP1_output_dir_override"],
+            "cps_output_dir_comment": var_params["cps_output_dir_comment"],
+            "cps_batch_size": var_params["cps_batch_size"],
+            "cps_bsize": var_params["cps_bsize"],
+
         }
 
         try:
@@ -174,3 +109,5 @@ def CIPS_variation_1(
 
 if __name__ == "__main__":
     CIPS_variation_1()
+
+

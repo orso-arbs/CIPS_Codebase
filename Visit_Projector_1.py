@@ -486,12 +486,12 @@ def Visit_projector_1(
     print(VisIt_data_df)
 
     # save to pickle
-    pkl_filename = os.path.join(output_dir, "Visit_projector_1_data.pkl") # Use os.path.join
+    pkl_filename = os.path.join(output_dir, "Visit_projector_1_data.pkl")
     VisIt_data_df.to_pickle(pkl_filename)
     print(f"Saved extracted DataFrame to {pkl_filename}") if Visit_projector_1_log_level >= 2 else None
 
     # save to csv
-    csv_filename = os.path.join(output_dir, "Visit_projector_1_data.csv") # Use os.path.join
+    csv_filename = os.path.join(output_dir, "Visit_projector_1_data.csv")
     VisIt_data_df.to_csv(csv_filename, sep='\t', index=False)
     print(f"Saved extracted DataFrame to {csv_filename}") if Visit_projector_1_log_level >= 2 else None
 
