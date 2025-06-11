@@ -13,6 +13,7 @@ from cellpose import utils # Needed for utils.diameters
 def Spherical_Reconstruction_Auxillary_1(
     # input
     input_dir, # Should be the output directory of CP_dimentionalise
+    dimentionalised_df=None,  # Add new parameter to accept DataFrame
 
     # output and logging
     Spherical_Reconstruction_log_level = 2,
@@ -28,14 +29,19 @@ def Spherical_Reconstruction_Auxillary_1(
 
     #################################################### Load Extracted Data
 
-    dimentionalised_data_path = os.path.join(input_dir, 'dimentionalised_DataFrame.pkl')
-    print(f"\n Loading extracted data from: {dimentionalised_data_path} \n") if Spherical_Reconstruction_log_level >= 1 else None
-    try:
-        dimentionalised_df = pd.read_pickle(dimentionalised_data_path)
-    except FileNotFoundError:
-        print(f"Error: Could not find extracted data file at {dimentionalised_data_path}")
-        print("Ensure CP_dimentionalise ran successfully and produced 'dimentionalised_DataFrame.pkl' in the specified input directory.")
-        return None # Or raise an error
+    # If DataFrame is provided, use it directly
+    if dimentionalised_df is not None:
+        print(f"Using provided DataFrame") if Spherical_Reconstruction_log_level >= 1 else None
+    else:
+        # Load from file as before
+        dimentionalised_data_path = os.path.join(input_dir, 'dimentionalised_DataFrame.pkl')
+        print(f"\n Loading extracted data from: {dimentionalised_data_path} \n") if Spherical_Reconstruction_log_level >= 1 else None
+        try:
+            dimentionalised_df = pd.read_pickle(dimentionalised_data_path)
+        except FileNotFoundError:
+            print(f"Error: Could not find extracted data file at {dimentionalised_data_path}")
+            print("Ensure CP_dimentionalise ran successfully and produced 'dimentionalised_DataFrame.pkl' in the specified input directory.")
+            return None # Or raise an error
     
     # Get number of images/rows from loaded data
     N_images = len(dimentionalised_df)
@@ -453,12 +459,12 @@ def Spherical_Reconstruction_1(
     
     # Initialize lists for all new columns we'll add
     new_columns = [
-        'A_cell_distribution_px2', 'd_cell_distribution_px', 
-        'd_cell_distribution_nonDim', 'A_cell_SRec_distribution_nonDim2',
-        'A_cell_SRec_distribution_px2', 'd_cell_SRec_distribution_nonDim',
-        'd_cell_SRec_distribution_px', 'centroid_x_distribution_px',
-        'centroid_y_distribution_px', 'centroid_x_distribution_nonDim',
-        'centroid_z_distribution_nonDim'
+        'A_cell_distribution_px2', 'A_cell_distribution_nonDim2',  # Added new column
+        'd_cell_distribution_px', 'd_cell_distribution_nonDim', 
+        'A_cell_SRec_distribution_nonDim2', 'A_cell_SRec_distribution_px2', 
+        'd_cell_SRec_distribution_nonDim', 'd_cell_SRec_distribution_px', 
+        'centroid_x_distribution_px', 'centroid_y_distribution_px', 
+        'centroid_x_distribution_nonDim', 'centroid_z_distribution_nonDim'
     ]
     
     for col in new_columns:
@@ -487,6 +493,7 @@ def Spherical_Reconstruction_1(
 
         # Initialize lists for each cell property
         A_cell_distribution_px2 = []
+        A_cell_distribution_nonDim2 = []
         d_cell_distribution_px = []
         d_cell_distribution_nonDim = []
         A_cell_SRec_distribution_nonDim2 = []
@@ -512,8 +519,9 @@ def Spherical_Reconstruction_1(
             centroid_y_px = np.mean(y_coords)
             centroid_x_px = np.mean(x_coords)
             
-            # 1. Calculate cell area in pixels
+            # 1. Calculate cell area in pixels and in nonDimensional units
             A_cell_px2 = len(y_coords)
+            A_cell_nonDim = A_cell_px2 * (d_T_per_px ** 2)  # Convert area to non-dimensional units
             
             # 2. Calculate cell diameter in pixels using area
             d_cell_px = 2 * np.sqrt(A_cell_px2 / np.pi)
@@ -564,6 +572,7 @@ def Spherical_Reconstruction_1(
             
             # Append values to respective lists
             A_cell_distribution_px2.append(A_cell_px2)
+            A_cell_distribution_nonDim2.append(A_cell_nonDim)
             d_cell_distribution_px.append(d_cell_px)
             d_cell_distribution_nonDim.append(d_cell_nonDim)
             A_cell_SRec_distribution_nonDim2.append(A_cell_SRec_nonDim2)
@@ -581,6 +590,7 @@ def Spherical_Reconstruction_1(
 
         # Store lists in DataFrame - Convert to numpy arrays first
         SRec_df.at[i, 'A_cell_distribution_px2'] = np.array(A_cell_distribution_px2)
+        SRec_df.at[i, 'A_cell_distribution_nonDim2'] = np.array(A_cell_distribution_nonDim2)
         SRec_df.at[i, 'd_cell_distribution_px'] = np.array(d_cell_distribution_px)
         SRec_df.at[i, 'd_cell_distribution_nonDim'] = np.array(d_cell_distribution_nonDim)
         SRec_df.at[i, 'A_cell_SRec_distribution_nonDim2'] = np.array(A_cell_SRec_distribution_nonDim2)
@@ -688,6 +698,16 @@ def Spherical_Reconstruction_1(
     # Add a newline after the loop is done to move to next line
     if Spherical_Reconstruction_log_level >= 1:
         print()  # This will move to the next line after the progress updates
+
+    Spherical_Reconstruction_Auxillary_1(
+        input_dir=output_dir,
+        dimentionalised_df=dimentionalised_df,  # Pass the DataFrame
+        Spherical_Reconstruction_log_level=Spherical_Reconstruction_log_level,
+        output_dir_manual=output_dir_manual,
+        output_dir_comment=output_dir_comment,
+        show_plots=True,
+        plot_CST_detJ=False,
+    )
 
     return output_dir
 

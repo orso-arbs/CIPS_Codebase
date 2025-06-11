@@ -151,7 +151,7 @@ def dimentionalise_2_from_VisIt_R_Average(
         dimentionalised_df.at[i, 'diameter_estimate_used_nonDim'] = diameter_estimate_used_nonDim_i
         dimentionalised_df.at[i, 'diameter_mean_nonDim'] = diameter_mean_nonDim_i
         dimentionalised_df.at[i, 'diameter_median_nonDim'] = diameter_median_nonDim_i
-        dimentionalised_df.at[i, 'diameter_distribution_nonDim'] = diameter_distribution_nonDim_i # Assign the array
+        dimentionalised_df.at[i, 'diameter_distribution_nonDim'] = diameter_distribution_nonDim_i
         dimentionalised_df.at[i, 'A_image_nonDim2'] = A_image_nonDim
         dimentionalised_df.at[i, 'A_empty_nonDim2'] = A_empty_nonDim
         dimentionalised_df.at[i, 'A_SF_nonDim2'] = A_SF_nonDim

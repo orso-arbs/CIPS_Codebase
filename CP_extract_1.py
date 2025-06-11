@@ -319,7 +319,7 @@ def CP_extract_1(
         extracted_df.at[i, 'niter'] = niter
         # Data from seg file
         extracted_df.at[i, 'seg_file_name'] = seg_filenames[i]
-        extracted_df.at[i, 'seg_file_path'] = seg_files[i] # Store full path to seg file
+        extracted_df.at[i, 'seg_file_path'] = seg_files[i]
         extracted_df.at[i, 'ismanual'] = ismanual
         extracted_df.at[i, 'flows0'] = flow_i[0]
         extracted_df.at[i, 'flows1'] = flow_i[1]
@@ -330,7 +330,7 @@ def CP_extract_1(
         extracted_df.at[i, 'masks'] = masks_i
         extracted_df.at[i, 'diameter_estimate_used_px'] = diameter_estimate_used_px_i
         # Data calculated
-        extracted_df.at[i, 'diameter_training_px'] = final_diameter_training_px # Use the determined value
+        extracted_df.at[i, 'diameter_training_px'] = final_diameter_training_px
         extracted_df.at[i, 'diameter_mean_px'] = diameter_mean_px_i
         extracted_df.at[i, 'diameter_median_px'] = diameter_median_px_i
         extracted_df.at[i, 'diameter_distribution_px'] = diameter_array_px_i
