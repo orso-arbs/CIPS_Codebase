@@ -92,7 +92,7 @@ def CIPS_pipeline(
     cps_cellprob_threshold=0.0, 
     cps_resample=True, 
     cps_niter=0,
-    cps_batch_size=6,
+    cps_batch_size=4,
     cps_augment=True, # New
     cps_tile_overlap=0.1, # New
     cps_bsize=160, # Stick to multiples of 16. Cellpose uses 224 by default.
@@ -664,8 +664,8 @@ if __name__ == "__main__":
         # 7 images
         #cips_VP1_output_dir_override = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_misc\VisIt_output_test_7_images",
 
-        # WWBBWW
-        cips_VP1_output_dir_override = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_variations\20250610_0004544\20250610_0004544\20250610_0004569",
+        # WWBBWW                         
+        cips_VP1_output_dir_override = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_variations\BW vars\20250610_0004544\20250610_0004569",
         
         # batch processing
         cps_max_images_per_batch=40,

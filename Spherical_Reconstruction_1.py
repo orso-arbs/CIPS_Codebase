@@ -6,6 +6,7 @@ import Format_1 as F_1
 import skimage.io as sk_io
 import matplotlib.pyplot as plt
 from skimage import color
+import time
 
 from cellpose import utils # Needed for utils.diameters
 
@@ -18,7 +19,7 @@ def Spherical_Reconstruction_Auxillary_1(
     # output and logging
     Spherical_Reconstruction_log_level = 2,
     output_dir_manual = "", output_dir_comment = "",
-    show_plots = True, # New argument to control plt.show()
+    show_plots = False, # New argument to control plt.show()
     plot_CST_detJ = False, # New argument to control detJ plot generation
     ):
 
@@ -390,7 +391,7 @@ def Spherical_Reconstruction_1(
     # output and logging
     Spherical_Reconstruction_log_level = 2,
     output_dir_manual = "", output_dir_comment = "",
-    show_plots = True,
+    show_plots = False,
     plot_CST_detJ = False,
     plot_diameter_sanity_check_imagewise = False,  # Control per-image diameter plots
     plot_diameter_sanity_check_summary = True,    # Control summary diameter plot
@@ -476,8 +477,8 @@ def Spherical_Reconstruction_1(
         diameter_distribution_px = dimentionalised_df.loc[i, 'diameter_distribution_px']
         masks = dimentionalised_df.loc[i, 'masks']
         R_SF_px = dimentionalised_df.loc[i, 'R_SF_px']
-        d_T_per_px = dimentionalised_df.loc[i, 'd_T_per_px']
         R_SF_nonDim = dimentionalised_df.loc[i, 'R_SF_nonDim']
+        d_T_per_px = dimentionalised_df.loc[i, 'd_T_per_px']
         
         # Get unique cell IDs (excluding background = 0)
         cell_ids = np.unique(masks)
@@ -519,6 +520,16 @@ def Spherical_Reconstruction_1(
             centroid_y_px = np.mean(y_coords)
             centroid_x_px = np.mean(x_coords)
             
+            # Find each pixel in non-dimensional space
+            cell_coords_px = np.vstack((x_coords, y_coords))
+            cell_coords_nonDim = Affine_image_px_and_NonDim(
+                Coordinates=cell_coords_px,
+                px_to_nonDim=True,
+                image_Nx_px=masks.shape[1],
+                image_Ny_px=masks.shape[0],
+                d_T_per_px=d_T_per_px
+            )
+
             # 1. Calculate cell area in pixels and in nonDimensional units
             A_cell_px2 = len(y_coords)
             A_cell_nonDim = A_cell_px2 * (d_T_per_px ** 2)  # Convert area to non-dimensional units
@@ -530,28 +541,32 @@ def Spherical_Reconstruction_1(
             d_cell_nonDim = d_cell_px * d_T_per_px
             
             # 4. Calculate spherically reconstructed area
-            # Convert each pixel to non-dimensional space
-            cell_pixels = np.vstack((x_coords, y_coords))
-            cell_coords_nonDim = Affine_image_px_and_NonDim(
-                Coordinates=cell_pixels,
+
+            # Calculate pixel coords in pixel units but centered around the image center. Pixel units are chosen as the acuracy is improoved for numerical processing with larger numbers.
+            cell_coords_px = np.vstack((x_coords, y_coords))
+            cell_coords_px_centered = Affine_image_px_and_NonDim(
+                Coordinates=cell_coords_px,
                 px_to_nonDim=True,
                 image_Nx_px=masks.shape[1],
                 image_Ny_px=masks.shape[0],
-                d_T_per_px=d_T_per_px
+                d_T_per_px=1
             )
-            
-            # Calculate Jacobian determinant for each pixel
-            A_cell_SRec_nonDim2 = 0
+
+            # Calculate spherically reconstructed area in pixel units centered in the shpere using the Jacobian determinant for each pixel
+            A_cell_SRec_px2 = 0
             for j in range(len(x_coords)):
-                x = cell_coords_nonDim[0][j]
-                z = cell_coords_nonDim[1][j]
-                # Calculate pixel area contribution using Jacobian
-                detJ_val = detJ(R_SF_nonDim, x, z)
-                A_cell_SRec_nonDim2 += detJ_val * (d_T_per_px ** 2)
-            
-            # 5. Calculate spherically reconstructed area in pixels
-            A_cell_SRec_px2 = A_cell_SRec_nonDim2 / (d_T_per_px ** 2)
-            
+                x = cell_coords_px_centered[0][j]
+                z = cell_coords_px_centered[1][j]
+                # Calculate pixel area contribution using Jacobian from spherical coordinates to orthographic projection
+                detJ_val = detJ(R_SF_px, x, z)
+                A_cell_SRec_px2 += detJ_val * 1  # Each pixel contributes 1 px^2 of area
+
+            # calculate spherically reconstructed area in non-dimensional units
+            A_cell_SRec_nonDim2 = A_cell_SRec_px2 * (d_T_per_px ** 2)
+
+            print(f"Cell {cell_id} - A_cell_SRec_nonDim2/A_cell_nonDim: {A_cell_SRec_nonDim2 / A_cell_nonDim} ") if Spherical_Reconstruction_log_level >= 3 else None
+
+
             # 6. Calculate spherically reconstructed diameter in non-dimensional units
             d_cell_SRec_nonDim = 2 * np.sqrt(A_cell_SRec_nonDim2 / np.pi)
             
@@ -559,16 +574,16 @@ def Spherical_Reconstruction_1(
             d_cell_SRec_px = 2 * np.sqrt(A_cell_SRec_px2 / np.pi)
             
             # 9. Convert centroid to non-dimensional coordinates
-            centroid_coords = np.array([[centroid_x_px], [centroid_y_px]])
-            centroid_nonDim = Affine_image_px_and_NonDim(
-                Coordinates=centroid_coords,
+            centroid_coords_px = np.array([[centroid_x_px], [centroid_y_px]])
+            centroid_coords_nonDim = Affine_image_px_and_NonDim(
+                Coordinates=centroid_coords_px,
                 px_to_nonDim=True,
                 image_Nx_px=masks.shape[1],
                 image_Ny_px=masks.shape[0],
                 d_T_per_px=d_T_per_px
             )
-            centroid_x_nonDim = centroid_nonDim[0][0]
-            centroid_z_nonDim = centroid_nonDim[1][0]
+            centroid_x_nonDim = centroid_coords_nonDim[0][0]
+            centroid_z_nonDim = centroid_coords_nonDim[1][0]
             
             # Append values to respective lists
             A_cell_distribution_px2.append(A_cell_px2)

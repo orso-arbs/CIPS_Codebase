@@ -11,7 +11,7 @@ def CIPS_variation_1(
     # General control
     input_dir=r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_variations",
     cips_variation_output_dir_manual="",
-    cips_variation_output_dir_comment="makeItRun_WWBBWW_2000px_tlowthresh0p5", 
+    cips_variation_output_dir_comment="makeItRun_BWvars_2000px_flowthresh0p5_manualbatch40_batchsize4_bsize160", 
 ):
     #################################################### I/O
     cips_variations_1_output_dir = F_1.F_out_dir(input_dir = input_dir, script_path = __file__, output_dir_comment = cips_variation_output_dir_comment, output_dir_manual = cips_variation_output_dir_manual)
@@ -25,6 +25,30 @@ def CIPS_variation_1(
     # Define parameter variations
     variations = [
         {
+            "cips_pipeline_output_dir_comment": "BW_2000px_manualbatch40_batchsize4_bsize160",
+            "run_visit_projector": False, 
+            "cips_VP1_output_dir_override": r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_variations\BW vars\20250607_2240236\20250607_2240246",
+            "cps_output_dir_comment": "BW_2000px_manualbatch40_batchsize4_bsize160",
+            "cps_batch_size": 4,
+            "cps_bsize": 160,
+        },
+        {
+            "cips_pipeline_output_dir_comment": "BBWW_2000px_manualbatch40_batchsize4_bsize160",
+            "run_visit_projector": False, 
+            "cips_VP1_output_dir_override": r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_variations\BW vars\20250608_0303173\20250608_0303173",
+            "cps_output_dir_comment": "BBWW_2000px_manualbatch40_batchsize4_bsize160",
+            "cps_batch_size": 4,
+            "cps_bsize": 160,
+        },
+        {
+            "cips_pipeline_output_dir_comment": "WBW_2000px_manualbatch40_batchsize4_bsize160",
+            "run_visit_projector": False, 
+            "cips_VP1_output_dir_override": r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_variations\BW vars\20250609_0028398\20250609_0028408",
+            "cps_output_dir_comment": "WBW_2000px_manualbatch40_batchsize4_bsize160",
+            "cps_batch_size": 4,
+            "cps_bsize": 160,
+        },
+        {
             "cips_pipeline_output_dir_comment": "WWBBWW_2000px_manualbatch40_batchsize4_bsize160",
             "run_visit_projector": False, 
             "cips_VP1_output_dir_override": r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_variations\BW vars\20250610_0004544\20250610_0004569",
@@ -33,28 +57,36 @@ def CIPS_variation_1(
             "cps_bsize": 160,
         },
         {
-            "cips_pipeline_output_dir_comment": "WWBBWW_2000px_manualbatch40_batchsize4_bsize80",
+            "cips_pipeline_output_dir_comment": "BWB_2000px_manualbatch40_batchsize4_bsize160",
             "run_visit_projector": False, 
-            "cips_VP1_output_dir_override": r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_variations\BW vars\20250610_0004544\20250610_0004569",
-            "cps_output_dir_comment": "WWBBWW_2000px_manualbatch40_batchsize4_bsize80",
+            "cips_VP1_output_dir_override": r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_variations\BW vars\20250610_0529590\20250610_0529590",
+            "cps_output_dir_comment": "BWB_2000px_manualbatch40_batchsize4_bsize160",
             "cps_batch_size": 4,
-            "cps_bsize": 80,
-        },
-        {
-            "cips_pipeline_output_dir_comment": "WWBBWW_2000px_manualbatch40_batchsize2_bsize160",
-            "run_visit_projector": False, 
-            "cips_VP1_output_dir_override": r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_variations\BW vars\20250610_0004544\20250610_0004569",
-            "cps_output_dir_comment": "WWBBWW_2000px_manualbatch40_batchsize2_bsize160",
-            "cps_batch_size": 2,
             "cps_bsize": 160,
         },
         {
-            "cips_pipeline_output_dir_comment": "WWBBWW_2000px_manualbatch40_batchsize2_bsize80",
+            "cips_pipeline_output_dir_comment": "BBWWBB_2000px_manualbatch40_batchsize4_bsize160",
             "run_visit_projector": False, 
-            "cips_VP1_output_dir_override": r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_variations\BW vars\20250610_0004544\20250610_0004569",
-            "cps_output_dir_comment": "WWBBWW_2000px_manualbatch40_batchsize2_bsize80",
-            "cps_batch_size": 2,
-            "cps_bsize": 80,
+            "cips_VP1_output_dir_override": r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_variations\BW vars\20250610_0646347\20250610_0646347",
+            "cps_output_dir_comment": "BBWWBB_2000px_manualbatch40_batchsize4_bsize160",
+            "cps_batch_size": 4,
+            "cps_bsize": 160,
+        },
+        {
+            "cips_pipeline_output_dir_comment": "WB_2000px_manualbatch40_batchsize4_bsize160",
+            "run_visit_projector": False, 
+            "cips_VP1_output_dir_override": r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_variations\BW vars\20250610_0803025\20250610_0803025",
+            "cps_output_dir_comment": "WB_2000px_manualbatch40_batchsize4_bsize160",
+            "cps_batch_size": 4,
+            "cps_bsize": 160,
+        },
+        {
+            "cips_pipeline_output_dir_comment": "WWBB_2000px_manualbatch40_batchsize4_bsize160",
+            "run_visit_projector": False, 
+            "cips_VP1_output_dir_override": r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_variations\BW vars\20250610_0916439\20250610_0916439",
+            "cps_output_dir_comment": "WWBB_2000px_manualbatch40_batchsize4_bsize160",
+            "cps_batch_size": 4,
+            "cps_bsize": 160,
         },
     ]
 

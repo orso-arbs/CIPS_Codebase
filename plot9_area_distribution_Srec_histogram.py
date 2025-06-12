@@ -12,8 +12,14 @@ import Format_1 as F_1
 import video_maker_1 as vm1
 import matplotlib.cm as cm  # Add this import
 
+# LaTeX settings
+plt.rcParams['text.usetex'] = True
+LATEX_FONT_SIZE = 16  # Global font size for LaTeX text
+plt.rcParams['font.size'] = LATEX_FONT_SIZE
+plt.rcParams['font.family'] = 'serif'
+
 @F_1.ParameterLog(max_size=1024 * 10)  # 10KB
-def plot9_diameter_distribution_Srec_comparison(
+def plot9_area_distribution_Srec_histogram(
     # Input parameters
     input_dir,  # Format_1 requires input_dir
     SRec_df=None,  # if None a .pkl file has to be in the input_dir
@@ -28,12 +34,18 @@ def plot9_diameter_distribution_Srec_comparison(
     video_fps=5,        # Frames per second for the video
     
     # Plot appearance parameters
-    show_image_inset=True,        # Show flame image inset
+    figure_width=12,            # Width of the figure in inches
+    figure_height=8,            # Height of the figure in inches
+    show_image_inset=True,      # Show flame image inset
     image_inset_size=0.4,        # Size of image inset as fraction of plot
-    image_margin=0.1,           # Margin between image inset and plot box edges
+    image_horizontal_position=0.8,  # Horizontal position of inset (0-1)
+    image_vertical_position=0.7,    # Vertical position of inset (0-1)
     zoom_scale=1.3,              # Scale factor for zooming in on the spherical flame
-    mask_alpha=0.5,               # Transparency of masks in the inset
+    mask_alpha=0.4,               # Transparency of masks in the inset
     show_centroids=True,          # Show cell centroids in the inset
+    centroid_size=7,            # Size of centroid markers
+    centroid_alpha=0.6,          # Alpha value for centroid markers
+    show_info_box=False,          # Show info box with cell count and diameters
     bin_count=50,                 # Number of histogram bins
     grid_alpha=0.2,               # Transparency of grid
     Plot_log_level=1,             # Logging verbosity
@@ -77,18 +89,30 @@ def plot9_diameter_distribution_Srec_comparison(
         Defaults to True.
     video_fps : int, optional
         Frames per second for the video if create_video is True. Defaults to 5.
+    figure_width : float, optional
+        Width of the figure in inches. Defaults to 12.
+    figure_height : float, optional
+        Height of the figure in inches. Defaults to 9.
     show_image_inset : bool, optional
         If True, shows an inset of the flame image with masks. Defaults to True.
     image_inset_size : float, optional
         Size of the image inset as a fraction of the plot. Defaults to 0.35.
-    image_margin : float, optional
-        Margin between the image inset and the plot box edges, as a fraction of the plot size. Defaults to 0.05.
+    image_horizontal_position : float, optional
+        Horizontal position of the image inset (0-1, where 1 is far right). Defaults to 0.65.
+    image_vertical_position : float, optional
+        Vertical position of the image inset (0-1, where 1 is top). Defaults to 0.75.
     zoom_scale : float, optional
         Scale factor for zooming in on the spherical flame in the image inset. Defaults to 1.5.
     mask_alpha : float, optional
         Transparency of masks in the inset image. Defaults to 0.3.
     show_centroids : bool, optional
         If True, shows cell centroids in the image inset. Defaults to True.
+    centroid_size : int, optional
+        Size of the centroid markers in the image inset. Defaults to 10.
+    centroid_alpha : float, optional
+        Alpha value for the centroid markers in the image inset. Defaults to 0.7.
+    show_info_box : bool, optional
+        If True, shows the info box with cell count and diameter information on the plot. Defaults to True.
     bin_count : int, optional
         Number of bins for the diameter distribution histogram. Defaults to 30.
     grid_alpha : float, optional
@@ -168,92 +192,155 @@ def plot9_diameter_distribution_Srec_comparison(
         if col not in SRec_df.columns:
             print(f"Warning: Column '{col}' not found in the DataFrame. Some functionality may be limited.")
 
-    #################################################### Plotting
+    #################################################### Clean data
+    # Clean data once after loading
+    print("Cleaning data...") if Plot_log_level >= 1 else None
+    
+    # Create new columns for cleaned data
+    SRec_df['A_cell_distribution_nonDim2_clean'] = SRec_df['A_cell_distribution_nonDim2'].apply(
+        lambda x: x[~np.isnan(x)] if x is not None else np.array([])
+    )
+    SRec_df['A_cell_SRec_distribution_nonDim2_clean'] = SRec_df['A_cell_SRec_distribution_nonDim2'].apply(
+        lambda x: x[~np.isnan(x)] if x is not None else np.array([])
+    )
+    
+    # Remove rows where either cleaned array is empty
+    valid_rows = (SRec_df['A_cell_distribution_nonDim2_clean'].apply(len) > 0) & \
+                 (SRec_df['A_cell_SRec_distribution_nonDim2_clean'].apply(len) > 0)
+    SRec_df = SRec_df[valid_rows].reset_index(drop=True)
+    
+    if len(SRec_df) == 0:
+        print("Error: No valid data found after cleaning") if Plot_log_level >= 0 else None
+        return output_dir
+
+    #################################################### Calculate global statistics
     # Number of rows in the DataFrame
     N_images = len(SRec_df)
+    
+    # Concatenate all valid values
+    all_diams_2d = np.concatenate(SRec_df['A_cell_distribution_nonDim2_clean'].values)
+    all_diams_3d = np.concatenate(SRec_df['A_cell_SRec_distribution_nonDim2_clean'].values)
+    
+    # Calculate global min/max
+    max_area = max(np.max(all_diams_2d), np.max(all_diams_3d))
+    min_area = min(np.min(all_diams_2d), np.min(all_diams_3d))
+    
+    # Calculate global max frequency
+    max_frequency_global = 0
+    for areas_2d, areas_3d in zip(SRec_df['A_cell_distribution_nonDim2_clean'], 
+                                 SRec_df['A_cell_SRec_distribution_nonDim2_clean']):
+        hist_2d, _ = np.histogram(areas_2d, bins=bin_count)
+        hist_3d, _ = np.histogram(areas_3d, bins=bin_count)
+        max_frequency_global = max(max_frequency_global, np.max(hist_2d), np.max(hist_3d))
 
-    # Find the maximum area value and determine bin edges
-    all_areas_2d = np.concatenate([areas for areas in SRec_df['A_cell_distribution_nonDim2'] 
-                                  if areas is not None and len(areas) > 0])
-    all_areas_3d = np.concatenate([areas for areas in SRec_df['A_cell_SRec_distribution_nonDim2'] 
-                                  if areas is not None and len(areas) > 0])
-    
-    max_area = max(np.max(all_areas_2d), np.max(all_areas_3d)) if len(all_areas_2d) > 0 and len(all_areas_3d) > 0 else 1
-    min_area = min(np.min(all_areas_2d), np.min(all_areas_3d)) if len(all_areas_2d) > 0 and len(all_areas_3d) > 0 else 0
-    
-    # Create bins for histograms
-    bins = np.linspace(min_area, max_area, bin_count + 1)
-    if Plot_log_level >= 2:
-        print(f"\nBin edges: {bins}")
-        print(f"Number of bins: {len(bins)-1}")
-    
-    # Calculate the maximum frequency across all histograms to normalize y-axis
-    max_frequency_2d = 0
-    max_frequency_3d = 0
-    for i in range(N_images):
-        areas_2d = SRec_df.iloc[i]['A_cell_distribution_nonDim2']
-        areas_3d = SRec_df.iloc[i]['A_cell_SRec_distribution_nonDim2']
-        
-        if Plot_log_level >= 2:
-            print(f"\nProcessing image {i+1}:")
-            print(f"2D areas shape: {areas_2d.shape if areas_2d is not None else None}")
-            print(f"3D areas shape: {areas_3d.shape if areas_3d is not None else None}")
-        
-        # Process 2D areas
-        if areas_2d is not None and len(areas_2d) > 0:
-            hist_2d, _ = np.histogram(areas_2d, bins=bins)
-            if Plot_log_level >= 2:
-                print(f"2D histogram counts: {hist_2d}")
-                print(f"2D max count: {np.max(hist_2d)}")
-            
-            if Frequency_percent_of_max:
-                max_frequency_2d = max(max_frequency_2d, np.max(hist_2d))
-            else:
-                max_frequency_2d = max(max_frequency_2d, np.max(hist_2d))
-        
-        # Process 3D areas
-        if areas_3d is not None and len(areas_3d) > 0:
-            hist_3d, _ = np.histogram(areas_3d, bins=bins)
-            if Plot_log_level >= 2:
-                print(f"3D histogram counts: {hist_3d}")
-                print(f"3D max count: {np.max(hist_3d)}")
-            
-            if Frequency_percent_of_max:
-                max_frequency_3d = max(max_frequency_3d, np.max(hist_3d))
-            else:
-                max_frequency_3d = max(max_frequency_3d, np.max(hist_3d))
-    
-    # Find the overall maximum for y-axis scaling
-    max_frequency = max(max_frequency_2d, max_frequency_3d)
-    
     print(f"Processing {N_images} images with area range: {min_area:.2f} to {max_area:.2f}") if Plot_log_level >= 1 else None
-    print(f"Maximum frequency - 2D: {max_frequency_2d}, 3D: {max_frequency_3d}") if Plot_log_level >= 1 else None
-    
+    print(f"Global maximum frequency: {max_frequency_global}") if Plot_log_level >= 1 else None
+
+    #################################################### Plotting
     # Process each image
     print(f"\nPlotting area distributions:")
     for i in range(N_images):
         print(f"\rProcessing image {i+1}/{N_images}", end='', flush=True) if Plot_log_level >= 1 else None
         
-        # Create figure
-        fig = plt.figure(figsize=(12, 9))
+        # Create figure with specified size
+        fig = plt.figure(figsize=(figure_width, figure_height))
+        ax = fig.add_subplot(111)
         
-        # If showing image inset, use GridSpec for layout
+        # Get the cleaned area distributions
+        areas_2d = SRec_df.iloc[i]['A_cell_distribution_nonDim2_clean']
+        areas_3d = SRec_df.iloc[i]['A_cell_SRec_distribution_nonDim2_clean']
+        
+        # Create bins for this specific image
+        bins = np.linspace(min_area, max_area, bin_count + 1)
+        
+        # Calculate the histograms
+        hist_2d, bin_edges_2d = np.histogram(areas_2d, bins=bins)
+        hist_3d, bin_edges_3d = np.histogram(areas_3d, bins=bins)
+        
+        # Apply normalization based on user preference
+        if Frequency_percent_of_max:
+            # Normalize to percentage of total count (instead of % of max)
+            total_count_2d = len(areas_2d)
+            total_count_3d = len(areas_3d)
+            
+            # Calculate weights for normalization to percentage of total
+            weights_2d = np.ones_like(areas_2d) * (100.0 / total_count_2d)
+            weights_3d = np.ones_like(areas_3d) * (100.0 / total_count_3d)
+            
+            y_label = r'Frequency (\% of total)'
+            # Set y-axis limit based on user input or extension
+            y_max = y_axis_limit if y_axis_limit is not None else max_frequency_global * y_axis_extension
+            
+            # Plot histograms with normalized values and black edges
+            ax.hist(areas_2d, bins=bins, alpha=0.6, color='orange', label='2D Area', 
+                   weights=weights_2d, edgecolor='black', linewidth=0.5)
+            ax.hist(areas_3d, bins=bins, alpha=0.6, color='green', label='3D Area', 
+                   weights=weights_3d, edgecolor='black', linewidth=0.5)
+        else:
+            # Use raw counts
+            y_label = r'Frequency (count)'
+            # Set y-axis limit based on user input or global max with extension
+            y_max = y_axis_limit if y_axis_limit is not None else max_frequency_global * y_axis_extension
+            
+            # Plot histograms with raw counts and black edges
+            ax.hist(areas_2d, bins=bins, alpha=0.6, color='orange', label='2D Area', 
+                   edgecolor='black', linewidth=0.5)
+            ax.hist(areas_3d, bins=bins, alpha=0.6, color='green', label='3D Area', 
+                   edgecolor='black', linewidth=0.5)
+        
+        # Add mean area lines
+        mean_2d = np.mean(areas_2d)
+        mean_3d = np.mean(areas_3d)
+        ax.axvline(mean_2d, color='darkorange', linestyle='--', linewidth=2, label=f'Mean 2D: {mean_2d:.3f}')
+        ax.axvline(mean_3d, color='darkgreen', linestyle='--', linewidth=2, label=f'Mean 3D: {mean_3d:.3f}')
+        
+        # Set axis limits and labels
+        x_min = min_area * 0.95
+        x_max = x_axis_limit if x_axis_limit is not None else max_area * x_axis_extension
+        ax.set_xlim(x_min, x_max)
+        ax.set_ylim(0, y_max)
+        
+        ax.set_xlabel('Cell Area (Non-Dimensional)')
+        ax.set_ylabel(y_label)
+        ax.set_title(f'Image {i+1}: 2D vs 3D Reconstructed\nCell Area Distribution')
+        
+        # Add grid
+        ax.grid(True, alpha=grid_alpha, linestyle='--')
+        
+        # Add legends centered at the top of the plot
+        ax.legend(loc='upper center', bbox_to_anchor=(0.5, 0.98))
+
+        # Add image inset if requested
         if show_image_inset:
-            gs = gridspec.GridSpec(1, 1, figure=fig)
-            ax = fig.add_subplot(gs[0, 0])
-            
-            # Calculate position for image inset in top right
-            inset_width = image_inset_size
-            inset_height = image_inset_size
-            inset_left = 1 - inset_width - image_margin
-            inset_bottom = 1 - inset_height - image_margin
-            
-            # Create inset axes
-            ax_inset = fig.add_axes([inset_left, inset_bottom, inset_width, inset_height])
-            
             try:
+                # Calculate position based on new parameters
+                inset_width = image_inset_size
+                inset_height = image_inset_size
+                inset_left = image_horizontal_position - (inset_width / 2)
+                inset_bottom = image_vertical_position - (inset_height / 2)
+                
+                # Create inset axes
+                ax_inset = fig.add_axes([inset_left, inset_bottom, inset_width, inset_height])
+                
+                # Load and display image
                 image_path = SRec_df.iloc[i]['image_file_path']
                 image = sk_io.imread(image_path)
+                
+                # Make white parts transparent
+                if len(image.shape) == 2:  # Grayscale image
+                    # Create RGBA image
+                    rgba_image = np.zeros((*image.shape, 4), dtype=np.uint8)
+                    rgba_image[..., :3] = np.stack([image]*3, axis=-1)
+                    rgba_image[..., 3] = np.where(image == 255, 0, 255)
+                    image = rgba_image
+                elif len(image.shape) == 3:  # RGB image
+                    # Create RGBA image
+                    rgba_image = np.zeros((*image.shape[:2], 4), dtype=np.uint8)
+                    rgba_image[..., :3] = image
+                    is_white = np.all(image == 255, axis=-1)
+                    rgba_image[..., 3] = np.where(is_white, 0, 255)
+                    image = rgba_image
+
                 masks = SRec_df.iloc[i]['masks']
                 
                 # Calculate zoom region to focus on the spherical flame
@@ -277,10 +364,10 @@ def plot9_diameter_distribution_Srec_comparison(
                 masked_data = np.ma.masked_where(masks_zoomed == 0, masks_zoomed % 10)
                 
                 # Use older syntax for colormap
-                cmap = cm.get_cmap('tab10', 10)  # This works in older matplotlib versions
+                cmap = cm.get_cmap('tab10', 10)
                 ax_inset.imshow(masked_data, cmap=cmap, alpha=mask_alpha)
 
-                # Show centroids if requested (adjust coordinates for zoom)
+                # Show centroids if requested
                 if show_centroids and 'centroid_x_distribution_px' in SRec_df.columns:
                     centroids_x = SRec_df.iloc[i]['centroid_x_distribution_px']
                     centroids_y = SRec_df.iloc[i]['centroid_y_distribution_px']
@@ -293,110 +380,37 @@ def plot9_diameter_distribution_Srec_comparison(
                             ax_inset.scatter(
                                 [x - left for x in x_coords],
                                 [y - top for y in y_coords],
-                                c='red', s=10, alpha=0.7
+                                c='red', s=centroid_size, alpha=centroid_alpha
                             )
-                
+
+                # Turn off axes for the inset
                 ax_inset.axis('off')
+                
+                # Add a thin border around the inset
+                for spine in ax_inset.spines.values():
+                    spine.set_visible(True)
+                    spine.set_color('black')
+                    spine.set_linewidth(0.5)
                 
             except Exception as e:
                 print(f"\nWarning: Could not display image inset for image {i+1}: {str(e)}") if Plot_log_level >= 1 else None
-                ax_inset.remove()
-        else:
-            ax = fig.add_subplot(111)
         
-        # Get the area distributions
-        areas_2d = SRec_df.iloc[i]['A_cell_distribution_nonDim2']
-        areas_3d = SRec_df.iloc[i]['A_cell_SRec_distribution_nonDim2']
-        
-        if areas_2d is None or len(areas_2d) == 0:
-            print(f"\nWarning: No 2D area data for image {i+1}") if Plot_log_level >= 1 else None
-            continue
-            
-        if areas_3d is None or len(areas_3d) == 0:
-            print(f"\nWarning: No 3D area data for image {i+1}") if Plot_log_level >= 1 else None
-            continue
-        
-        # Get diameters if available for the legend
-        try:
-            d_2d = np.mean(SRec_df.iloc[i]['d_cell_distribution_nonDim'])
-            d_3d = np.mean(SRec_df.iloc[i]['d_cell_SRec_distribution_nonDim'])
-            diameter_str = f"2D Diameter: {d_2d:.2f}, 3D Diameter: {d_3d:.2f}"
-        except:
-            diameter_str = "Diameters not available"
-        
-        # Plot the histograms
-        hist_2d, bin_edges_2d = np.histogram(areas_2d, bins=bins)
-        hist_3d, bin_edges_3d = np.histogram(areas_3d, bins=bins)
-        
-        if Plot_log_level >= 2:
-            print(f"\nPlotting image {i+1}:")
-            print(f"2D histogram: {hist_2d}")
-            print(f"3D histogram: {hist_3d}")
-            print(f"Bin centers 2D: {bin_centers_2d}")
-            print(f"Bin centers 3D: {bin_centers_3d}")
-            
-        # Normalize if requested - normalize each dataset individually
-        if Frequency_percent_of_max:
-            # Normalize 2D data to its own maximum
-            if hist_2d.max() > 0:
-                hist_2d = (hist_2d / max_frequency_2d) * 100
-                if Plot_log_level >= 2:
-                    print(f"Normalized 2D histogram: {hist_2d}")
-                    
-            # Normalize 3D data to its own maximum
-            if hist_3d.max() > 0:
-                hist_3d = (hist_3d / max_frequency_3d) * 100
-                if Plot_log_level >= 2:
-                    print(f"Normalized 3D histogram: {hist_3d}")
-
-        # Calculate bin centers for bar plots
-        bin_centers_2d = (bin_edges_2d[:-1] + bin_edges_2d[1:]) / 2
-        bin_centers_3d = (bin_edges_3d[:-1] + bin_edges_3d[1:]) / 2
-        
-        # Plot histograms using bar chart for better clarity
-        bar_width = (bins[1] - bins[0]) * 0.8  # Slightly narrower than bin width
-        ax.bar(bin_centers_2d, hist_2d, width=bar_width, alpha=0.2, color='orange', 
-               label='2D Area', align='center')
-        ax.bar(bin_centers_3d, hist_3d, width=bar_width, alpha=0.2, color='green', 
-               label='3D Area', align='center')
-        
-        # Add mean area lines
-        mean_2d = np.mean(areas_2d)
-        mean_3d = np.mean(areas_3d)
-        ax.axvline(mean_2d, color='darkorange', linestyle='--', linewidth=2, label=f'Mean 2D: {mean_2d:.3f}')
-        ax.axvline(mean_3d, color='darkgreen', linestyle='--', linewidth=2, label=f'Mean 3D: {mean_3d:.3f}')
-        
-        # Set axis limits and labels
-        ax.set_xlim(
-            min_area * 0.95,
-            x_axis_limit if x_axis_limit is not None else max_area * x_axis_extension
-        )
-        
-        y_max = y_axis_limit if y_axis_limit is not None else max_frequency * y_axis_extension
-        ax.set_ylim(0, y_max)
-        
-        ax.set_xlabel('Cell Area (Non-Dimensional)')
-        if Frequency_percent_of_max:
-            ax.set_ylabel('Frequency (% of max)')
-        else:
-            ax.set_ylabel('Frequency (count)')
-        ax.set_title(f'Image {i+1}: 2D vs 3D Reconstructed\nCell Area Distribution')
-        
-        # Add grid
-        ax.grid(True, alpha=grid_alpha, linestyle='--')
-        
-        # Add legends with better positioning
-        leg1 = ax.legend(loc='upper left', bbox_to_anchor=(0.02, 0.98))
-        
-        # Add cell count and area/diameter info in a separate box
-        cell_count = len(areas_2d)
-        box_text = f"Cell count: {cell_count}\n{diameter_str}"
-        ax.text(0.02, 0.88, box_text, 
-                transform=ax.transAxes, fontsize=10,
-                bbox=dict(boxstyle='round', facecolor='white', alpha=0.7))
+        # Add cell count and diameter info in a separate box
+        if show_info_box:
+            try:
+                d_2d = np.mean(SRec_df.iloc[i]['d_cell_distribution_nonDim'])
+                d_3d = np.mean(SRec_df.iloc[i]['d_cell_SRec_distribution_nonDim'])
+                diameter_str = f"2D Diameter: {d_2d:.2f}\n3D Diameter: {d_3d:.2f}"
+                cell_count = len(areas_2d)
+                box_text = f"Cell count: {cell_count}\n{diameter_str}"
+                ax.text(0.02, 0.88, box_text, 
+                       transform=ax.transAxes, fontsize=10,
+                       bbox=dict(boxstyle='round', facecolor='white', alpha=0.7))
+            except Exception as e:
+                print(f"\nWarning: Could not add diameter info: {str(e)}") if Plot_log_level >= 1 else None
 
         # Save plots
-        base_filename = f'area_comparison_{i+1:04d}'
+        base_filename = f'Histogram_cell_areas__2Dvs3D_{i+1:04d}'
         
         if save_png:
             png_path = os.path.join(png_dir, f'{base_filename}.png')
@@ -432,8 +446,8 @@ def plot9_diameter_distribution_Srec_comparison(
 # Example usage
 if __name__ == "__main__":
     print("Running Diameter Distribution Comparison Plotter...")
-    plot9_diameter_distribution_Srec_comparison(
-        input_dir=r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_variations\20250607_2240236\20250608_0303173\20250608_0303173\20250608_0409296\20250608_0643128\20250608_0645118\20250611_1634115",
+    plot9_area_distribution_Srec_histogram(
+        input_dir=r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_variations\20250607_2240236\20250608_0303173\20250608_0303173\20250608_0409296\20250608_0643128\20250608_0645118\20250612_1349113",
         save_svg=False,
         save_png=True,
         show_plots=False,
