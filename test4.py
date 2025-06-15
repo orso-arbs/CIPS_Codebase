@@ -3,8 +3,9 @@ from pathlib import Path
 
 def update_dataframes_in_dirs(target_dirs: list, source_file_path: str):
     """
-    Updates pickle and CSV files in a list of directories by adding two new
-    columns from a source pickle file.
+    Updates pickle and CSV files in a list of directories. It adds or
+    overwrites specified columns by matching rows with a source file based
+    on a key column.
 
     Args:
         target_dirs (list): A list of strings, where each string is a path to a
@@ -13,16 +14,15 @@ def update_dataframes_in_dirs(target_dirs: list, source_file_path: str):
                                 the columns to be added.
     """
     # --- Configuration ---
-    # The name of the file to be updated in each directory
     PICKLE_FILENAME = "Visit_projector_1_data.pkl"
     CSV_FILENAME = "Visit_projector_1_data.csv"
-    # The names of the columns to add
+    KEY_COLUMN = "Image_filename_VisIt"
     COLUMNS_TO_ADD = [
         "Min_Psuedocolored_variable_SF_VisIt",
         "Max_Psuedocolored_variable_SF_VisIt"
     ]
 
-    # --- 1. Load the Source Data ---
+    # --- 1. Load the Source Data and Validate ---
     source_path = Path(source_file_path)
     if not source_path.is_file():
         print(f"Error: Source file not found at {source_path}")
@@ -31,9 +31,14 @@ def update_dataframes_in_dirs(target_dirs: list, source_file_path: str):
     try:
         print(f"Reading source data from: {source_path}")
         source_df = pd.read_pickle(source_path)
-        # Isolate the columns you want to add
-        new_columns_data = source_df[COLUMNS_TO_ADD]
-        print("Source data loaded successfully.")
+        # Validate that the necessary columns exist in the source file
+        if KEY_COLUMN not in source_df.columns:
+            print(f"Error: Key column '{KEY_COLUMN}' not found in source file. Aborting.")
+            return
+        if not all(col in source_df.columns for col in COLUMNS_TO_ADD):
+            print(f"Error: Not all required data columns {COLUMNS_TO_ADD} found in source file. Aborting.")
+            return
+        print("Source data loaded and validated successfully.")
     except Exception as e:
         print(f"Error reading source file {source_path}: {e}")
         return
@@ -54,27 +59,45 @@ def update_dataframes_in_dirs(target_dirs: list, source_file_path: str):
             # Read the existing dataframe in the target directory
             target_df = pd.read_pickle(target_pickle_file)
 
-            # Check if BOTH columns already exist. If so, skip modification.
+            # Check if the key column exists in the target file
+            if KEY_COLUMN not in target_df.columns:
+                print(f"Warning: Key column '{KEY_COLUMN}' not found in target file. Skipping.")
+                continue
+
+            # If all columns already exist, we assume it's up-to-date.
             if all(col in target_df.columns for col in COLUMNS_TO_ADD):
                 print("Columns already exist. No action taken.")
                 continue
 
-            # Add the new columns.
-            # IMPORTANT: This assumes the rows in the source file and the target
-            # file correspond one-to-one in the same order.
-            print("Columns not found. Adding new columns...")
-            for col in COLUMNS_TO_ADD:
-                if col not in target_df.columns:
-                    # Assign the series from the source data to the new column
-                    target_df[col] = new_columns_data[col]
+            print("Columns missing or incomplete. Updating by matching rows...")
+
+            # To avoid creating duplicate columns (e.g., 'col_x', 'col_y') during the merge,
+            # we first identify which of the columns-to-add already exist in the target...
+            existing_cols_to_overwrite = [col for col in COLUMNS_TO_ADD if col in target_df.columns]
+            if existing_cols_to_overwrite:
+                print(f"Will overwrite existing columns: {existing_cols_to_overwrite}")
+                # ...and drop them. The merge will add them back with the new values from source.
+                target_df = target_df.drop(columns=existing_cols_to_overwrite)
+
+            # Prepare the data from the source file, containing only the key and the columns to add.
+            source_subset = source_df[[KEY_COLUMN] + COLUMNS_TO_ADD]
+
+            # Perform a left merge. This keeps all rows from the target dataframe
+            # and adds data from the source dataframe where the key column matches.
+            updated_df = pd.merge(
+                target_df,
+                source_subset,
+                on=KEY_COLUMN,
+                how="left"
+            )
 
             # Save the modified dataframe, overwriting the old pickle file
-            target_df.to_pickle(target_pickle_file)
+            updated_df.to_pickle(target_pickle_file)
             print(f"Successfully updated and saved file: {target_pickle_file}")
 
             # Also save the updated dataframe to a CSV file, overwriting it
             target_csv_file = target_dir / CSV_FILENAME
-            target_df.to_csv(target_csv_file, sep='\t', index=False)
+            updated_df.to_csv(target_csv_file, sep='\t', index=False)
             print(f"Successfully updated and saved CSV file: {target_csv_file}")
 
 
@@ -94,11 +117,7 @@ if __name__ == '__main__':
     # 2. List all the directories you want to update
     #    Use raw strings (r"...") for Windows paths to avoid issues with backslashes
     directories_to_process = [
-        r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_variations\BW vars\20250607_2240236\20250607_2240246",
-        r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_variations\BW vars\20250608_0303173\20250608_0303173",
-        r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_variations\BW vars\20250609_0028398\20250609_0028408",
-        
-        # Add as many directory paths as you need
+        r"C:\Users\obs\Desktop\test_col\20250604_1312276\20250604_1312276",
     ]
 
     # --- Run the Function ---

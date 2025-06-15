@@ -17,7 +17,7 @@ def Spherical_Reconstruction_Auxillary_1(
     dimentionalised_df=None,  # Add new parameter to accept DataFrame
 
     # output and logging
-    Spherical_Reconstruction_log_level = 2,
+    Spherical_Reconstruction_log_level = 1,
     output_dir_manual = "", output_dir_comment = "",
     show_plots = False, # New argument to control plt.show()
     plot_CST_detJ = False, # New argument to control detJ plot generation
@@ -47,7 +47,11 @@ def Spherical_Reconstruction_Auxillary_1(
     # Get number of images/rows from loaded data
     N_images = len(dimentionalised_df)
 
-    i = 40
+    # Use the first image instead of a hardcoded index (40)
+    i = 0  # Use the first image for visualization
+    if N_images == 0:
+        print("No images found in the DataFrame")
+        return output_dir
 
     print(f"Image {i} of {N_images}")
     R = dimentionalised_df.loc[i, 'R_SF_nonDim']
@@ -178,32 +182,29 @@ def Affine_image_px_and_NonDim(Coordinates, px_to_nonDim=False, nonDim_to_px=Fal
     if image_Nx_px is None or image_Ny_px is None or d_T_per_px is None:
         raise ValueError("Must provide image_Nx_px, image_Ny_px, and d_T_per_px")
 
+    # Debug: Check input coordinates
+    if Coordinates.shape[0] != 2:
+        print(f"WARNING: Input coordinates shape: {Coordinates.shape}")
+        print(f"First few coordinates: {Coordinates[:5] if len(Coordinates) > 5 else Coordinates}")
+    
     Transformed_Coordinates = np.zeros_like(Coordinates)
     
     if px_to_nonDim:
         x_px = Coordinates[0]
         y_px = Coordinates[1]
-        Transformed_Coordinates[0] = ((x_px + 1/2) - image_Nx_px/2) * d_T_per_px
-        Transformed_Coordinates[1] = (image_Ny_px/2 - (y_px + 1/2)) * d_T_per_px
+        Transformed_Coordinates[0] = ((x_px + 1/2) - image_Nx_px/2) * d_T_per_px # x coord
+        Transformed_Coordinates[1] = (image_Ny_px/2 - (y_px + 1/2)) * d_T_per_px # z coord
         
     if nonDim_to_px:
         x_nonDim = Coordinates[0]
         z_nonDim = Coordinates[1]
-        Transformed_Coordinates[0] = x_nonDim / d_T_per_px + image_Nx_px/2 - 1/2
-        Transformed_Coordinates[1] = image_Ny_px/2 - z_nonDim / d_T_per_px - 1/2
+        Transformed_Coordinates[0] = x_nonDim / d_T_per_px + image_Nx_px/2 - 1/2 # x coord 
+        Transformed_Coordinates[1] = image_Ny_px/2 - z_nonDim / d_T_per_px - 1/2 # y coord
     
-    # if px_to_centered_px:
-    #     x_px = Coordinates[0]
-    #     y_px = Coordinates[1]
-    #     Transformed_Coordinates[0] = (x_px + 1/2) - image_Nx_px/2
-    #     Transformed_Coordinates[1] = image_Ny_px/2 - (y_px + 1/2)
-
-    # if centered_px_to_px:
-    #     x_px_centered = Coordinates[0]
-    #     x_px_centered = Coordinates[1]
-    #     Transformed_Coordinates[0] = (x_px + 1/2) - image_Nx_px/2
-    #     Transformed_Coordinates[1] = image_Ny_px/2 - (y_px + 1/2)
-
+    # Debug: Check output coordinates
+    if Transformed_Coordinates.shape[0] != 2:
+        print(f"WARNING: Output coordinates shape: {Transformed_Coordinates.shape}")
+        print(f"First few transformed coordinates: {Transformed_Coordinates[:5] if len(Transformed_Coordinates) > 5 else Transformed_Coordinates}")
 
     return Transformed_Coordinates
 
@@ -217,7 +218,7 @@ def Cubed_Sphere_Tile_Boundary(R, N_pts=500):
     
     Returns:
         pd.DataFrame: DataFrame containing the boundary points (N,W,S,E)
-        Each column contains a 2xN_pts array with x and z coordinates
+        Each column contains a 2xN_pts array with x and z coordinates centered in the sphere
     """
     # Calculate L (side length of the cube)
     L = R / np.sqrt(3)
@@ -255,9 +256,6 @@ def Cubed_Sphere_Tile_Boundary(R, N_pts=500):
     return CST_Boundary, CST_Boundary_combined
 
 
-
-    return CST_Boundary
-
 def plot_boundary_and_detJ(CST_Boundary, R, plot_resolution=200, cmap='viridis', alpha=1.0):
     """
     Plots the boundaries of the cubed sphere tile with detJ pseudocolor field.
@@ -273,7 +271,6 @@ def plot_boundary_and_detJ(CST_Boundary, R, plot_resolution=200, cmap='viridis',
     R = 1.0
     boundary = Cubed_Sphere_Tile_Boundary(R, N_pts=100)
     plot_boundary_and_detJ(boundary, R)
-
     """
     import matplotlib.pyplot as plt
     from matplotlib.colors import LogNorm
@@ -379,10 +376,438 @@ def plot_boundary_and_detJ(CST_Boundary, R, plot_resolution=200, cmap='viridis',
     # Adjust layout to prevent cutting off
     plt.tight_layout()
     
-    plt.show()
+    #plt.show()
     return fig, ax
 
 
+
+def point_in_CST_check(x_nonDim, z_nonDim, R_SF_nonDim):
+    """
+    Determines if a point is inside the CST (Cubed Sphere Tile) boundary using analytical geometry.
+    
+    By considering the CST symmetry, only the first quadrant in x-z is checked 
+    by taking the absolute values of coordinates.
+    
+    Args:
+        x_nonDim: x-coordinate in non-dimensional space
+        z_nonDim: z-coordinate in non-dimensional space
+        R_SF_nonDim: Radius of the sphere in non-dimensional units
+        
+    Returns:
+        bool: True if point is inside the CST, False otherwise
+    """
+    # Calculate the CST Boundary extrema
+    L = R_SF_nonDim / np.sqrt(3) 
+    
+    min_CST_Boundary = L
+    max_CST_Boundary = np.sqrt(R_SF_nonDim**2 / 2)
+    
+    # Take absolute values to exploit symmetry
+    x_abs = abs(x_nonDim)
+    z_abs = abs(z_nonDim)
+    
+    if x_abs > max_CST_Boundary or z_abs > max_CST_Boundary:
+        return False
+    
+    if x_abs > min_CST_Boundary and z_abs > min_CST_Boundary:
+        return False
+
+    if x_abs <= min_CST_Boundary and z_abs <= min_CST_Boundary:
+        return True
+    
+    if x_abs <= max_CST_Boundary and z_abs <= max_CST_Boundary:
+        if x_abs >= z_abs and x_abs <= np.sqrt((R_SF_nonDim**2 - z_abs**2)/2):
+            return True
+        if x_abs >= z_abs and x_abs > np.sqrt((R_SF_nonDim**2 - z_abs**2)/2):
+            return False
+        
+        if z_abs >= x_abs and z_abs <= np.sqrt((R_SF_nonDim**2 - x_abs**2)/2):
+            return True
+        if z_abs >= x_abs and z_abs > np.sqrt((R_SF_nonDim**2 - x_abs**2)/2):
+            return False
+
+    # If we reach here, point is not classified correctly
+    print(f"Warning: ({x_nonDim}, {z_nonDim}) point_in_CST_check unclassified. max_CST_Boundary={max_CST_Boundary}, min_CST_Boundary={min_CST_Boundary}")
+    
+    return False
+
+def CST_selection(SRec_df, output_dir, Spherical_Reconstruction_log_level=2, show_plots=False):
+    """
+    Classifies cells based on their position relative to the CST boundary.
+    
+    Args:
+        SRec_df: DataFrame containing spherical reconstruction data
+        output_dir: Directory to save plots
+        Spherical_Reconstruction_log_level: Verbosity level
+        show_plots: Whether to display plots
+    
+    Returns:
+        DataFrame: Updated DataFrame with CST classification columns
+    """
+    # Initialize new columns for the CST selection data
+    new_columns = [
+        'CST_classification',
+        'A_cell_distribution_CST_px2',
+        'A_cell_distribution_CST_nonDim2',
+        'd_cell_distribution_CST_px',
+        'd_cell_distribution_CST_nonDim',
+        'A_cell_SRec_distribution_CST_nonDim2',
+        'A_cell_SRec_distribution_CST_px2',
+        'd_cell_SRec_distribution_CST_nonDim',
+        'd_cell_SRec_distribution_CST_px',
+        'centroid_x_distribution_CST_px',
+        'centroid_y_distribution_CST_px',
+        'centroid_x_distribution_CST_nonDim',
+        'centroid_z_distribution_CST_nonDim'
+    ]
+    
+    for col in new_columns:
+        SRec_df[col] = None
+    
+    # Create directory for classification plots
+    plots_dir = os.path.join(output_dir, 'CST_classification_plots')
+    os.makedirs(plots_dir, exist_ok=True)
+    
+    # Process each image
+    N_images = len(SRec_df)
+    for i in range(N_images):
+        if Spherical_Reconstruction_log_level >= 1:
+            print(f"\rProcessing CST selection for image {i+1}/{N_images}", end='', flush=True)
+        
+        # Extract data for this image
+        masks = SRec_df.loc[i, 'masks']
+        R_SF_nonDim = SRec_df.loc[i, 'R_SF_nonDim']
+        R_SF_px = SRec_df.loc[i, 'R_SF_px']
+        image_Nx_px = SRec_df.loc[i, 'image_Ny_px']  # These are swapped in the code
+        image_Ny_px = SRec_df.loc[i, 'image_Nx_px']  # These are swapped in the code
+        d_T_per_px = SRec_df.loc[i, 'd_T_per_px']
+        
+        # Get cell IDs
+        cell_ids = np.unique(masks)
+        cell_ids = cell_ids[cell_ids > 0]  # Exclude background
+        
+        # Generate CST boundary for visualization purposes only
+        CST_Boundary, CST_Boundary_combined = Cubed_Sphere_Tile_Boundary(R_SF_nonDim, N_pts=500)
+        CST_Boundary_combined_px = Affine_image_px_and_NonDim(
+            Coordinates=CST_Boundary_combined,
+            nonDim_to_px=True,
+            image_Nx_px=image_Nx_px,
+            image_Ny_px=image_Ny_px,
+            d_T_per_px=d_T_per_px,
+        )
+        
+        # Extract cell properties for this image. The diameter Pixel based values are already output by Cellpos. They are recalculated here via the areas to have asserted control of how they are generated.
+        A_cell_distribution_px2 = SRec_df.loc[i, 'A_cell_distribution_px2']
+        A_cell_distribution_nonDim2 = SRec_df.loc[i, 'A_cell_distribution_nonDim2']
+        d_cell_distribution_px = SRec_df.loc[i, 'd_cell_distribution_px']
+        d_cell_distribution_nonDim = SRec_df.loc[i, 'd_cell_distribution_nonDim']
+        A_cell_SRec_distribution_nonDim2 = SRec_df.loc[i, 'A_cell_SRec_distribution_nonDim2']
+        A_cell_SRec_distribution_px2 = SRec_df.loc[i, 'A_cell_SRec_distribution_px2']
+        d_cell_SRec_distribution_nonDim = SRec_df.loc[i, 'd_cell_SRec_distribution_nonDim']
+        d_cell_SRec_distribution_px = SRec_df.loc[i, 'd_cell_SRec_distribution_px']
+        centroid_x_distribution_px = SRec_df.loc[i, 'centroid_x_distribution_px']
+        centroid_y_distribution_px = SRec_df.loc[i, 'centroid_y_distribution_px']
+        centroid_x_distribution_nonDim = SRec_df.loc[i, 'centroid_x_distribution_nonDim']
+        centroid_z_distribution_nonDim = SRec_df.loc[i, 'centroid_z_distribution_nonDim']
+        
+        # Lists for filtered cells
+        CST_classification = []
+        A_cell_distribution_CST_px2 = []
+        A_cell_distribution_CST_nonDim2 = []
+        d_cell_distribution_CST_px = []
+        d_cell_distribution_CST_nonDim = []
+        A_cell_SRec_distribution_CST_nonDim2 = []
+        A_cell_SRec_distribution_CST_px2 = []
+        d_cell_SRec_distribution_CST_nonDim = []
+        d_cell_SRec_distribution_CST_px = []
+        centroid_x_distribution_CST_px = []
+        centroid_y_distribution_CST_px = []
+        centroid_x_distribution_CST_nonDim = []
+        centroid_z_distribution_CST_nonDim = []
+        
+        # Dictionary for cell classifications and centroids for plotting
+        cell_classifications = {}
+        cell_centroids_px = {}
+        
+        # Process each cell
+        for idx, cell_id in enumerate(cell_ids):
+            print(f"\rProcessing CST selection for image {i+1}/{N_images} - cell {idx+1}/{len(cell_ids)}", end='', flush=True) if Spherical_Reconstruction_log_level >= 2 else None
+            # Get cell mask and centroid
+            cell_mask = masks == cell_id
+            y_coords, x_coords = np.where(cell_mask)
+            if len(y_coords) == 0:
+                continue
+                
+            # Get centroid in pixel and non-dimensional coordinates
+            centroid_x_px = centroid_x_distribution_px[idx]
+            centroid_y_px = centroid_y_distribution_px[idx]
+            centroid_x_nonDim = centroid_x_distribution_nonDim[idx]
+            centroid_z_nonDim = centroid_z_distribution_nonDim[idx]
+                        
+            # Check if centroid is inside CST boundary using the analytical function
+            centroid_in_CST = point_in_CST_check(
+                x_nonDim=centroid_x_nonDim,
+                z_nonDim=centroid_z_nonDim,
+                R_SF_nonDim=R_SF_nonDim
+            )
+                        
+            ######## Check if all mask points are inside CST boundary
+            
+            # Ensure mask coordinates are correctly processed
+            
+            # Better debug information about the coordinates
+            if Spherical_Reconstruction_log_level >= 4:
+                print(f"\nCell {cell_id} has {len(x_coords)} pixels")
+                if len(x_coords) > 0:
+                    print(f"Sample pixel coordinates (x, y): ({x_coords[0]}, {y_coords[0]})")
+            
+            # Convert mask points to non-dimensional coordinates
+            # Fix: Ensure proper stacking of coordinates
+            mask_coords_px = np.vstack((x_coords, y_coords)).astype(float)
+            
+            # Debug to verify mask_coords_px
+            if Spherical_Reconstruction_log_level >= 4:
+                print(f"mask_coords_px shape: {mask_coords_px.shape}")
+                if mask_coords_px.shape[1] > 0:
+                    print(f"First few mask_coords_px: {mask_coords_px[:, :5] if mask_coords_px.shape[1] > 5 else mask_coords_px}")
+            
+
+            mask_coords_nonDim = Affine_image_px_and_NonDim(
+                Coordinates=mask_coords_px,	
+                px_to_nonDim=True,
+                image_Nx_px=masks.shape[1],
+                image_Ny_px=masks.shape[0],
+                d_T_per_px=d_T_per_px
+            )
+
+            # Debug to verify mask_coords_nonDim
+            if Spherical_Reconstruction_log_level >= 4:
+                print(f"mask_coords_nonDim shape: {mask_coords_nonDim.shape}")
+                if mask_coords_nonDim.shape[1] > 0:
+                    print(f"First few mask_coords_nonDim: {mask_coords_nonDim[:, :5] if mask_coords_nonDim.shape[1] > 5 else mask_coords_nonDim}")
+            
+            # Check each mask point against the CST boundary
+            all_points_in = True
+            any_point_in = False
+            n_points_checked = 0
+            n_points_in_CST = 0
+            
+            # Check a sample of points for optimization (especially for large masks)
+            max_points_to_check = 1000  # Limit for very large masks
+            check_stride = max(1, len(mask_coords_nonDim[0]) // max_points_to_check)
+            
+            # First check if any point is in and if all points might be in
+            for j in range(0, len(mask_coords_nonDim[0]), check_stride):
+                px = mask_coords_nonDim[0][j]
+                pz = mask_coords_nonDim[1][j]
+                
+                if Spherical_Reconstruction_log_level >= 4 and n_points_checked < 5:
+                    print(f"Testing point #{n_points_checked}: ({px:.4f}, {pz:.4f})")
+                    
+                n_points_checked += 1
+                point_in = point_in_CST_check(
+                    x_nonDim=px,
+                    z_nonDim=pz,
+                    R_SF_nonDim=R_SF_nonDim,
+                )
+                
+                if point_in:
+                    n_points_in_CST += 1
+                    any_point_in = True
+                else:
+                    all_points_in = False
+                
+            
+            # Classify cell
+            if centroid_in_CST and all_points_in:
+                classification = "all_in_CST"
+            elif centroid_in_CST and any_point_in:
+                classification = "center_in_CST"
+            elif not centroid_in_CST and any_point_in:
+                classification = "center_out_CST"
+            else:
+                classification = "all_out_CST"
+            
+            # Additional debug check if we got all_out_CST but have points in CST
+            if classification == "all_out_CST" and n_points_in_CST > 0:
+                print(f"WARNING: Cell {cell_id} classified as all_out_CST but has {n_points_in_CST} points in CST")
+            
+            # Store classification for plotting
+            cell_classifications[cell_id] = classification
+            cell_centroids_px[cell_id] = (centroid_x_px, centroid_y_px)
+            print(f"\rClassification: {classification} with centroid_in_CST: {centroid_in_CST} and any_point_in: {any_point_in}") if Spherical_Reconstruction_log_level >= 2 else None
+            
+            # Only include cells that are not completely outside the CST
+            if classification != "all_out_CST":
+                CST_classification.append(classification)
+                A_cell_distribution_CST_px2.append(A_cell_distribution_px2[idx])
+                A_cell_distribution_CST_nonDim2.append(A_cell_distribution_nonDim2[idx])
+                d_cell_distribution_CST_px.append(d_cell_distribution_px[idx])
+                d_cell_distribution_CST_nonDim.append(d_cell_distribution_nonDim[idx])
+                A_cell_SRec_distribution_CST_nonDim2.append(A_cell_SRec_distribution_nonDim2[idx])
+                A_cell_SRec_distribution_CST_px2.append(A_cell_SRec_distribution_px2[idx])
+                d_cell_SRec_distribution_CST_nonDim.append(d_cell_SRec_distribution_nonDim[idx])
+                d_cell_SRec_distribution_CST_px.append(d_cell_SRec_distribution_px[idx])
+                centroid_x_distribution_CST_px.append(centroid_x_px)
+                centroid_y_distribution_CST_px.append(centroid_y_px)
+                centroid_x_distribution_CST_nonDim.append(centroid_x_nonDim)
+                centroid_z_distribution_CST_nonDim.append(centroid_z_nonDim)
+        
+        # Store the filtered lists in the DataFrame
+        SRec_df.at[i, 'CST_classification'] = np.array(CST_classification)
+        SRec_df.at[i, 'A_cell_distribution_CST_px2'] = np.array(A_cell_distribution_CST_px2)
+        SRec_df.at[i, 'A_cell_distribution_CST_nonDim2'] = np.array(A_cell_distribution_CST_nonDim2)
+        SRec_df.at[i, 'd_cell_distribution_CST_px'] = np.array(d_cell_distribution_CST_px)
+        SRec_df.at[i, 'd_cell_distribution_CST_nonDim'] = np.array(d_cell_distribution_CST_nonDim)
+        SRec_df.at[i, 'A_cell_SRec_distribution_CST_nonDim2'] = np.array(A_cell_SRec_distribution_CST_nonDim2)
+        SRec_df.at[i, 'A_cell_SRec_distribution_CST_px2'] = np.array(A_cell_SRec_distribution_CST_px2)
+        SRec_df.at[i, 'd_cell_SRec_distribution_CST_nonDim'] = np.array(d_cell_SRec_distribution_CST_nonDim)
+        SRec_df.at[i, 'd_cell_SRec_distribution_CST_px'] = np.array(d_cell_SRec_distribution_CST_px)
+        SRec_df.at[i, 'centroid_x_distribution_CST_px'] = np.array(centroid_x_distribution_CST_px)
+        SRec_df.at[i, 'centroid_y_distribution_CST_px'] = np.array(centroid_y_distribution_CST_px)
+        SRec_df.at[i, 'centroid_x_distribution_CST_nonDim'] = np.array(centroid_x_distribution_CST_nonDim)
+        SRec_df.at[i, 'centroid_z_distribution_CST_nonDim'] = np.array(centroid_z_distribution_CST_nonDim)
+        
+        # Generate classification plot
+        print("Generating classification plot...") if Spherical_Reconstruction_log_level >= 2 else None
+        if len(cell_classifications) > 0:  # Only plot if we have cells to classify
+            try:
+                # Load the image for plotting
+                image_RGB = sk_io.imread(SRec_df.loc[i, 'image_file_path'])[..., :3]
+                outlines = SRec_df.loc[i, 'outlines']
+                
+                # Create and save the classification plot
+                output_path = os.path.join(plots_dir, f"image_{i}_CST_classification.png")
+                plot_CST_selection_sanity_check(
+                    image_RGB=image_RGB,
+                    masks=masks,
+                    outlines=outlines,
+                    CST_Boundary_combined_px=CST_Boundary_combined_px,
+                    R=R_SF_nonDim,
+                    d_T_per_px=d_T_per_px,
+                    image_Nx_px=image_Nx_px,
+                    image_Ny_px=image_Ny_px,
+                    cell_classifications=cell_classifications,
+                    cell_centroids_px=cell_centroids_px,
+                    output_path=output_path,
+                    show_plot=show_plots,
+                    title_prefix=f"Image {i+1}"
+                )
+            except Exception as e:
+                print(f"\nError generating plot for image {i}: {e}")
+    
+    # Print newline after progress updates
+    if Spherical_Reconstruction_log_level >= 1:
+        print()
+        
+    return SRec_df
+
+def plot_CST_selection_sanity_check(image_RGB, masks, outlines, CST_Boundary_combined_px, R, d_T_per_px, 
+                                   image_Nx_px, image_Ny_px, cell_classifications, cell_centroids_px,
+                                   output_path, show_plot=False, title_prefix="Image", 
+                                   Convert_to_grayscale_image=True):
+    """
+    Create a visualization of cell classifications based on the CST boundary.
+    
+    Args:
+        image_RGB: The RGB image
+        masks: The cell masks
+        outlines: The cell outlines
+        CST_Boundary_combined_px: The CST boundary coordinates in pixel space
+        R: Radius of the sphere
+        d_T_per_px: Conversion factor from pixels to non-dimensional units
+        image_Nx_px: Image width in pixels
+        image_Ny_px: Image height in pixels
+        cell_classifications: Dict mapping cell IDs to classification strings
+        cell_centroids_px: Dict mapping cell IDs to (x, y) centroids in pixel space
+        output_path: Path to save the figure
+        show_plot: Whether to display the plot
+        title_prefix: Prefix for the plot title
+    
+    Returns:
+        None
+    """
+    # Define colors for each classification type
+    classification_colors = {
+        'all_in_CST': 'green',
+        'center_in_CST': 'blue',
+        'center_out_CST': 'yellow',
+        'all_out_CST': 'red'
+    }
+    
+    # Create figure with white background
+    fig, ax = plt.subplots(1, 1, figsize=(12, 12))
+    
+    # Display base RGB image or convert to grayscale
+    if Convert_to_grayscale_image:
+        image_gray = np.mean(image_RGB, axis=2)  # Convert RGB to grayscale
+        ax.imshow(image_gray, cmap='gray')
+    else:
+        ax.imshow(image_RGB)
+    
+    # Plot masks with color coding by classification
+    # Create a colored mask image
+    colored_masks = np.zeros((*masks.shape, 4))  # RGBA
+    
+    for cell_id, classification in cell_classifications.items():
+        if cell_id <= 0:  # Skip background
+            continue
+            
+        # Get the color for this classification
+        color_name = classification_colors.get(classification, 'gray')
+        color_rgba = plt.cm.colors.to_rgba(color_name)
+        
+        # Set alpha based on classification type
+        alpha = 0.4 
+        color_rgba = (*color_rgba[:3], alpha)
+        
+        # Apply color to the mask
+        cell_mask = masks == cell_id
+        colored_masks[cell_mask] = color_rgba
+    
+    # Display the colored masks
+    ax.imshow(colored_masks)
+    
+    # Plot outlines 
+    outlined = np.ma.masked_where(outlines == 0, outlines)
+    ax.imshow(outlined, alpha=0.7, cmap='gray')
+    
+    # Add Cubed Sphere Tile Boundary
+    ax.plot(CST_Boundary_combined_px[0], CST_Boundary_combined_px[1], 'r', linewidth=2, label='CST Boundary')
+    
+    # Plot reference circle
+    theta = np.linspace(0, 2*np.pi, 200)
+    ax.plot(R*np.cos(theta) / d_T_per_px + image_Nx_px/2, R*np.sin(theta) / d_T_per_px + image_Ny_px/2, 'r--', 
+            label='Reference Circle', linewidth=1.5)
+    
+    # Plot cell centroids
+    for cell_id, (x, y) in cell_centroids_px.items():
+        classification = cell_classifications.get(cell_id)
+        if classification:
+            color = classification_colors.get(classification, 'white')
+            marker = 'o' if 'in_CST' in classification else 'x'
+            ax.plot(x, y, marker=marker, color=color, markersize=8, markeredgecolor='black', markeredgewidth=1)
+    
+    # Add legend for classifications
+    legend_elements = [
+        plt.Line2D([0], [0], marker='o', color='w', markerfacecolor='green', markersize=10, label='All in CST'),
+        plt.Line2D([0], [0], marker='o', color='w', markerfacecolor='blue', markersize=10, label='Center in CST'),
+        plt.Line2D([0], [0], marker='x', color='yellow', markersize=10, label='Center out CST'),
+        plt.Line2D([0], [0], marker='x', color='red', markersize=10, label='All out CST')
+    ]
+    ax.legend(handles=legend_elements, loc='upper right')
+    
+    # Set title and turn off axis
+    ax.set_title(f"{title_prefix} - CST Cell Classification", fontsize=16)
+    ax.axis('off')
+    
+    # Save the figure
+    plt.savefig(output_path, format='png', bbox_inches='tight', dpi=300)
+    print(f"CST classification plot saved to {output_path}")
+    
+    if show_plot:
+        plt.show()
+    plt.close(fig)
 
 def Spherical_Reconstruction_1(
     # input
@@ -559,12 +984,12 @@ def Spherical_Reconstruction_1(
                 z = cell_coords_px_centered[1][j]
                 # Calculate pixel area contribution using Jacobian from spherical coordinates to orthographic projection
                 detJ_val = detJ(R_SF_px, x, z)
-                A_cell_SRec_px2 += detJ_val * 1  # Each pixel contributes 1 px^2 of area
+                A_cell_SRec_px2 += detJ_val * 1 # Each pixel contributes 1 px^2 of area
 
             # calculate spherically reconstructed area in non-dimensional units
             A_cell_SRec_nonDim2 = A_cell_SRec_px2 * (d_T_per_px ** 2)
 
-            print(f"Cell {cell_id} - A_cell_SRec_nonDim2/A_cell_nonDim: {A_cell_SRec_nonDim2 / A_cell_nonDim} ") if Spherical_Reconstruction_log_level >= 3 else None
+            print(f"Cell {cell_id} - A_cell_SRec_nonDim2/A_cell_nonDim: {A_cell_SRec_nonDim2 / A_cell_nonDim} ") if Spherical_Reconstruction_log_level >= 4 else None
 
 
             # 6. Calculate spherically reconstructed diameter in non-dimensional units
@@ -601,7 +1026,7 @@ def Spherical_Reconstruction_1(
         
             print(f"Processed cell {cell_id}: "
                   f"length A_cell_distribution_px2={len(A_cell_distribution_px2)}, "
-                  f"A_cell_distribution_px2={A_cell_distribution_px2[-1]}, ") if Spherical_Reconstruction_log_level >= 3 else None
+                  f"A_cell_distribution_px2={A_cell_distribution_px2[-1]}, ") if Spherical_Reconstruction_log_level >= 4 else None
 
         # Store lists in DataFrame - Convert to numpy arrays first
         SRec_df.at[i, 'A_cell_distribution_px2'] = np.array(A_cell_distribution_px2)
@@ -649,6 +1074,17 @@ def Spherical_Reconstruction_1(
             if show_plots:
                 plt.show()
             plt.close(fig)
+
+    #################################################### Perform CST Selection
+    
+    print("\nPerforming CST Selection...") if Spherical_Reconstruction_log_level >= 1 else None
+    SRec_df = CST_selection(
+        SRec_df=SRec_df, 
+        output_dir=output_dir,
+        Spherical_Reconstruction_log_level=Spherical_Reconstruction_log_level,
+        show_plots=show_plots
+    )
+    print("CST Selection complete.") if Spherical_Reconstruction_log_level >= 1 else None
 
     #################################################### Save Results
     
@@ -720,17 +1156,121 @@ def Spherical_Reconstruction_1(
         Spherical_Reconstruction_log_level=Spherical_Reconstruction_log_level,
         output_dir_manual=output_dir_manual,
         output_dir_comment=output_dir_comment,
-        show_plots=True,
-        plot_CST_detJ=False,
+        show_plots=show_plots,
+        plot_CST_detJ=plot_CST_detJ,
     )
 
     return output_dir
 
+def plot_sanitycheck_CST_selection_pixel_wise(R_SF_nonDim, output_dir, resolution=500, show_plot=False):
+    """
+    Creates a visualization of the CST boundary check function.
+    
+    Args:
+        R_SF_nonDim: Radius of the sphere in non-dimensional units
+        output_dir: Directory to save the plot
+        resolution: Resolution of the test grid
+        show_plot: Whether to display the plot
+        
+    Returns:
+        None
+    """
+    # Create directory for sanity check plots
+    plots_dir = os.path.join(output_dir, 'CST_boundary_sanity_checks')
+    os.makedirs(plots_dir, exist_ok=True)
+    
+    # Create test grid in non-dimensional coordinates
+    range_limit = R_SF_nonDim * 1.1  # Just beyond the sphere radius
+    x_range = np.linspace(-range_limit, range_limit, resolution)
+    z_range = np.linspace(-range_limit, range_limit, resolution)
+    X, Z = np.meshgrid(x_range, z_range)
+    
+    # Calculate CST boundary
+    CST_Boundary, CST_Boundary_combined = Cubed_Sphere_Tile_Boundary(R_SF_nonDim, N_pts=500)
+    
+    # Test each point in the grid
+    results = np.zeros((resolution, resolution))
+    for i in range(resolution):
+        print(f"\rProcessing row {i+1}/{resolution}", end='', flush=True)
+        for j in range(resolution):
+            x = X[i, j]
+            z = Z[i, j]
+            # First check if point is within sphere
+            if x**2 + z**2 <= R_SF_nonDim**2:
+                # Then check if it's in CST
+                results[i, j] = 1 if point_in_CST_check(x, z, R_SF_nonDim) else 0.5
+            else:
+                results[i, j] = 0  # Outside sphere
+    
+    # Create figure
+    fig, ax = plt.subplots(figsize=(12, 12))
+    
+    # Create custom colormap: red for outside sphere, yellow for outside CST but inside sphere, green for inside CST
+    cmap = plt.cm.colors.ListedColormap(['red', 'yellow', 'green'])
+    bounds = [0, 0.25, 0.75, 1.5]
+    norm = plt.cm.colors.BoundaryNorm(bounds, cmap.N)
+    
+    # Plot the results
+    im = ax.pcolormesh(X, Z, results, cmap=cmap, norm=norm)
+    
+    # Add colorbar
+    cbar = plt.colorbar(im, ax=ax, ticks=[0.125, 0.5, 1.0])
+    cbar.set_ticklabels(['Outside Sphere', 'Outside CST, Inside Sphere', 'Inside CST'])
+    
+    # Plot CST boundary
+    for boundary, color, label in zip(['N', 'E', 'S', 'W'], ['lime', 'cyan', 'magenta', 'blue'], ['North', 'East', 'South', 'West']):
+        points = CST_Boundary.at[0, boundary]
+        ax.plot(points[0], points[1], color=color, label=label, linewidth=2)
+    
+    # Plot sphere boundary
+    theta = np.linspace(0, 2*np.pi, 200)
+    ax.plot(R_SF_nonDim*np.cos(theta), R_SF_nonDim*np.sin(theta), 'k--', linewidth=1.5, label='Sphere')
+    
+    # Mark cube corners
+    L = R_SF_nonDim / np.sqrt(3)
+    corners = [
+        (L, L), (L, -L), (-L, -L), (-L, L)
+    ]
+    for x, z in corners:
+        ax.plot(x, z, 'ko', markersize=8)
+    
+    # Set title and labels
+    ax.set_title(f'CST Boundary Check Sanity Plot (R={R_SF_nonDim:.2f})', fontsize=14)
+    ax.set_xlabel('x (non-dimensional)', fontsize=12)
+    ax.set_ylabel('z (non-dimensional)', fontsize=12)
+    ax.legend(loc='upper right')
+    
+    # Set aspect ratio to equal
+    ax.set_aspect('equal')
+    
+    # Save the figure
+    output_path = os.path.join(plots_dir, f"CST_boundary_check_sanity_R{R_SF_nonDim:.2f}.png")
+    plt.savefig(output_path, format='png', bbox_inches='tight', dpi=300)
+    print(f"CST boundary check sanity plot saved to {output_path}")
+    
+    if show_plot:
+        plt.show()
+    plt.close(fig)
+
+    return None
+
 # Example usage:
 if __name__ == "__main__":
     print("Running Spherical Reconstruction...")
+
+    # plot_sanitycheck_CST_selection_pixel_wise(
+    #     R_SF_nonDim = 1, 
+    #     output_dir = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_variations\20250604_1311111\20250604_1312276\20250604_1312276\20250604_1313140\20250604_1314474\20250604_1314484\20250612_2041591", 
+    #     resolution=500, 
+    #     show_plot=True)
+
     Spherical_Reconstruction_1(
+        # Dimentionalised output of BBWW 2000px 
         input_dir = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_variations\20250607_2240236\20250608_0303173\20250608_0303173\20250608_0409296\20250608_0643128\20250608_0645118",
+        
+        # Dimentionalised output_dir of hot 3000px States 79 and 100
+        #input_dir = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_variations\20250604_1311111\20250604_1312276\20250604_1312276\20250604_1313140\20250604_1314474\20250604_1314484",
+        
         Spherical_Reconstruction_log_level = 2,
         show_plots = False,
         plot_CST_detJ = True,

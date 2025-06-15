@@ -102,7 +102,7 @@ def CIPS_pipeline(
     cps_CP_default_seg_file_onoff=1,
     cps_output_dir_manual="",
     cps_output_dir_comment="",
-    cps_CP_segment_log_level=2,
+    cps_CP_segment_log_level=1,
 
     # CP_extract_1 args
     cpe_output_dir_manual="",
@@ -117,7 +117,7 @@ def CIPS_pipeline(
     # Spherical_Reconstruction_1 args
     sr_output_dir_manual="",
     sr_output_dir_comment="",
-    sr_Spherical_Reconstruction_log_level=2,
+    sr_Spherical_Reconstruction_log_level=1,
     sr_show_plots=False,
     sr_plot_CST_detJ=False,
     

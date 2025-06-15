@@ -38,8 +38,8 @@ def plot9_area_distribution_Srec_histogram(
     figure_height=8,            # Height of the figure in inches
     show_image_inset=True,      # Show flame image inset
     image_inset_size=0.4,        # Size of image inset as fraction of plot
-    image_horizontal_position=0.8,  # Horizontal position of inset (0-1)
-    image_vertical_position=0.7,    # Vertical position of inset (0-1)
+    image_horizontal_position=0.76,  # Horizontal position of inset (0-1)
+    image_vertical_position=0.68,    # Vertical position of inset (0-1)
     zoom_scale=1.3,              # Scale factor for zooming in on the spherical flame
     mask_alpha=0.4,               # Transparency of masks in the inset
     show_centroids=True,          # Show cell centroids in the inset

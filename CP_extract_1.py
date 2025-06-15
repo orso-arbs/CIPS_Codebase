@@ -27,7 +27,7 @@ def CP_extract_1(
     input_dir,
 
     # extraction parameters
-    diameter_training_px = None, # Renamed/ 역할 변경: Was CP_model_type, now specific override for diameter_training_px
+    diameter_training_px = None, # specific override for diameter_training_px
     save_flows = 0, # 0: don't save flows, 1: save flows
 
     # output and logging 
@@ -212,9 +212,12 @@ def CP_extract_1(
         'channels',
         'flows0', 'flows1', 'flows2', 'flows3', 'flows4',
         'diameter_estimate_used_px', 'diameter_training_px',
-        'diameter_mean_px', 'diameter_median_px', 'diameter_distribution_px', 'outlines', 'masks', 'N_cells',
+        'CP_out_diameter_mean_px', 'CP_out_diameter_median_px', 'CP_out_diameter_distribution_px', 'outlines', 'masks', 'N_cells',
         'A_image_px2', 'A_empty_px2', 'A_SF_px2', 'Ar_px2_SFperimage', 'D_SF_px', 'R_SF_px',
         'A_CP_mask_px', 'Ar_px2_CP_maskperImage', 'Ar_px2_CP_maskperSF',
+        # Add cell-wise metrics columns
+        'A_cell_distribution_px2', 'd_cell_distribution_px',
+        'centroid_x_distribution_px', 'centroid_y_distribution_px',
         # Added columns from CP_settings that were previously read but not explicitly added here
         'gpu', 'diameter_estimate_guess_px', 'CP_segment_output_dir_comment', 'flow_threshold',
         'cellprob_threshold', 'resample', 'niter'
@@ -227,8 +230,12 @@ def CP_extract_1(
 
     # Explicitly set multiple columns to 'object' to allow lists or complex data types
     columns_with_lists = [
+        # Cellpose settings and outputs
         'ismanual', 'flows0', 'flows1', 'flows2', 'flows3', 'flows4', 'channels',
-        'outlines', 'masks', 'diameter_distribution_px',
+        'outlines', 'masks', 'CP_out_diameter_distribution_px',
+        # cell-wise metrics 
+        'A_cell_distribution_px2', 'd_cell_distribution_px',
+        'centroid_x_distribution_px', 'centroid_y_distribution_px'
     ]
     for column in columns_with_lists:
         # Check if column exists before setting dtype, as some might be added later
@@ -261,15 +268,15 @@ def CP_extract_1(
 
         # diameter_training_px is now determined outside the loop as final_diameter_training_px
 
-        # extract diameter tuple and from its mean and complete distribution
-        diameters_tuple_i = utils.diameters(masks_i)
-        diameter_median_px_i = diameters_tuple_i[0]
-        diameter_array_px_i = diameters_tuple_i[1]
-        diameter_mean_px_i = np.mean(diameter_array_px_i)
+        # extract diameter tuple and from its mean and complete distribution from Cellpose output (later will be calsulated indepoendently from masks for control)
+        CP_out_diameters_tuple_i = utils.diameters(masks_i)
+        CP_out_diameter_median_px_i = CP_out_diameters_tuple_i[0]
+        CP_out_diameter_array_px_i = CP_out_diameters_tuple_i[1]
+        CP_out_diameter_mean_px_i = np.mean(CP_out_diameter_array_px_i)
 
-        # Calculate the relative frequency of each diameter in diameter_array_px_i
-        diameters_unique, counts_diameters = np.unique(diameter_array_px_i, return_counts=True)
-        diameters_total = diameter_array_px_i.size
+        # Calculate the relative frequency of each diameter in CP_out_diameter_array_px_i
+        diameters_unique, counts_diameters = np.unique(CP_out_diameter_array_px_i, return_counts=True)
+        diameters_total = CP_out_diameter_array_px_i.size
         diameters_relative_frequencies = counts_diameters / diameters_total
 
         # CP effectiveness measures
@@ -288,6 +295,59 @@ def CP_extract_1(
         Ar_px2_CP_maskperSF = A_CP_mask_px / A_SF_px2
         
 
+        ################### cell-wise metrics
+
+        # Get unique cell IDs (excluding background = 0)##
+        cell_ids = np.unique(masks_i)
+        cell_ids = cell_ids[cell_ids > 0]  # Exclude background (ID=0)
+        
+        # Print progress update that overwrites itself
+        if CP_extract_log_level >= 1:
+            print(f"\rProcessing image {i+1}/{N_images} ({len(cell_ids)} cells found)", end='', flush=True)
+
+        # If no cells found, continue to next image
+        if len(cell_ids) == 0:
+            continue
+
+        # Initialize lists for each cell property
+        A_cell_distribution_px2 = []
+        d_cell_distribution_px = []
+        centroid_x_distribution_px = []
+        centroid_y_distribution_px = []
+        
+        # Process each cell in the image
+        for cell_id in cell_ids:
+            # Create a binary mask for this specific cell
+            cell_mask = masks_i == cell_id
+            
+            # Calculate centroid of the cell
+            y_coords, x_coords = np.where(cell_mask)
+            if len(y_coords) == 0:
+                continue
+                
+            # 8. Find cell centroid in pixel coordinates
+            centroid_y_px = np.mean(y_coords).astype(float)
+            centroid_x_px = np.mean(x_coords).astype(float)
+            
+            # 1. Calculate cell area in pixels^2
+            A_cell_px2 = len(y_coords)
+            
+            # 2. Calculate cell diameter in pixels using area
+            d_cell_px = 2 * np.sqrt(A_cell_px2 / np.pi)
+                        
+            
+            # Append values to respective lists
+            A_cell_distribution_px2.append(A_cell_px2)
+            d_cell_distribution_px.append(d_cell_px)
+            centroid_x_distribution_px.append(centroid_x_px)
+            centroid_y_distribution_px.append(centroid_y_px)
+        
+            print(f"Processed cell {cell_id}: "
+                  f"length A_cell_distribution_px2={len(A_cell_distribution_px2)}, "
+                  f"A_cell_distribution_px2={A_cell_distribution_px2[-1]}, ") if CP_extract_log_level >= 4 else None
+
+
+
         ### Fill a DataFrame row
         # Data from VisIt
         extracted_df.at[i, 'Plot_VisIt']                            = VisIt_data_df.at[i, 'Plot_VisIt']
@@ -297,7 +357,6 @@ def CP_extract_1(
         extracted_df.at[i, 'R_SF_Average_VisIt']                    = VisIt_data_df.at[i, 'R_SF_Average_VisIt']
         extracted_df.at[i, 'Min_Psuedocolored_variable_SF_VisIt']   = VisIt_data_df.at[i, 'Min_Psuedocolored_variable_SF_VisIt']
         extracted_df.at[i, 'Max_Psuedocolored_variable_SF_VisIt']   = VisIt_data_df.at[i, 'Max_Psuedocolored_variable_SF_VisIt']
-
         # Data from Images
         extracted_df.at[i, 'image_file_name'] = os.path.basename(image_files[i]) # Store only filename
         extracted_df.at[i, 'image_file_path'] = image_files[i]
@@ -329,11 +388,11 @@ def CP_extract_1(
         extracted_df.at[i, 'outlines'] = outlines_i
         extracted_df.at[i, 'masks'] = masks_i
         extracted_df.at[i, 'diameter_estimate_used_px'] = diameter_estimate_used_px_i
-        # Data calculated
+        # Image-wise calculated properties
         extracted_df.at[i, 'diameter_training_px'] = final_diameter_training_px
-        extracted_df.at[i, 'diameter_mean_px'] = diameter_mean_px_i
-        extracted_df.at[i, 'diameter_median_px'] = diameter_median_px_i
-        extracted_df.at[i, 'diameter_distribution_px'] = diameter_array_px_i
+        extracted_df.at[i, 'CP_out_diameter_mean_px'] = CP_out_diameter_mean_px_i # from Cellpose output diameter distribution
+        extracted_df.at[i, 'CP_out_diameter_median_px'] = CP_out_diameter_median_px_i # from Cellpose output diameter distribution
+        extracted_df.at[i, 'CP_out_diameter_distribution_px'] = CP_out_diameter_array_px_i # from Cellpose output diameter distribution
         extracted_df.at[i, 'N_cells'] = N_cells_i
         extracted_df.at[i, 'A_image_px2'] = A_image_px2
         extracted_df.at[i, 'A_empty_px2'] = A_empty_px2
@@ -344,10 +403,16 @@ def CP_extract_1(
         extracted_df.at[i, 'A_CP_mask_px'] = A_CP_mask_px
         extracted_df.at[i, 'Ar_px2_CP_maskperImage'] = Ar_px2_CP_maskperImage
         extracted_df.at[i, 'Ar_px2_CP_maskperSF'] = Ar_px2_CP_maskperSF
+        # Cell-wise calculated properties      
+        extracted_df.at[i, 'A_cell_distribution_px2'] = np.array(A_cell_distribution_px2)
+        extracted_df.at[i, 'd_cell_distribution_px'] = np.array(d_cell_distribution_px)
+        extracted_df.at[i, 'centroid_x_distribution_px'] = np.array(centroid_x_distribution_px)
+        extracted_df.at[i, 'centroid_y_distribution_px'] = np.array(centroid_y_distribution_px)
 
 
-    # Clean diameter_distribution_px after the loop
-    extracted_df['diameter_distribution_px'] = extracted_df['diameter_distribution_px'].apply(
+
+    # Clean CP_out_diameter_distribution_px after the loop
+    extracted_df['CP_out_diameter_distribution_px'] = extracted_df['CP_out_diameter_distribution_px'].apply(
         lambda x: np.array([x]) if isinstance(x, np.ndarray) and x.ndim == 0 else x
     )
 
@@ -390,3 +455,15 @@ def CP_extract_1(
 
     #################################################### return
     return output_dir # Format_1 requires output_dir as first return
+
+# Example usage:
+if __name__ == "__main__":
+    print("Running CP extract...")
+    
+    CP_extract_1(
+        # Segmentation output_dir of hot 3000px States 79 and 100
+        input_dir=r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_variations\20250604_1311111\20250604_1312276\20250604_1312276\20250604_1313140",
+        output_dir_comment="test new CP_extract_1",
+        CP_extract_log_level=1,
+        save_flows=0
+    )
