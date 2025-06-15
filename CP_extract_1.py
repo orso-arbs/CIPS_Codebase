@@ -218,6 +218,8 @@ def CP_extract_1(
         # Add cell-wise metrics columns
         'A_cell_distribution_px2', 'd_cell_distribution_px',
         'centroid_x_distribution_px', 'centroid_y_distribution_px',
+        'd_cell_mean_px', 'A_cell_mean_px2',
+        'd_cell_median_px', 'A_cell_median_px2',  # Add new columns
         # Added columns from CP_settings that were previously read but not explicitly added here
         'gpu', 'diameter_estimate_guess_px', 'CP_segment_output_dir_comment', 'flow_threshold',
         'cellprob_threshold', 'resample', 'niter'
@@ -346,6 +348,13 @@ def CP_extract_1(
                   f"length A_cell_distribution_px2={len(A_cell_distribution_px2)}, "
                   f"A_cell_distribution_px2={A_cell_distribution_px2[-1]}, ") if CP_extract_log_level >= 4 else None
 
+        # Calculate mean and median diameter from the distributions
+        d_cell_mean_px = np.mean(d_cell_distribution_px)
+        A_cell_mean_px2 = np.mean(A_cell_distribution_px2)
+        d_cell_median_px = np.median(d_cell_distribution_px)
+        A_cell_median_px2 = np.median(A_cell_distribution_px2)
+
+
 
 
         ### Fill a DataFrame row
@@ -403,12 +412,15 @@ def CP_extract_1(
         extracted_df.at[i, 'A_CP_mask_px'] = A_CP_mask_px
         extracted_df.at[i, 'Ar_px2_CP_maskperImage'] = Ar_px2_CP_maskperImage
         extracted_df.at[i, 'Ar_px2_CP_maskperSF'] = Ar_px2_CP_maskperSF
-        # Cell-wise calculated properties      
+        # from Cell-wise calculated properties      
         extracted_df.at[i, 'A_cell_distribution_px2'] = np.array(A_cell_distribution_px2)
         extracted_df.at[i, 'd_cell_distribution_px'] = np.array(d_cell_distribution_px)
         extracted_df.at[i, 'centroid_x_distribution_px'] = np.array(centroid_x_distribution_px)
         extracted_df.at[i, 'centroid_y_distribution_px'] = np.array(centroid_y_distribution_px)
-
+        extracted_df.at[i, 'd_cell_mean_px'] = d_cell_mean_px
+        extracted_df.at[i, 'A_cell_mean_px2'] = A_cell_mean_px2
+        extracted_df.at[i, 'd_cell_median_px'] = d_cell_median_px
+        extracted_df.at[i, 'A_cell_median_px2'] = A_cell_median_px2
 
 
     # Clean CP_out_diameter_distribution_px after the loop

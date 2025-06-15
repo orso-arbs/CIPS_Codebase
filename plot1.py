@@ -118,7 +118,7 @@ def plotter_1(input_dir, # Format_1 requires input_dir
 
     
     #################################################### Plotting
-
+    
     # auxillary function to plot the data
 
     # Number of rows in the DataFrame
@@ -128,10 +128,10 @@ def plotter_1(input_dir, # Format_1 requires input_dir
     bin_size = 2
     max_frequency = 0
     for i in range(N_images):
-        unique_diameters, counts_diameters = np.unique(CP_data_df.loc[i, 'diameter_distribution_px'], return_counts=True)
+        unique_diameters, counts_diameters = np.unique(CP_data_df.loc[i, 'd_cell_distribution_px'], return_counts=True)
         max_diameter = max(unique_diameters) if unique_diameters.size > 0 else 0
         bins = np.arange(0, max_diameter + bin_size, bin_size)    
-        hist, _ = np.histogram(CP_data_df.loc[i, 'diameter_distribution_px'], bins=bins)
+        hist, _ = np.histogram(CP_data_df.loc[i, 'd_cell_distribution_px'], bins=bins)
         if hist.size > 0:
             max_frequency = max(max_frequency, hist.max())
         else:
@@ -181,17 +181,17 @@ def plotter_1(input_dir, # Format_1 requires input_dir
         ax_0_2.axis('off')
 
         # Plot: Diameter distribution vs. diameter frequency (bin count histogram)
-        unique_diameters, counts_diameters = np.unique(CP_data_df.loc[i, 'diameter_distribution_px'], return_counts=True)
+        unique_diameters, counts_diameters = np.unique(CP_data_df.loc[i, 'd_cell_distribution_px'], return_counts=True)
         max_diameter = max(unique_diameters) if unique_diameters.size > 0 else 0
         bins = np.arange(0, max_diameter + bin_size, bin_size)
 
-        ax_1_0.hist(CP_data_df.loc[i, 'diameter_distribution_px'], bins=bins)
+        ax_1_0.hist(CP_data_df.loc[i, 'd_cell_distribution_px'], bins=bins)
         ax_1_0.set_title("Diameter Distribution")
         ax_1_0.set_xlabel("Diameter [px]")
         ax_1_0.set_ylabel("Frequency")
 
-        mean_diameter = CP_data_df.loc[i, 'diameter_mean_px'] if np.isfinite(CP_data_df.loc[i, 'diameter_mean_px']) else 0
-        median_diameter = CP_data_df.loc[i, 'diameter_median_px'] if np.isfinite(CP_data_df.loc[i, 'diameter_median_px']) else 0
+        mean_diameter = CP_data_df.loc[i, 'd_cell_mean_px'] if np.isfinite(CP_data_df.loc[i, 'd_cell_mean_px']) else 0
+        median_diameter = CP_data_df.loc[i, 'd_cell_median_px'] if np.isfinite(CP_data_df.loc[i, 'd_cell_median_px']) else 0
         diameter_training_px = CP_data_df.iloc[i]['diameter_training_px'] if np.isfinite(CP_data_df.iloc[i]['diameter_training_px']) else 0
         diameter_estimate_used_px = CP_data_df.iloc[i]['diameter_estimate_used_px'] if np.isfinite(CP_data_df.iloc[i]['diameter_estimate_used_px']) else 0
         ax_1_0.axvline(mean_diameter, color='blue', linewidth=1)
@@ -204,18 +204,18 @@ def plotter_1(input_dir, # Format_1 requires input_dir
         ax_1_0.axvline(diameter_estimate_used_px, color='purple', linewidth=1)
         ax_1_0.text(diameter_estimate_used_px, ax_1_0.get_ylim()[1] * 0.6, f'Estimate: {diameter_estimate_used_px:05.2f}', color='purple')
 
-        ax_1_0.set_xlim(0, CP_data_df['diameter_distribution_px'].apply(lambda x: np.max(x) if x.size > 0 else 0).max() * 1.05)
+        ax_1_0.set_xlim(0, CP_data_df['d_cell_distribution_px'].apply(lambda x: np.max(x) if x.size > 0 else 0).max() * 1.05)
         ax_1_0.set_ylim(0, max_frequency*1.05)
 
         # Plot: Image number vs. median diameter, mean diameter, and amount of cells (up to current image)
         x_array = range(N_images)
         #ax_1_12 = ax_1_12_auxilliary
         ax_1_12_R = ax_1_12.twinx()
-        ax_1_12.plot(range(N_images), CP_data_df['diameter_mean_px'], label=f"{CP_data_df.iloc[i]['diameter_mean_px']:05.2f} = Cell Mean Diameter [px]", color='blue')
-        ax_1_12.plot(range(N_images), CP_data_df['diameter_median_px'], label=f"{CP_data_df.iloc[i]['diameter_median_px']:05.2f} = Cell Median Diameter [px]", color='green')
+        ax_1_12.plot(range(N_images), CP_data_df['d_cell_mean_px'], label=f"{CP_data_df.iloc[i]['d_cell_mean_px']:05.2f} = Cell Mean Diameter [px]", color='blue')
+        ax_1_12.plot(range(N_images), CP_data_df['d_cell_median_px'], label=f"{CP_data_df.iloc[i]['d_cell_median_px']:05.2f} = Cell Median Diameter [px]", color='green')
         ax_1_12.plot(range(N_images), CP_data_df['diameter_training_px'], label=f"{CP_data_df.iloc[i]['diameter_training_px'] if pd.notna(CP_data_df.iloc[i]['diameter_training_px']) else 'N/A' :05.2f} = Cellpose Training Diameter [px]", color='violet')
         ax_1_12.plot(range(N_images), CP_data_df['diameter_estimate_used_px'], label=f"{CP_data_df.iloc[i]['diameter_estimate_used_px'] if pd.notna(CP_data_df.iloc[i]['diameter_estimate_used_px']) else 'N/A' :05.2f} = Cellpose Estimate Diameter [px]", color='purple')
-        #S = max(CP_data_df['diameter_mean_px'].max(), CP_data_df['diameter_median_px'].max()) / CP_data_df['D_SF_px'].max()
+        #S = max(CP_data_df['d_cell_mean_px'].max(), CP_data_df['d_cell_median_px'].max()) / CP_data_df['D_SF_px'].max()
         #ax_1_12.plot(range(N_images), CP_data_df['D_SF_px'] * S, label=f"{(CP_data_df.iloc[i]['D_SF_px']*S):.2f} = Flame Ball Diameter * {S:.3f}", color='orange')
         S2 = 1e-1
         ax_1_12.plot(range(N_images), CP_data_df['D_SF_px'] * S2, label=f"{(CP_data_df.iloc[i]['D_SF_px']*S2):05.2f} = Flame Ball Diameter [px] * {S2:.3f}", color='orange')
@@ -232,8 +232,8 @@ def plotter_1(input_dir, # Format_1 requires input_dir
         ax_1_12_RR.plot(range(N_images), CP_data_df['Ar_px2_CP_maskperSF'], label=f"{CP_data_df.iloc[i]['Ar_px2_CP_maskperSF']:05.2f}" + " = CP efficiency $\mu_{CP} = A_{CP}/A_{SF}$", color='gray')
 
         ax_1_12.set_xlim(0, N_images - 1)
-        #ax_1_12.set_ylim(min(CP_data_df['diameter_mean_px'].min(), CP_data_df['diameter_median_px'].min(), CP_data_df['D_SF_px'].max()*S2), max(CP_data_df['diameter_mean_px'].max(), CP_data_df['diameter_median_px'].max(), CP_data_df['D_SF_px'].max() * S2)*1.05)
-        ax_1_12.set_ylim(0, max(CP_data_df['diameter_mean_px'].max(), CP_data_df['diameter_median_px'].max(), CP_data_df['D_SF_px'].max() * S2)*1.05)
+        #ax_1_12.set_ylim(min(CP_data_df['d_cell_mean_px'].min(), CP_data_df['d_cell_median_px'].min(), CP_data_df['D_SF_px'].max()*S2), max(CP_data_df['d_cell_mean_px'].max(), CP_data_df['d_cell_median_px'].max(), CP_data_df['D_SF_px'].max() * S2)*1.05)
+        ax_1_12.set_ylim(0, max(CP_data_df['d_cell_mean_px'].max(), CP_data_df['d_cell_median_px'].max(), CP_data_df['D_SF_px'].max() * S2)*1.05)
         ax_1_12_R.set_ylim(CP_data_df['N_cells'].min(), CP_data_df['N_cells'].max()*1.05)
 
         ax_1_12.set_xticks(range(N_images))  # Keep original ticks
@@ -292,9 +292,6 @@ def plotter_1(input_dir, # Format_1 requires input_dir
         AWTTP.add_white_space_with_banners(input_image_path, output_image_path, top_text, bottom_text, font_size = 18)
 
 
-
-
-
     print("\n") # new line
 
     if video == 1:
@@ -309,3 +306,15 @@ def plotter_1(input_dir, # Format_1 requires input_dir
     ####################################################### return
 
     return output_dir # Format_1 requires outpu_dir as first return
+
+# Example usage:
+if __name__ == "__main__":
+    print("Running plotter...")
+    
+    plotter_1(
+        # Extraction output_dir of hot 3000px States 79 and 100
+        input_dir=r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_variations\20250604_1311111\20250604_1312276\20250604_1312276\20250604_1313140\20250615_1635229",
+        output_dir_comment="test_plotting",
+        Plot_log_level=1,
+        video=1
+    )
