@@ -214,7 +214,7 @@ def CP_extract_1(
         'diameter_estimate_used_px', 'diameter_training_px',
         'CP_out_diameter_mean_px', 'CP_out_diameter_median_px', 'CP_out_diameter_distribution_px', 'outlines', 'masks', 'N_cells',
         'A_image_px2', 'A_empty_px2', 'A_SF_px2', 'Ar_px2_SFperimage', 'D_SF_px', 'R_SF_px',
-        'A_CP_mask_px', 'Ar_px2_CP_maskperImage', 'Ar_px2_CP_maskperSF',
+        'A_CP_mask_px2', 'Ar_px2_CP_maskperImage', 'Ar_px2_CP_maskperSF',
         # Add cell-wise metrics columns
         'A_cell_distribution_px2', 'd_cell_distribution_px',
         'centroid_x_distribution_px', 'centroid_y_distribution_px',
@@ -250,10 +250,20 @@ def CP_extract_1(
             extracted_df[col] = extracted_df[col].astype('object')
 
 
-    ## Extract data by looping through each image and its segmentation for better controll (computationally more expensive but its ok)
+    ## Extract data by looping through each image and its segmentation
+    print()
     for i in range(N_images):
+        # Add debug print to track which image is being processed
+        print(f"\rProcessing image {i+1}/{N_images} (filename: {os.path.basename(image_files[i])})", end='', flush=True) if CP_extract_log_level >= 1 else None
+        
         image_i = all_images[i]
         grayscale_image_i = all_grayscale_images[i]
+        
+        # Verify the segmentation file exists and can be accessed
+        if i >= len(all_segs):
+            print(f"WARNING: Missing segmentation for image {i}") if CP_extract_log_level >= 1 else None
+            continue
+            
         seg_i = all_segs[i]
 
         # read seg
@@ -267,22 +277,33 @@ def CP_extract_1(
         channels = seg_i["chan_choose"]
         ismanual = seg_i['ismanual']
         seg_image_filename = seg_i["filename"] # gives seg filename though it shoud give images file name. weird...
+        N_cells_i = np.max(masks_i)
 
         # diameter_training_px is now determined outside the loop as final_diameter_training_px
 
-        # extract diameter tuple and from its mean and complete distribution from Cellpose output (later will be calsulated indepoendently from masks for control)
-        CP_out_diameters_tuple_i = utils.diameters(masks_i)
-        CP_out_diameter_median_px_i = CP_out_diameters_tuple_i[0]
-        CP_out_diameter_array_px_i = CP_out_diameters_tuple_i[1]
-        CP_out_diameter_mean_px_i = np.mean(CP_out_diameter_array_px_i)
+        # Check if there are any cells first
+        if N_cells_i == 0:
+            CP_out_diameter_median_px_i = np.nan
+            CP_out_diameter_array_px_i = np.array([])
+            CP_out_diameter_mean_px_i = np.nan
+        else:
+            # extract diameter tuple and from its mean and complete distribution from Cellpose output
+            CP_out_diameters_tuple_i = utils.diameters(masks_i)
+            CP_out_diameter_median_px_i = CP_out_diameters_tuple_i[0]
+            CP_out_diameter_array_px_i = CP_out_diameters_tuple_i[1]
+            CP_out_diameter_mean_px_i = np.mean(CP_out_diameter_array_px_i)
 
         # Calculate the relative frequency of each diameter in CP_out_diameter_array_px_i
-        diameters_unique, counts_diameters = np.unique(CP_out_diameter_array_px_i, return_counts=True)
-        diameters_total = CP_out_diameter_array_px_i.size
-        diameters_relative_frequencies = counts_diameters / diameters_total
+        if len(CP_out_diameter_array_px_i) == 0:
+            diameters_unique = np.array([])
+            diameters_relative_frequencies = np.array([])
+            diameters_total = 0
+        else:
+            diameters_unique, counts_diameters = np.unique(CP_out_diameter_array_px_i, return_counts=True)
+            diameters_total = CP_out_diameter_array_px_i.size
+            diameters_relative_frequencies = counts_diameters / diameters_total
 
         # CP effectiveness measures
-        N_cells_i = np.max(masks_i)
         image_Nx_px = image_i.shape[0]
         image_Ny_px = image_i.shape[1]
         A_image_px2 = image_Nx_px * image_Ny_px
@@ -292,11 +313,10 @@ def CP_extract_1(
         D_SF_px = math.sqrt(A_SF_px2 * 4 / math.pi)
         R_SF_px = D_SF_px / 2
 
-        A_CP_mask_px = np.count_nonzero(masks_i != 0)
-        Ar_px2_CP_maskperImage = A_CP_mask_px / A_image_px2
-        Ar_px2_CP_maskperSF = A_CP_mask_px / A_SF_px2
+        A_CP_mask_px2 = np.count_nonzero(masks_i != 0)
+        Ar_px2_CP_maskperImage = A_CP_mask_px2 / A_image_px2
+        Ar_px2_CP_maskperSF = A_CP_mask_px2 / A_SF_px2
         
-
         ################### cell-wise metrics
 
         # Get unique cell IDs (excluding background = 0)##
@@ -305,59 +325,71 @@ def CP_extract_1(
         
         # Print progress update that overwrites itself
         if CP_extract_log_level >= 1:
-            print(f"\rProcessing image {i+1}/{N_images} ({len(cell_ids)} cells found)", end='', flush=True)
+            print(f" ({len(cell_ids)} cells found)", end='', flush=True)
 
-        # If no cells found, continue to next image
-        if len(cell_ids) == 0:
-            continue
-
-        # Initialize lists for each cell property
+        # Initialize cell property arrays - even if empty
         A_cell_distribution_px2 = []
         d_cell_distribution_px = []
         centroid_x_distribution_px = []
         centroid_y_distribution_px = []
         
-        # Process each cell in the image
-        for cell_id in cell_ids:
-            # Create a binary mask for this specific cell
-            cell_mask = masks_i == cell_id
-            
-            # Calculate centroid of the cell
-            y_coords, x_coords = np.where(cell_mask)
-            if len(y_coords) == 0:
-                continue
+        # If no cells found, set placeholder values but don't skip the image
+        if len(cell_ids) == 0:
+            d_cell_mean_px = np.nan
+            A_cell_mean_px2 = np.nan
+            d_cell_median_px = np.nan
+            A_cell_median_px2 = np.nan
+        else:
+            # Process each cell in the image
+            for cell_id in cell_ids:
+                # Create a binary mask for this specific cell
+                cell_mask = masks_i == cell_id
                 
-            # 8. Find cell centroid in pixel coordinates
-            centroid_y_px = np.mean(y_coords).astype(float)
-            centroid_x_px = np.mean(x_coords).astype(float)
+                # Calculate centroid of the cell
+                y_coords, x_coords = np.where(cell_mask)
+                if len(y_coords) == 0:
+                    continue
+                    
+                # Find cell centroid in pixel coordinates
+                centroid_y_px = np.mean(y_coords).astype(float)
+                centroid_x_px = np.mean(x_coords).astype(float)
+                
+                # Calculate cell area in pixels^2
+                A_cell_px2 = len(y_coords)
+                
+                # Calculate cell diameter in pixels using area
+                d_cell_px = 2 * np.sqrt(A_cell_px2 / np.pi)
+                            
+                # Append values to respective lists
+                A_cell_distribution_px2.append(A_cell_px2)
+                d_cell_distribution_px.append(d_cell_px)
+                centroid_x_distribution_px.append(centroid_x_px)
+                centroid_y_distribution_px.append(centroid_y_px)
             
-            # 1. Calculate cell area in pixels^2
-            A_cell_px2 = len(y_coords)
-            
-            # 2. Calculate cell diameter in pixels using area
-            d_cell_px = 2 * np.sqrt(A_cell_px2 / np.pi)
-                        
-            
-            # Append values to respective lists
-            A_cell_distribution_px2.append(A_cell_px2)
-            d_cell_distribution_px.append(d_cell_px)
-            centroid_x_distribution_px.append(centroid_x_px)
-            centroid_y_distribution_px.append(centroid_y_px)
-        
-            print(f"Processed cell {cell_id}: "
-                  f"length A_cell_distribution_px2={len(A_cell_distribution_px2)}, "
-                  f"A_cell_distribution_px2={A_cell_distribution_px2[-1]}, ") if CP_extract_log_level >= 4 else None
+                print(f"Processed cell {cell_id}: "
+                    f"length A_cell_distribution_px2={len(A_cell_distribution_px2)}, "
+                    f"A_cell_distribution_px2={A_cell_distribution_px2[-1]}, ") if CP_extract_log_level >= 4 else None
 
-        # Calculate mean and median diameter from the distributions
-        d_cell_mean_px = np.mean(d_cell_distribution_px)
-        A_cell_mean_px2 = np.mean(A_cell_distribution_px2)
-        d_cell_median_px = np.median(d_cell_distribution_px)
-        A_cell_median_px2 = np.median(A_cell_distribution_px2)
+            # Calculate mean and median diameter from the distributions
+            # Make sure there are cells before calculating statistics
+            if len(d_cell_distribution_px) > 0:
+                d_cell_mean_px = np.mean(d_cell_distribution_px)
+                A_cell_mean_px2 = np.mean(A_cell_distribution_px2)
+                d_cell_median_px = np.median(d_cell_distribution_px)
+                A_cell_median_px2 = np.median(A_cell_distribution_px2)
+            else:
+                d_cell_mean_px = np.nan
+                A_cell_mean_px2 = np.nan
+                d_cell_median_px = np.nan
+                A_cell_median_px2 = np.nan
 
+        # Ensure we always set an array value even if empty
+        A_cell_distribution_px2 = np.array(A_cell_distribution_px2)
+        d_cell_distribution_px = np.array(d_cell_distribution_px)
+        centroid_x_distribution_px = np.array(centroid_x_distribution_px)
+        centroid_y_distribution_px = np.array(centroid_y_distribution_px)
 
-
-
-        ### Fill a DataFrame row
+        # Fill DataFrame row with current image data
         # Data from VisIt
         extracted_df.at[i, 'Plot_VisIt']                            = VisIt_data_df.at[i, 'Plot_VisIt']
         extracted_df.at[i, 'Image_filename_VisIt']                  = VisIt_data_df.at[i, 'Image_filename_VisIt']
@@ -409,7 +441,7 @@ def CP_extract_1(
         extracted_df.at[i, 'Ar_px2_SFperimage'] = Ar_px2_SFperimage
         extracted_df.at[i, 'D_SF_px'] = D_SF_px
         extracted_df.at[i, 'R_SF_px'] = R_SF_px
-        extracted_df.at[i, 'A_CP_mask_px'] = A_CP_mask_px
+        extracted_df.at[i, 'A_CP_mask_px2'] = A_CP_mask_px2
         extracted_df.at[i, 'Ar_px2_CP_maskperImage'] = Ar_px2_CP_maskperImage
         extracted_df.at[i, 'Ar_px2_CP_maskperSF'] = Ar_px2_CP_maskperSF
         # from Cell-wise calculated properties      
@@ -423,6 +455,9 @@ def CP_extract_1(
         extracted_df.at[i, 'A_cell_median_px2'] = A_cell_median_px2
 
 
+    # After the loop, ensure the DataFrame is properly indexed
+    extracted_df = extracted_df.reset_index(drop=True)  # Reset index to ensure it starts at 0 and is continuous
+    
     # Clean CP_out_diameter_distribution_px after the loop
     extracted_df['CP_out_diameter_distribution_px'] = extracted_df['CP_out_diameter_distribution_px'].apply(
         lambda x: np.array([x]) if isinstance(x, np.ndarray) and x.ndim == 0 else x

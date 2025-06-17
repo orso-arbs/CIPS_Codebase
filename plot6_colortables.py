@@ -424,7 +424,7 @@ if __name__ == "__main__":
     
     plotter_6_colortables(
         # BBWW extract 
-        input_dir = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_Pipe_Default_dir\20250609_2008055\20250609_2008066\20250609_2013422\20250609_2014114",
+        input_dir = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_variations\BW vars\20250610_0646347\20250610_0646347\20250615_1609401\20250615_1727535",
         output_dir_manual="",
         output_dir_comment="",
         show_plot=0,
