@@ -302,7 +302,6 @@ def plotter_1(input_dir, # Format_1 requires input_dir
             output_dir_comment = output_dir_comment,
             )
 
-
     ####################################################### return
 
     return output_dir # Format_1 requires outpu_dir as first return

@@ -21,7 +21,7 @@ def CIPS_pipeline_2(
     # General control
     input_dir=r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_Pipe_Default_dir",
     cips_pipeline_output_dir_manual="",
-    cips_pipeline_output_dir_comment="", 
+    cips_pipeline_output_dir_comment="T3_vmag_3000px_WWBBWW_cyto3_flowThres0p5", 
     cips_pipeline_global_log_level=None,
 
     # Stage output overrides (for resuming pipeline)
@@ -46,10 +46,12 @@ def CIPS_pipeline_2(
     distance_bw=1.0,
     # Parameters for the pointwise color table
     pointwise_color_points=[
-        [0.0, 0, 0, 0, 255],
-        [0.3, 0, 0, 0, 255],
-        [0.7, 255, 255, 255, 255],
-        [1.0, 255, 255, 255, 255],
+        [0.0, 255, 255, 255, 255],  # White
+        [0.3, 255, 255, 255, 255],  # White
+        [0.45, 0, 0, 0, 255], # Black
+        [0.55, 0, 0, 0, 255], # Black
+        [0.7, 255, 255, 255, 255],  # White
+        [1.0, 255, 255, 255, 255],  # White
     ],  
     show_color_table_markers=True,
     
@@ -61,8 +63,8 @@ def CIPS_pipeline_2(
     vp_imageZoom=1,
     vp_parallelScale=80,
     vp_perspective=0,
-    vp_WindowWidth=2000,
-    vp_WindowHeight=2000,
+    vp_WindowWidth=3000,
+    vp_WindowHeight=3000,
     vp_Visit_projector_1_log_level=2,
     vp_Visit_projector_1_show_windows=0,
     vp_output_dir_manual="",
@@ -79,7 +81,7 @@ def CIPS_pipeline_2(
     cps_cellprob_threshold=0.0, 
     cps_resample=True, 
     cps_niter=0,
-    cps_batch_size=4,
+    cps_batch_size=2,
     cps_augment=True,
     cps_tile_overlap=0.1,
     cps_bsize=160,
@@ -104,7 +106,7 @@ def CIPS_pipeline_2(
     a11_S_L=51.44,
     a11_T_b=1843.5,
     a11_show_plots=False,
-    a11_plot_CST_detJ=False,
+    a11_plot_CST_detJ=True,
     a11_plot_CST_selection=True,
     a11_Convert_to_grayscale_image=True,
 
@@ -158,13 +160,13 @@ def CIPS_pipeline_2(
     p6c_Legend_y_offset=1.3,
     p6c_dpi=100,
     p6c_save_fig=True,
-    p6c_video=False,
+    p6c_video=True,
 
     # Control flags for pipeline sections
     run_visit_projector=True,
     run_cp_segment=True,
     run_cp_extract=True,
-    run_analysis_a11=True,  # New flag for the unified A11 analysis
+    run_analysis_a11=True,
     run_plotter_6_colortables=True,
     run_plotter_1=True,
     run_plotter_4=True,
@@ -548,20 +550,20 @@ if __name__ == "__main__":
     
     CIPS_pipeline_2(
         cips_pipeline_global_log_level=2, 
-        cips_pipeline_output_dir_comment="unified_A11_analysis",
+        cips_pipeline_output_dir_comment="T3_vmag_3000px_WWBBWW_cyto3_flowThres0p5",
         
         # Visit_Projector parameters
         
         # Cellpose segmentation parameters
         cps_max_images_per_batch=40,
-        cps_batch_size=4,
+        cps_batch_size=2,
         cps_augment=True,
         cps_tile_overlap=0.1,
         cps_bsize=160,
         cps_output_dir_comment="",
         
         # Cellpose extract parameters
-        cpe_output_dir_comment="Test_A11_pipeline",
+        cpe_output_dir_comment="",
         cpe_CP_extract_log_level=2,	
 
         # Analysis Altantzis2011 parameters
@@ -572,10 +574,10 @@ if __name__ == "__main__":
         a11_plot_CST_selection=True,
         
         # Run all pipeline steps
-        run_visit_projector=False, cips_VP1_output_dir_override=r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_variations\BW vars\20250610_0004544\20250610_0004569",
-        run_cp_segment=False, cips_CPs1_output_dir_override=r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_variations\BW vars\20250610_0004544\20250610_0004569\20250612_2023463",
+        run_visit_projector=True, #cips_VP1_output_dir_override=r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_variations\BW vars\20250610_0004544\20250610_0004569",
+        run_cp_segment=True, #cips_CPs1_output_dir_override=r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_Pipe_Default_dir\20250618_1754539\20250618_1754549\20250618_1756011",
         run_cp_extract=True,
-        run_analysis_a11=True,
+        run_analysis_a11=True, #cips_A11_output_dir_override=r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_Pipe_Default_dir\20250618_1754539\20250618_1754549\20250618_1756011\20250618_2359067\20250618_2359162",
         run_plotter_1=True,
         run_plotter_4=True,
         run_plotter_2=True,

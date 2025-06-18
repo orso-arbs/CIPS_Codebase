@@ -172,15 +172,15 @@ def plotter_2_CPvsA11(input_dir, # Format_1 requires input_dir
 
 
     # Find the maximum frequency for all histograms
-    max_diameter_row = CP_data_df['diameter_distribution_nonDim'].apply(lambda x: np.max(x) if len(x) > 0 else None)
+    max_diameter_row = CP_data_df['d_cell_distribution_nonDim'].apply(lambda x: np.max(x) if len(x) > 0 else None)
     max_diameter = max_diameter_row.max()
     bin_size = max_diameter/15
     max_frequency = 0
     for i in range(N_images):
-        unique_diameters, counts_diameters = np.unique(CP_data_df.loc[i, 'diameter_distribution_nonDim'], return_counts=True)
+        unique_diameters, counts_diameters = np.unique(CP_data_df.loc[i, 'd_cell_distribution_nonDim'], return_counts=True)
         max_diameter = max(unique_diameters) if unique_diameters.size > 0 else 0
         bins = np.arange(0, max_diameter + bin_size, bin_size)    
-        hist, _ = np.histogram(CP_data_df.loc[i, 'diameter_distribution_nonDim'], bins=bins)
+        hist, _ = np.histogram(CP_data_df.loc[i, 'd_cell_distribution_nonDim'], bins=bins)
         if hist.size > 0:
             max_frequency = max(max_frequency, hist.max())
         else:
@@ -233,20 +233,20 @@ def plotter_2_CPvsA11(input_dir, # Format_1 requires input_dir
 
 
         # Plot: Diameter distribution vs. diameter frequency (bin count histogram)
-        unique_diameters, counts_diameters = np.unique(CP_data_df.loc[i, 'diameter_distribution_nonDim'], return_counts=True)
+        unique_diameters, counts_diameters = np.unique(CP_data_df.loc[i, 'd_cell_distribution_nonDim'], return_counts=True)
         max_diameter_i = max(unique_diameters) if unique_diameters.size > 0 else 0
         bins = np.arange(0, max_diameter_i + bin_size, bin_size)
 
-        ax_1_0.hist(CP_data_df.loc[i, 'diameter_distribution_nonDim'], bins=bins, orientation='horizontal', edgecolor='turquoise', color='white', linewidth=2)
+        ax_1_0.hist(CP_data_df.loc[i, 'd_cell_distribution_nonDim'], bins=bins, orientation='horizontal', edgecolor='turquoise', color='white', linewidth=2)
 #        ax_1_0.invert_xaxis()
         ax_1_0.set_title("Diameter Distribution")
         ax_1_0.set_xlabel("Frequency")
         ax_1_0.set_ylabel("Diameter")
         ax_1_0.set_xlim(0, max_frequency*1.05)
-        ax_1_0.set_ylim(0, CP_data_df['diameter_distribution_nonDim'].apply(lambda x: np.max(x) if x.size > 0 else 0).max() * 1.05)
+        ax_1_0.set_ylim(0, CP_data_df['d_cell_distribution_nonDim'].apply(lambda x: np.max(x) if x.size > 0 else 0).max() * 1.05)
 
-        mean_diameter = CP_data_df.loc[i, 'diameter_mean_nonDim']
-        median_diameter = CP_data_df.loc[i, 'diameter_median_nonDim']
+        mean_diameter = CP_data_df.loc[i, 'd_cell_mean_px']
+        median_diameter = CP_data_df.loc[i, 'd_cell_median_px']
         diameter_training_nonDim = CP_data_df.iloc[i]['diameter_training_nonDim']
         ax_1_0.axhline(mean_diameter, color='green', linewidth=2)
         ax_1_0.text(ax_1_0.get_xlim()[1] * 0.5, mean_diameter + max_diameter*0.01, f'Mean: {mean_diameter:05.2f}', color='green')
@@ -260,7 +260,7 @@ def plotter_2_CPvsA11(input_dir, # Format_1 requires input_dir
         #ax_1_12 = ax_1_12_auxilliary
 
 
-        line_1_12_1, = ax_1_12.plot(CP_data_df['time'], CP_data_df['diameter_mean_nonDim'], label=f"{CP_data_df.iloc[i]['diameter_mean_nonDim']:05.2f}" +" = Cell Mean Diameter $D_{c,mean}$", color='green')
+        line_1_12_1, = ax_1_12.plot(CP_data_df['time'], CP_data_df['d_cell_mean_px'], label=f"{CP_data_df.iloc[i]['d_cell_mean_px']:05.2f}" +" = Cell Mean Diameter $D_{c,mean}$", color='green')
         line_1_12_2, = ax_1_12.plot(CP_data_df['time'], CP_data_df['diameter_training_nonDim'], label=f"{CP_data_df.iloc[i]['diameter_training_nonDim'] if pd.notna(CP_data_df.iloc[i]['diameter_training_nonDim']) else 0.00:05.2f} = Cellpose Training Diameter", color='aquamarine')
 
 
@@ -389,3 +389,34 @@ def plotter_2_CPvsA11(input_dir, # Format_1 requires input_dir
     
     print(f"Plotter 2 (CPvsA11) finished. Output in {output_dir}")
     return output_dir # Format_1 requires outpu_dir as first return
+
+# Example usage when script is run directly
+if __name__ == "__main__":
+    print("Running plotter_2_CPvsA11 as standalone module...")
+    
+    # Example input directory that should contain a .pkl file with CP data
+    input_dir = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_Pipe_Default_dir\20250618_1754539\20250618_1754549\20250618_1756011\20250618_2359067\20250618_2359162"
+    
+    # Try to load the DataFrame directly
+    try:
+        pkl_files = glob.glob(os.path.join(input_dir, "*.pkl"))
+        if pkl_files:
+            CP_data_path = pkl_files[0]
+            analysis_df = pd.read_pickle(CP_data_path)
+            print(f"Loaded data from: {CP_data_path}")
+        else:
+            print("No .pkl files found in the input directory.")
+            analysis_df = None
+    except Exception as e:
+        print(f"Error loading data: {e}")
+        analysis_df = None
+    
+    output_dir = plotter_2_CPvsA11(
+        input_dir=input_dir,
+        CP_data_df=analysis_df,
+        video=1,  # Set to 1 to create video
+        Plot_log_level=2,  # Higher log level for more information
+        output_dir_comment="test_standalone"
+    )
+    
+    print(f"Plotting complete. Results in: {output_dir}")

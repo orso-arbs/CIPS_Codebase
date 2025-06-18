@@ -139,7 +139,7 @@ def plotter_3_CPvsA11_Panel(input_dir, # Format_1 requires input_dir
     N_images = len(CP_data_df)
 
     # Find the maximum frequency for all histograms
-    max_diameter = max([diameter for sublist in CP_data_df['diameter_distribution_nonDim'] for diameter in sublist])
+    max_diameter = max([diameter for sublist in CP_data_df['d_cell_distribution_nonDim'] for diameter in sublist])
     
     print(f"\nPlotting data")
 
@@ -159,10 +159,10 @@ def plotter_3_CPvsA11_Panel(input_dir, # Format_1 requires input_dir
 
         # Plot: Image number vs. median diameter, mean diameter, and amount of cells (up to current image)
 
-        ax_1_12.plot(CP_data_df['time'], CP_data_df['diameter_mean_nonDim'], label="Cell Mean Diameter", color='green')
+        ax_1_12.plot(CP_data_df['time'], CP_data_df['d_cell_mean_nonDim'], label="Cell Mean Diameter", color='green')
         ax_1_12.plot(CP_data_df['time'], CP_data_df['diameter_training_nonDim'], label=f"Cellpose Training Diameter", color='aquamarine')
         
-        #S = max(CP_data_df['diameter_mean_nonDim'].max(), CP_data_df['diameter_median_nonDim'].max()) / CP_data_df['D_SF_nonDim'].max()
+        #S = max(CP_data_df['d_cell_mean_nonDim'].max(), CP_data_df['diameter_median_nonDim'].max()) / CP_data_df['D_SF_nonDim'].max()
         #ax_1_12.plot(range(N_images), CP_data_df['D_SF_nonDim'] * S, label=f"{(CP_data_df.iloc[i]['D_SF_nonDim']*S):.2f} = Spherical Flame Diameter * {S:.3f}", color='orange')
             
         
@@ -278,9 +278,9 @@ def plotter_3_CPvsA11_Panel(input_dir, # Format_1 requires input_dir
         ax_2.set_ylabel('d_T_per_px', color='blue')
         ax_2.tick_params(axis='y', labelcolor='blue')
 
-        # Third axis for diameter_mean_nonDim
-        ax_3.plot(CP_data_df['time'], CP_data_df['diameter_mean_nonDim'], label="diameter_mean_nonDim", color='red', linestyle='solid')
-        ax_3.set_ylabel('diameter_mean_nonDim', color='red')
+        # Third axis for d_cell_mean_nonDim
+        ax_3.plot(CP_data_df['time'], CP_data_df['d_cell_mean_nonDim'], label="d_cell_mean_nonDim", color='red', linestyle='solid')
+        ax_3.set_ylabel('d_cell_mean_nonDim', color='red')
         ax_3.tick_params(axis='y', labelcolor='red')
 
         ax_3_twin = ax_3.twinx()  # Create a twin axes sharing the same x-axis
@@ -320,10 +320,10 @@ def plotter_3_CPvsA11_Panel(input_dir, # Format_1 requires input_dir
 
         # Plot: Image number vs. median diameter, mean diameter, and amount of cells (up to current image)
 
-        ax_0.plot(CP_data_df['time'], CP_data_df['diameter_mean_nonDim'], label="Cell Mean Diameter", color='green')
+        ax_0.plot(CP_data_df['time'], CP_data_df['d_cell_mean_nonDim'], label="Cell Mean Diameter", color='green')
         ax_0.plot(CP_data_df['time'], CP_data_df['diameter_training_nonDim'], label=f"Cellpose Training Diameter", color='aquamarine')
         
-        #S = max(CP_data_df['diameter_mean_nonDim'].max(), CP_data_df['diameter_median_nonDim'].max()) / CP_data_df['D_SF_nonDim'].max()
+        #S = max(CP_data_df['d_cell_mean_nonDim'].max(), CP_data_df['diameter_median_nonDim'].max()) / CP_data_df['D_SF_nonDim'].max()
         #ax_0.plot(range(N_images), CP_data_df['D_SF_nonDim'] * S, label=f"{(CP_data_df.iloc[i]['D_SF_nonDim']*S):.2f} = Spherical Flame Diameter * {S:.3f}", color='orange')
             
         
@@ -526,7 +526,7 @@ def plotter_3_CPvsA11_Panel(input_dir, # Format_1 requires input_dir
         for ax in axes_R:
             # Add Twin Axes
             ax_R1 = ax.twinx()
-            ax_R1.plot(CP_data_df['time'], CP_data_df['diameter_mean_nonDim'],
+            ax_R1.plot(CP_data_df['time'], CP_data_df['d_cell_mean_nonDim'],
                         label="Cell Mean Diameter $D_{c,mean}$", color='green')
             ax_R1.set_ylabel("Cell Mean Diameter $ D_{c,mean}$", color='green')
 
@@ -563,7 +563,7 @@ def plotter_3_CPvsA11_Panel(input_dir, # Format_1 requires input_dir
         for ax in axes_L:
             # Add Twin Axes
             ax_R1 = ax.twinx()
-            ax_R1.plot(CP_data_df['time'], CP_data_df['diameter_mean_nonDim'],
+            ax_R1.plot(CP_data_df['time'], CP_data_df['d_cell_mean_nonDim'],
                         label="Cell Mean Diameter $D_{c,mean}$", color='green')
 
             ax_R2 = ax.twinx()

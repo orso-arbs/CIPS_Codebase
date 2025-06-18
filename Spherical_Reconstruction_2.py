@@ -86,12 +86,12 @@ def Spherical_Reconstruction_2(
     #################################################### Initialize New Columns
     # Add new columns for spherical reconstruction results
     srec_columns = [
-        'A_cell_distribution_px2', 'A_cell_distribution_nonDim2',
-        'd_cell_distribution_px', 'd_cell_distribution_nonDim', 
         'A_cell_SRec_distribution_nonDim2', 'A_cell_SRec_distribution_px2', 
-        'd_cell_SRec_distribution_nonDim', 'd_cell_SRec_distribution_px', 
-        'centroid_x_distribution_px', 'centroid_y_distribution_px', 
-        'centroid_x_distribution_nonDim', 'centroid_z_distribution_nonDim'
+        'd_cell_SRec_distribution_nonDim', 'd_cell_SRec_distribution_px',
+        'centroid_xSp_distribution_nonDim',
+        'centroid_ySp_distribution_nonDim',
+        'centroid_zSp_distribution_nonDim',
+        'centroid_zSp_distribution_px',
     ]
     
     # Initialize columns to hold lists/arrays
@@ -121,56 +121,73 @@ def Spherical_Reconstruction_2(
             continue
         
         # Initialize lists for each cell property
-        A_cell_distribution_px2 = []
-        A_cell_distribution_nonDim2 = []
-        d_cell_distribution_px = []
-        d_cell_distribution_nonDim = []
         A_cell_SRec_distribution_nonDim2 = []
         A_cell_SRec_distribution_px2 = []
         d_cell_SRec_distribution_nonDim = []
         d_cell_SRec_distribution_px = []
-        centroid_x_distribution_px = []
-        centroid_y_distribution_px = []
-        centroid_x_distribution_nonDim = []
-        centroid_z_distribution_nonDim = []
+        centroid_zSp_distribution_px = []
+        
+        centroid_xSp_distribution_nonDim = []
+        centroid_ySp_distribution_nonDim = []
+        centroid_zSp_distribution_nonDim = []
+        
+        # Get existing centroid distributions for this image
+        centroid_xIm_distribution_px = Analysis_A11_df.loc[i, 'centroid_xIm_distribution_px']
+        centroid_yIm_distribution_px = Analysis_A11_df.loc[i, 'centroid_yIm_distribution_px']
         
         # Process each cell in the image
-        for cell_id in cell_ids:
+        for j, cell_id in enumerate(cell_ids):
             # Create a binary mask for this specific cell
             cell_mask = masks == cell_id
             
-            # Calculate centroid and area of the cell
+            # Calculate area of the cell (still needed for area calculations)
             y_coords, x_coords = np.where(cell_mask)
             if len(y_coords) == 0:
                 continue
             
-            # Find cell centroid in pixel coordinates
-            centroid_y_px = np.mean(y_coords)
-            centroid_x_px = np.mean(x_coords)
+            # Use existing centroid values from the DataFrame instead of recalculating
+            cell_centroid_xIm_px = centroid_xIm_distribution_px[j]
+            cell_centroid_yIm_px = centroid_yIm_distribution_px[j]
             
-            # Calculate cell area in pixels and non-dimensional units
-            A_cell_px2 = len(y_coords)
-            A_cell_nonDim2 = A_cell_px2 * (d_T_per_px ** 2)
+            # Calculate 3D centroid using coordinate transformation
+            cell_centroid_Im_px = np.array([[cell_centroid_xIm_px], [cell_centroid_yIm_px]])
             
-            # Calculate cell diameter based on area
-            d_cell_px = 2 * np.sqrt(A_cell_px2 / np.pi)
-            d_cell_nonDim = d_cell_px * d_T_per_px
-            
-            # Find each pixel in non-dimensional space (centered coordinates)
-            cell_coords_px = np.vstack((x_coords, y_coords))
-            cell_coords_px_centered = Affine_image_px_and_NonDim(
-                Coordinates=cell_coords_px,
-                px_to_nonDim=True,
+            # Step 1: Transform to centered coordinates
+            cell_centroid_xSp_px, cell_centroid_zSp_px = Coordinate_Transform_image_to_centered_Spherical(
+                Coordinates=cell_centroid_Im_px,
+                image_to_centered=True,
                 image_Nx_px=masks.shape[1],
-                image_Ny_px=masks.shape[0],
-                d_T_per_px=1  # Use 1 to keep in pixel units but centered
+                image_Ny_px=masks.shape[0]
+            )
+            
+            # Step 2: Scale to non-dimensional units
+            centroid_xSp_nonDim = cell_centroid_xSp_px[0] * d_T_per_px
+            centroid_zSp_nonDim = cell_centroid_zSp_px[0] * d_T_per_px
+            
+            # Step 3: Calculate height (z-coordinate)
+            centroid_ySp_nonDim = sphere_height_from_plane(
+                R=R_SF_nonDim,
+                x1=centroid_xSp_nonDim,
+                x2=centroid_zSp_nonDim
+            )
+            
+            # Z-coordinate in pixel units
+            centroid_ySp_px = centroid_ySp_nonDim / d_T_per_px
+            
+            # Find each pixel in centered coordinates (keep in pixel units)
+            cell_coords_Im_px = np.vstack((x_coords, y_coords))
+            cell_coords_Sp_px = Coordinate_Transform_image_to_centered_Spherical(
+                Coordinates=cell_coords_Im_px,
+                image_to_centered=True,
+                image_Nx_px=masks.shape[1],
+                image_Ny_px=masks.shape[0]
             )
             
             # Calculate spherically reconstructed area using Jacobian determinant
             A_cell_SRec_px2 = 0
             for j in range(len(x_coords)):
-                x = cell_coords_px_centered[0][j]
-                z = cell_coords_px_centered[1][j]
+                x = cell_coords_Sp_px[0][j]
+                z = cell_coords_Sp_px[1][j]
                 # Calculate pixel area contribution using Jacobian
                 detJ_val = detJ(R_SF_px, x, z)
                 A_cell_SRec_px2 += detJ_val * 1  # Each pixel contributes 1 px^2 of area
@@ -181,46 +198,28 @@ def Spherical_Reconstruction_2(
             # Calculate spherically reconstructed diameters
             d_cell_SRec_nonDim = 2 * np.sqrt(A_cell_SRec_nonDim2 / np.pi)
             d_cell_SRec_px = 2 * np.sqrt(A_cell_SRec_px2 / np.pi)
-            
-            # Convert centroid to non-dimensional coordinates
-            centroid_coords_px = np.array([[centroid_x_px], [centroid_y_px]])
-            centroid_coords_nonDim = Affine_image_px_and_NonDim(
-                Coordinates=centroid_coords_px,
-                px_to_nonDim=True,
-                image_Nx_px=masks.shape[1],
-                image_Ny_px=masks.shape[0],
-                d_T_per_px=d_T_per_px
-            )
-            centroid_x_nonDim = centroid_coords_nonDim[0][0]
-            centroid_z_nonDim = centroid_coords_nonDim[1][0]
-            
+                        
             # Append values to respective lists
-            A_cell_distribution_px2.append(A_cell_px2)
-            A_cell_distribution_nonDim2.append(A_cell_nonDim2)
-            d_cell_distribution_px.append(d_cell_px)
-            d_cell_distribution_nonDim.append(d_cell_nonDim)
             A_cell_SRec_distribution_nonDim2.append(A_cell_SRec_nonDim2)
             A_cell_SRec_distribution_px2.append(A_cell_SRec_px2)
             d_cell_SRec_distribution_nonDim.append(d_cell_SRec_nonDim)
             d_cell_SRec_distribution_px.append(d_cell_SRec_px)
-            centroid_x_distribution_px.append(centroid_x_px)
-            centroid_y_distribution_px.append(centroid_y_px)
-            centroid_x_distribution_nonDim.append(centroid_x_nonDim)
-            centroid_z_distribution_nonDim.append(centroid_z_nonDim)
+            
+            # Add the 3D centroid coordinates
+            centroid_xSp_distribution_nonDim.append(centroid_xSp_nonDim)
+            centroid_zSp_distribution_nonDim.append(centroid_zSp_nonDim)
+            centroid_ySp_distribution_nonDim.append(centroid_ySp_nonDim) # Spherical height of the x-z Spherical coords plane aka x-y image coords plane
+            centroid_zSp_distribution_px.append(centroid_ySp_px) # same spherical height in px units
         
         # Store lists as numpy arrays in DataFrame
-        Analysis_A11_df.at[i, 'A_cell_distribution_px2'] = np.array(A_cell_distribution_px2)
-        Analysis_A11_df.at[i, 'A_cell_distribution_nonDim2'] = np.array(A_cell_distribution_nonDim2)
-        Analysis_A11_df.at[i, 'd_cell_distribution_px'] = np.array(d_cell_distribution_px)
-        Analysis_A11_df.at[i, 'd_cell_distribution_nonDim'] = np.array(d_cell_distribution_nonDim)
         Analysis_A11_df.at[i, 'A_cell_SRec_distribution_nonDim2'] = np.array(A_cell_SRec_distribution_nonDim2)
         Analysis_A11_df.at[i, 'A_cell_SRec_distribution_px2'] = np.array(A_cell_SRec_distribution_px2)
         Analysis_A11_df.at[i, 'd_cell_SRec_distribution_nonDim'] = np.array(d_cell_SRec_distribution_nonDim)
         Analysis_A11_df.at[i, 'd_cell_SRec_distribution_px'] = np.array(d_cell_SRec_distribution_px)
-        Analysis_A11_df.at[i, 'centroid_x_distribution_px'] = np.array(centroid_x_distribution_px)
-        Analysis_A11_df.at[i, 'centroid_y_distribution_px'] = np.array(centroid_y_distribution_px)
-        Analysis_A11_df.at[i, 'centroid_x_distribution_nonDim'] = np.array(centroid_x_distribution_nonDim)
-        Analysis_A11_df.at[i, 'centroid_z_distribution_nonDim'] = np.array(centroid_z_distribution_nonDim)
+        Analysis_A11_df.at[i, 'centroid_xSp_distribution_nonDim'] = np.array(centroid_xSp_distribution_nonDim)
+        Analysis_A11_df.at[i, 'centroid_ySp_distribution_nonDim'] = np.array(centroid_ySp_distribution_nonDim)
+        Analysis_A11_df.at[i, 'centroid_zSp_distribution_nonDim'] = np.array(centroid_zSp_distribution_nonDim)
+        Analysis_A11_df.at[i, 'centroid_zSp_distribution_px'] = np.array(centroid_zSp_distribution_px)
     
     print("\nSpherical reconstruction complete!") if SR2_log_level >= 1 else None
     
@@ -239,12 +238,19 @@ def Spherical_Reconstruction_2(
         
         # Calculate CST boundary
         CST_Boundary_nonDim, CST_Boundary_combined_nonDim = Cubed_Sphere_Tile_Boundary(R, N_pts=100)
-        CST_Boundary_combined_px = Affine_image_px_and_NonDim(
-            Coordinates=CST_Boundary_combined_nonDim,
-            nonDim_to_px=True,
+        
+        # Convert non-dimensional boundary to pixel coordinates
+        # Step 1: Convert to centered pixel coordinates by dividing by d_T_per_px
+        centered_px_coords = np.zeros_like(CST_Boundary_combined_nonDim)
+        centered_px_coords[0] = CST_Boundary_combined_nonDim[0] / d_T_per_px
+        centered_px_coords[1] = CST_Boundary_combined_nonDim[1] / d_T_per_px
+        
+        # Step 2: Transform to image coordinates
+        CST_Boundary_combined_px = Coordinate_Transform_image_to_centered_Spherical(
+            Coordinates=centered_px_coords, 
+            centered_to_image=True,
             image_Nx_px=image_Nx_px,
-            image_Ny_px=image_Ny_px,
-            d_T_per_px=d_T_per_px
+            image_Ny_px=image_Ny_px
         )
         
         # Load image
@@ -322,52 +328,67 @@ def detJ(R, x, z):
     """Calculate the Jacobian determinant at point (x,z)"""
     return R/np.sqrt(R**2 - x**2 - z**2)
 
-def Affine_image_px_and_NonDim(Coordinates, px_to_nonDim=False, nonDim_to_px=False,
-                              image_Nx_px=None, image_Ny_px=None, d_T_per_px=None):
+def Coordinate_Transform_image_to_centered_Spherical(Coordinates, image_to_centered=False, centered_to_image=False,
+                                         image_Nx_px=None, image_Ny_px=None):
     """
-    Transforms coordinates between pixel and non-dimensional space.
+    Transforms coordinates between image coordinates and centered coordinates.
+    No scaling is performed, coordinates remain in pixel units.
     
     Args:
         Coordinates (numpy.ndarray): 2xN array of coordinates
-        px_to_nonDim (bool): Convert from pixel to non-dimensional
-        nonDim_to_px (bool): Convert from non-dimensional to pixel
+        image_to_centered (bool): Convert from image to centered coordinates
+        centered_to_image (bool): Convert from centered to image coordinates
         image_Nx_px (int): Image width in pixels
         image_Ny_px (int): Image height in pixels
-        d_T_per_px (float): Conversion factor
     
     Returns:
         numpy.ndarray: 2xN array of transformed coordinates
     """
-    if px_to_nonDim and nonDim_to_px:
-        raise ValueError("Cannot set both px_to_nonDim and nonDim_to_px to True")
+    if image_to_centered and centered_to_image:
+        raise ValueError("Cannot set both image_to_centered and centered_to_image to True")
     
-    if not px_to_nonDim and not nonDim_to_px:
-        raise ValueError("Must set either px_to_nonDim or nonDim_to_px to True")
+    if not image_to_centered and not centered_to_image:
+        raise ValueError("Must set either image_to_centered or centered_to_image to True")
         
-    if image_Nx_px is None or image_Ny_px is None or d_T_per_px is None:
-        raise ValueError("Must provide image_Nx_px, image_Ny_px, and d_T_per_px")
+    if image_Nx_px is None or image_Ny_px is None:
+        raise ValueError("Must provide image_Nx_px and image_Ny_px")
     
-    # Check input shape
-    if Coordinates.shape[0] != 2:
-        print(f"WARNING: Input coordinates shape: {Coordinates.shape}")
-        print(f"First few coordinates: {Coordinates[:5] if len(Coordinates) > 5 else Coordinates}")
-    
-    Coordinates = Coordinates.astype(float)  # Ensure float type for calculations
+    # Make a copy of input coordinates to preserve original
+    Coordinates = Coordinates.astype(float)
     Transformed_Coordinates = np.zeros_like(Coordinates)
     
-    if px_to_nonDim:
+    if image_to_centered:
+        # Convert from image coordinates to centered coordinates
         x_px = Coordinates[0]
         y_px = Coordinates[1]
-        Transformed_Coordinates[0] = ((x_px + 1/2) - image_Nx_px/2) * d_T_per_px  # x coord
-        Transformed_Coordinates[1] = (image_Ny_px/2 - (y_px + 1/2)) * d_T_per_px  # z coord
+        Transformed_Coordinates[0] = (x_px + 1/2) - image_Nx_px/2  # x in spherical coords at the image center
+        Transformed_Coordinates[1] = image_Ny_px/2 - (y_px + 1/2)  # z in spherical coords at the image center
+    elif centered_to_image:
+        # Convert from centered coordinates to image coordinates
+        x_centered = Coordinates[0]
+        z_centered = Coordinates[1]
+        Transformed_Coordinates[0] = x_centered + image_Nx_px/2 - 1/2  # x coord in image coords 
+        Transformed_Coordinates[1] = image_Ny_px/2 - z_centered - 1/2  # y coord in image coords 
         
-    if nonDim_to_px:
-        x_nonDim = Coordinates[0]
-        z_nonDim = Coordinates[1]
-        Transformed_Coordinates[0] = x_nonDim / d_T_per_px + image_Nx_px/2 - 1/2  # x coord 
-        Transformed_Coordinates[1] = image_Ny_px/2 - z_nonDim / d_T_per_px - 1/2  # y coord
-    
     return Transformed_Coordinates
+
+def sphere_height_from_plane(R, x1, x2):
+    """
+    Calculates the height (z-coordinate) on a sphere given the (x1,x2) coordinates on the plane.
+    
+    Args:
+        R (float): Radius of the sphere
+        x1 (float or numpy.ndarray): First coordinate on the plane
+        x2 (float or numpy.ndarray): Second coordinate on the plane
+    
+    Returns:
+        float or numpy.ndarray: Height coordinate (z-coordinate)
+    """
+    # Calculate height using sphere equation: x1² + x2² + z² = R²
+    # Therefore z = sqrt(R² - x1² - x2²)
+    
+    # Use maximum to ensure we don't take sqrt of negative numbers due to numerical errors
+    return np.sqrt(np.maximum(0, R**2 - x1**2 - x2**2))
 
 def Cubed_Sphere_Tile_Boundary(R, N_pts=500):
     """

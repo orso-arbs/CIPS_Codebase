@@ -51,6 +51,7 @@ def plotter_11_colortables_panel(
     save_fig=True,             # Whether to save the figure
     image_positions=None,     # List of (x,y) positions for flame images in figure coordinates
     split_legends=False,        # Whether to split legends between left and right columns
+    show_colortable_minmax=True,  # Whether to show min/max values on colortables
 ):
     """
     Creates a 4x4 grid panel comparing results from 8 different CIPS pipe runs.
@@ -122,6 +123,9 @@ def plotter_11_colortables_panel(
         - Left column shows diameter-related legends
         - Right column shows cell count and area coverage legends
         By default False
+    show_colortable_minmax : bool, optional
+        Whether to show min/max values on colortables
+        By default True
         
     Returns
     -------
@@ -222,6 +226,9 @@ def plotter_11_colortables_panel(
     # Create a second grid for the flame images with the same dimensions
     gs_images = gridspec.GridSpec(4, 4, width_ratios=width_ratios, height_ratios=[1, 1, 1, 1])
     gs_images.update(hspace=0.0, wspace=0.0)
+    
+    # Add a flag to prevent overlapping y-axis tick labels between plots
+    prevent_ytick_overlap = True
     
     # Calculate max values across all DataFrames to use consistent y-axis scales
     max_diameter_mean = 0
@@ -345,13 +352,14 @@ def plotter_11_colortables_panel(
                 min_val_colorbar = None
                 max_val_colorbar = None
                 
-                if df is not None and 'Min_Psuedocolored_variable_SF_VisIt' in df.columns:
-                    min_val_colorbar = df['Min_Psuedocolored_variable_SF_VisIt'].mean()
-                if df is not None and 'Max_Psuedocolored_variable_SF_VisIt' in df.columns:
-                    max_val_colorbar = df['Max_Psuedocolored_variable_SF_VisIt'].mean()
+                if show_colortable_minmax and df is not None:
+                    if 'Min_Psuedocolored_variable_SF_VisIt' in df.columns:
+                        min_val_colorbar = df['Min_Psuedocolored_variable_SF_VisIt'].mean()
+                    if 'Max_Psuedocolored_variable_SF_VisIt' in df.columns:
+                        max_val_colorbar = df['Max_Psuedocolored_variable_SF_VisIt'].mean()
                 
                 # Add Min/Max annotations if values are available
-                if min_val_colorbar is not None and max_val_colorbar is not None:
+                if show_colortable_minmax and min_val_colorbar is not None and max_val_colorbar is not None:
                     try:
                         max_text = f"max: {float(max_val_colorbar):.1f}"
                         min_text = f"min: {float(min_val_colorbar):.1f}"
@@ -434,7 +442,7 @@ def plotter_11_colortables_panel(
                     ax_xy.tick_params(labelbottom=False)
                 
                 if row == 0:  # Top row
-                    ax_xy.tick_params(labeltop=True)
+                    ax_xy.tick_params(labeltop=True, axis='x', which='both', direction='in')
                     ax_xy.xaxis.set_label_position('top')  # Set label position to top
                     ax_xy.set_xlabel('$\\tau$', fontsize=LATEX_FONT_SIZE)  # Add x-label to top
                 else:
@@ -448,6 +456,13 @@ def plotter_11_colortables_panel(
                         ax_xy_twin.tick_params(labelright=False)
                         if ax_xy_twin2:
                             ax_xy_twin2.tick_params(labelright=False)
+                        
+                        # Prevent overlapping y-axis tick labels between plots
+                        if prevent_ytick_overlap and row < 3:  # For all rows except the last one
+                            # Hide the bottom-most tick label
+                            yticks = ax_xy.get_yticks()
+                            yticklabels = ['' if i == 0 else l for i, l in enumerate(ax_xy.get_yticklabels())]
+                            ax_xy.set_yticklabels(yticklabels)
                 else:  # Right column of xy plots
                     if xy_plot_col == 2:  # Second xy plot column
                         ax_xy.tick_params(labelleft=False)
@@ -456,6 +471,19 @@ def plotter_11_colortables_panel(
                         if ax_xy_twin2:
                             ax_xy_twin2.set_ylabel(r"SF Area coverage [\%]", fontsize=LATEX_FONT_SIZE *FontSizeFactor_Axis)
                             ax_xy_twin2.tick_params(labelright=True)
+                        
+                        # Prevent overlapping y-axis tick labels between plots
+                        if prevent_ytick_overlap and row < 3:  # For all rows except the last one
+                            # Hide the bottom-most tick label for the right y-axis
+                            yticks = ax_xy_twin.get_yticks()
+                            yticklabels = ['' if i == 0 else l for i, l in enumerate(ax_xy_twin.get_yticklabels())]
+                            ax_xy_twin.set_yticklabels(yticklabels)
+                            
+                            # Also for the third y-axis if it exists
+                            if ax_xy_twin2:
+                                yticks = ax_xy_twin2.get_yticks()
+                                yticklabels = ['' if i == 0 else l for i, l in enumerate(ax_xy_twin2.get_yticklabels())]
+                                ax_xy_twin2.set_yticklabels(yticklabels)
                 
                 # Add legend if it's the first row of plots
                 if row == 0:
@@ -497,9 +525,14 @@ def plotter_11_colortables_panel(
                 
                 # Add text label if provided
                 if text_list and df_index < len(text_list) and text_list[df_index]:
-                    ax_xy.text(0.5, 0.9, text_list[df_index], 
+                    # Format the text with LaTeX italic command
+                    italic_text = r"$\it{" + text_list[df_index].strip("()") + "}$"
+                    if "(" in text_list[df_index]:  # Check if text has parentheses
+                        italic_text = f"({italic_text})"  # Add back parentheses outside italic
+                    
+                    ax_xy.text(0.08, 0.9, italic_text, 
                              ha='center', va='center', transform=ax_xy.transAxes,
-                             fontsize=LATEX_FONT_SIZE * 0.9, weight='bold')
+                             fontsize=LATEX_FONT_SIZE * 2, weight='bold')
     
     # Add all flame images in a second pass using the image grid
     if show_images:
@@ -507,7 +540,7 @@ def plotter_11_colortables_panel(
             for col_set in range(2):
                 df_index = row * 2 + col_set
                 df = dataframes[df_index] if df_index < len(dataframes) else None
-                
+
                 if df is not None:
                     try:
                         # Find the row with the specified image number
@@ -589,6 +622,7 @@ def plotter_11_colortables_panel(
                                 center_x, center_y = img_width // 2, img_height // 2
                                 zoom_half_size = int(D_SF_px * ScaleFactor / 2)
                                 
+
                                 # Ensure zoom region is within image bounds
                                 left = max(0, center_x - zoom_half_size)
                                 right = min(img_width, center_x + zoom_half_size)
@@ -606,6 +640,7 @@ def plotter_11_colortables_panel(
                                        (center_x_zoomed, bottom-top), 
                                        (255, 255, 0), 1)
                                 
+
                                 # Make all pure white pixels transparent
                                 h, w, c = zoom_img_with_line.shape
                                 rgba_img = np.zeros((h, w, 4), dtype=np.uint8)
@@ -690,25 +725,25 @@ def plotter_11_colortables_panel(
 if __name__ == "__main__":
     # Example usage
     DataFrames_dir = [
-        r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_variations\BW vars\20250607_2240236\20250607_2240246\20250612_1429370\20250614_1949188",
-        r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_variations\BW vars\20250608_0303173\20250608_0303173\20250612_1638247\20250614_2137355",
-        r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_variations\BW vars\20250609_0028398\20250609_0028408\20250612_1843092\20250614_2257342",
-        r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_variations\BW vars\20250610_0004544\20250610_0004569\20250612_2023463\20250612_2228583",
-        r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_variations\BW vars\20250610_0529590\20250610_0529590\20250615_1239319\20250615_1440242",
-        r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_variations\BW vars\20250610_0646347\20250610_0646347\20250615_1609401\20250615_1727535",
-        r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_variations\BW vars\20250610_0803025\20250610_0803025\20250615_1734526\20250615_1952036",
-        r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_variations\BW vars\20250610_0916439\20250610_0916439\20250615_2115060\20250615_2243023",
+        r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_variations\BW vars\20250607_2240236\20250607_2240246\20250612_1429370\20250614_1949188", # 1
+        r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_variations\BW vars\20250608_0303173\20250608_0303173\20250612_1638247\20250614_2137355", # 2
+        r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_variations\BW vars\20250610_0803025\20250610_0803025\20250615_1734526\20250615_1952036", # 7
+        r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_variations\BW vars\20250610_0916439\20250610_0916439\20250615_2115060\20250615_2243023", # 8
+        r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_variations\BW vars\20250609_0028398\20250609_0028408\20250612_1843092\20250614_2257342", # 3
+        r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_variations\BW vars\20250610_0004544\20250610_0004569\20250612_2023463\20250612_2228583", # 4
+        r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_variations\BW vars\20250610_0529590\20250610_0529590\20250615_1239319\20250615_1440242", # 5
+        r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_variations\BW vars\20250610_0646347\20250610_0646347\20250615_1609401\20250615_1727535", # 6
     ]
     
     text_list = [
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        ""
+        "(a)",
+        "(b)",
+        "(c)",
+        "(d)",
+        "(e)",
+        "(f)",
+        "(g)",
+        "(h)"
     ]
     
     plotter_11_colortables_panel(
@@ -716,17 +751,18 @@ if __name__ == "__main__":
         text_list=text_list,
         show_plot=0,
         Plot_log_level=1,
-        image_num_to_show=50,
+        image_num_to_show=100,
         side_L_width=1,
-        side_R_width=1.5,
+        side_R_width=1.4,
         center_L_width=3,
         center_R_width=3,
         colortable_scale=1.0,  # Scale colortables to original size
         left_border_width=int(80*1),  # Add 80px white border on right side of left colortables
-        right_border_width=int(80*1.6), # Add 80px white border on left side of right colortables
+        right_border_width=int(80*1.8), # Add 80px white border on left side of right colortables
         image_height_ratio=0.55,  # Size multiplier for flame images (1.0 = standard size)
-        image_h_pos=0.2,  # Horizontal position (0.1 = near left side)
-        image_v_pos=0.75,  # Vertical position (0.8 = near top)
+        image_h_pos=0.25,  # Horizontal position (0.1 = near left side)
+        image_v_pos=0.7,  # Vertical position (0.8 = near top)
         split_legends=True,  # Split legends between left and right columns
+        show_colortable_minmax=False,  # Show min/max values on colortables
         save_fig=True
     )

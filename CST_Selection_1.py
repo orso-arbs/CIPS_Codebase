@@ -4,7 +4,7 @@ import os
 import matplotlib.pyplot as plt
 import Format_1 as F_1
 import skimage.io as sk_io
-from Spherical_Reconstruction_2 import Cubed_Sphere_Tile_Boundary, Affine_image_px_and_NonDim
+from Spherical_Reconstruction_2 import Cubed_Sphere_Tile_Boundary, Coordinate_Transform_image_to_centered_Spherical, sphere_height_from_plane
 
 @F_1.ParameterLog(max_size=1024 * 10, log_level=0)
 def CST_Selection_1(
@@ -90,10 +90,10 @@ def CST_Selection_1(
         'A_cell_SRec_distribution_CST_px2',
         'd_cell_SRec_distribution_CST_nonDim',
         'd_cell_SRec_distribution_CST_px',
-        'centroid_x_distribution_CST_px',
-        'centroid_y_distribution_CST_px',
-        'centroid_x_distribution_CST_nonDim',
-        'centroid_z_distribution_CST_nonDim'
+        'centroid_xIm_distribution_CST_px',
+        'centroid_yIm_distribution_CST_px',
+        'centroid_xSp_distribution_CST_nonDim',
+        'centroid_zSp_distribution_CST_nonDim',
     ]
     
     # Initialize columns to hold lists/arrays
@@ -117,8 +117,8 @@ def CST_Selection_1(
         
         # Extract data for this image
         masks = Analysis_A11_df.loc[i, 'masks']
-        R_SF_nonDim = Analysis_A11_df.loc[i, 'R_SF_nonDim']
         R_SF_px = Analysis_A11_df.loc[i, 'R_SF_px']
+        R_SF_nonDim = Analysis_A11_df.loc[i, 'R_SF_nonDim']
         image_Nx_px = Analysis_A11_df.loc[i, 'image_Ny_px']  # These are swapped in the code
         image_Ny_px = Analysis_A11_df.loc[i, 'image_Nx_px']  # These are swapped in the code
         d_T_per_px = Analysis_A11_df.loc[i, 'd_T_per_px']
@@ -129,12 +129,19 @@ def CST_Selection_1(
         
         # Generate CST boundary for visualization purposes only
         CST_Boundary, CST_Boundary_combined = Cubed_Sphere_Tile_Boundary(R_SF_nonDim, N_pts=500)
-        CST_Boundary_combined_px = Affine_image_px_and_NonDim(
-            Coordinates=CST_Boundary_combined,
-            nonDim_to_px=True,
+        
+        # Convert non-dimensional boundary to pixel coordinates
+        # Step 1: Convert to centered pixel coordinates by dividing by d_T_per_px
+        centered_px_coords = np.zeros_like(CST_Boundary_combined)
+        centered_px_coords[0] = CST_Boundary_combined[0] / d_T_per_px
+        centered_px_coords[1] = CST_Boundary_combined[1] / d_T_per_px
+        
+        # Step 2: Transform to image coordinates
+        CST_Boundary_combined_px = Coordinate_Transform_image_to_centered_Spherical(
+            Coordinates=centered_px_coords, 
+            centered_to_image=True,
             image_Nx_px=image_Nx_px,
-            image_Ny_px=image_Ny_px,
-            d_T_per_px=d_T_per_px
+            image_Ny_px=image_Ny_px
         )
         
         # Extract cell properties for this image
@@ -146,10 +153,10 @@ def CST_Selection_1(
         A_cell_SRec_distribution_px2 = Analysis_A11_df.loc[i, 'A_cell_SRec_distribution_px2']
         d_cell_SRec_distribution_nonDim = Analysis_A11_df.loc[i, 'd_cell_SRec_distribution_nonDim']
         d_cell_SRec_distribution_px = Analysis_A11_df.loc[i, 'd_cell_SRec_distribution_px']
-        centroid_x_distribution_px = Analysis_A11_df.loc[i, 'centroid_x_distribution_px']
-        centroid_y_distribution_px = Analysis_A11_df.loc[i, 'centroid_y_distribution_px']
-        centroid_x_distribution_nonDim = Analysis_A11_df.loc[i, 'centroid_x_distribution_nonDim']
-        centroid_z_distribution_nonDim = Analysis_A11_df.loc[i, 'centroid_z_distribution_nonDim']
+        centroid_xIm_distribution_px = Analysis_A11_df.loc[i, 'centroid_xIm_distribution_px']
+        centroid_yIm_distribution_px = Analysis_A11_df.loc[i, 'centroid_yIm_distribution_px']
+        centroid_xSp_distribution_nonDim = Analysis_A11_df.loc[i, 'centroid_xSp_distribution_nonDim']
+        centroid_zSp_distribution_nonDim = Analysis_A11_df.loc[i, 'centroid_zSp_distribution_nonDim']
         
         # Lists for filtered cells
         CST_classification = []
@@ -162,10 +169,10 @@ def CST_Selection_1(
         A_cell_SRec_distribution_CST_px2 = []
         d_cell_SRec_distribution_CST_nonDim = []
         d_cell_SRec_distribution_CST_px = []
-        centroid_x_distribution_CST_px = []
-        centroid_y_distribution_CST_px = []
-        centroid_x_distribution_CST_nonDim = []
-        centroid_z_distribution_CST_nonDim = []
+        centroid_xIm_distribution_CST_px = []
+        centroid_yIm_distribution_CST_px = []
+        centroid_xSp_distribution_CST_nonDim = []
+        centroid_zSp_distribution_CST_nonDim = []
         
         # Dictionary for cell classifications and centroids for plotting
         cell_classifications = {}
@@ -178,32 +185,39 @@ def CST_Selection_1(
             
             # Get cell mask and centroid
             cell_mask = masks == cell_id
-            y_coords, x_coords = np.where(cell_mask)
-            if len(y_coords) == 0:
+
+            cell_coords_yIm_px, cell_coords_xIm_px = np.where(cell_mask)
+            if len(cell_coords_yIm_px) == 0:
                 continue
                 
             # Get centroid in pixel and non-dimensional coordinates
-            centroid_x_px = centroid_x_distribution_px[idx]
-            centroid_y_px = centroid_y_distribution_px[idx]
-            centroid_x_nonDim = centroid_x_distribution_nonDim[idx]
-            centroid_z_nonDim = centroid_z_distribution_nonDim[idx]
+            centroid_xIm_px = centroid_xIm_distribution_px[idx]
+            centroid_yIm_px = centroid_yIm_distribution_px[idx]
+            centroid_xSp_nonDim = centroid_xSp_distribution_nonDim[idx]
+            centroid_zSp_nonDim = centroid_zSp_distribution_nonDim[idx]
                         
             # Check if centroid is inside CST boundary
             centroid_in_CST = point_in_CST_check(
-                x_nonDim=centroid_x_nonDim,
-                z_nonDim=centroid_z_nonDim,
+                xSp_nonDim=centroid_xSp_nonDim,
+                zSp_nonDim=centroid_zSp_nonDim,
                 R_SF_nonDim=R_SF_nonDim
             )
                         
             # Convert mask points to non-dimensional coordinates
-            mask_coords_px = np.vstack((x_coords, y_coords))
-            mask_coords_nonDim = Affine_image_px_and_NonDim(
+            mask_coords_px = np.vstack((cell_coords_xIm_px, cell_coords_yIm_px))
+            
+            # Step 1: Transform to centered coordinates
+            mask_coords_centered = Coordinate_Transform_image_to_centered_Spherical(
                 Coordinates=mask_coords_px,
-                px_to_nonDim=True,
+                image_to_centered=True,
                 image_Nx_px=masks.shape[1],
-                image_Ny_px=masks.shape[0],
-                d_T_per_px=d_T_per_px
+                image_Ny_px=masks.shape[0]
             )
+            
+            # Step 2: Scale to non-dimensional units
+            mask_coords_nonDim = np.zeros_like(mask_coords_centered)
+            mask_coords_nonDim[0] = mask_coords_centered[0] * d_T_per_px
+            mask_coords_nonDim[1] = mask_coords_centered[1] * d_T_per_px
             
             # Check if all points are inside CST boundary
             all_points_in = True
@@ -221,8 +235,8 @@ def CST_Selection_1(
                 
                 n_points_checked += 1
                 point_in = point_in_CST_check(
-                    x_nonDim=px,
-                    z_nonDim=pz,
+                    xSp_nonDim=px,
+                    zSp_nonDim=pz,
                     R_SF_nonDim=R_SF_nonDim,
                 )
                 
@@ -244,11 +258,11 @@ def CST_Selection_1(
                 
             # Determine if cell should be included in CST based on new condition
             is_included = (classification == "all_in_CST_Boundary") or \
-                         (classification == "center_in_CST_Boundary" and centroid_z_nonDim >= -centroid_x_nonDim)
+                         (classification == "center_in_CST_Boundary" and centroid_zSp_nonDim >= -centroid_xSp_nonDim)
             
             # Store classification for plotting
             cell_classifications[cell_id] = classification
-            cell_centroids_px[cell_id] = (centroid_x_px, centroid_y_px)
+            cell_centroids_px[cell_id] = (centroid_xIm_px, centroid_yIm_px)
             cell_inclusion[cell_id] = is_included
             
             # Add all cells to the classification
@@ -265,10 +279,10 @@ def CST_Selection_1(
                 A_cell_SRec_distribution_CST_px2.append(A_cell_SRec_distribution_px2[idx])
                 d_cell_SRec_distribution_CST_nonDim.append(d_cell_SRec_distribution_nonDim[idx])
                 d_cell_SRec_distribution_CST_px.append(d_cell_SRec_distribution_px[idx])
-                centroid_x_distribution_CST_px.append(centroid_x_px)
-                centroid_y_distribution_CST_px.append(centroid_y_px)
-                centroid_x_distribution_CST_nonDim.append(centroid_x_nonDim)
-                centroid_z_distribution_CST_nonDim.append(centroid_z_nonDim)
+                centroid_xIm_distribution_CST_px.append(centroid_xIm_px)
+                centroid_yIm_distribution_CST_px.append(centroid_yIm_px)
+                centroid_xSp_distribution_CST_nonDim.append(centroid_xSp_nonDim)
+                centroid_zSp_distribution_CST_nonDim.append(centroid_zSp_nonDim)
         
         # Store the filtered lists in the DataFrame
         Analysis_A11_df.at[i, 'CST_classification'] = np.array(CST_classification)
@@ -281,10 +295,10 @@ def CST_Selection_1(
         Analysis_A11_df.at[i, 'A_cell_SRec_distribution_CST_px2'] = np.array(A_cell_SRec_distribution_CST_px2)
         Analysis_A11_df.at[i, 'd_cell_SRec_distribution_CST_nonDim'] = np.array(d_cell_SRec_distribution_CST_nonDim)
         Analysis_A11_df.at[i, 'd_cell_SRec_distribution_CST_px'] = np.array(d_cell_SRec_distribution_CST_px)
-        Analysis_A11_df.at[i, 'centroid_x_distribution_CST_px'] = np.array(centroid_x_distribution_CST_px)
-        Analysis_A11_df.at[i, 'centroid_y_distribution_CST_px'] = np.array(centroid_y_distribution_CST_px)
-        Analysis_A11_df.at[i, 'centroid_x_distribution_CST_nonDim'] = np.array(centroid_x_distribution_CST_nonDim)
-        Analysis_A11_df.at[i, 'centroid_z_distribution_CST_nonDim'] = np.array(centroid_z_distribution_CST_nonDim)
+        Analysis_A11_df.at[i, 'centroid_xIm_distribution_CST_px'] = np.array(centroid_xIm_distribution_CST_px)
+        Analysis_A11_df.at[i, 'centroid_yIm_distribution_CST_px'] = np.array(centroid_yIm_distribution_CST_px)
+        Analysis_A11_df.at[i, 'centroid_xSp_distribution_CST_nonDim'] = np.array(centroid_xSp_distribution_CST_nonDim)
+        Analysis_A11_df.at[i, 'centroid_zSp_distribution_CST_nonDim'] = np.array(centroid_zSp_distribution_CST_nonDim)
         
         # Generate classification plots
         if plot_CST_selection and len(cell_classifications) > 0:
@@ -356,7 +370,7 @@ def CST_Selection_1(
     
     return output_dir
 
-def point_in_CST_check(x_nonDim, z_nonDim, R_SF_nonDim):
+def point_in_CST_check(xSp_nonDim, zSp_nonDim, R_SF_nonDim):
     """
     Determines if a point is inside the CST (Cubed Sphere Tile) boundary using analytical geometry.
     
@@ -364,8 +378,8 @@ def point_in_CST_check(x_nonDim, z_nonDim, R_SF_nonDim):
     by taking the absolute values of coordinates.
     
     Args:
-        x_nonDim: x-coordinate in non-dimensional space
-        z_nonDim: z-coordinate in non-dimensional space
+        xSp_nonDim: x-coordinate in non-dimensional units in Spherical coords plane
+        zSp_nonDim: z-coordinate in non-dimensional units in Spherical coords plane
         R_SF_nonDim: Radius of the sphere in non-dimensional units
         
     Returns:
@@ -378,8 +392,8 @@ def point_in_CST_check(x_nonDim, z_nonDim, R_SF_nonDim):
     max_CST_Boundary = np.sqrt(R_SF_nonDim**2 / 2)
     
     # Take absolute values to exploit symmetry
-    x_abs = abs(x_nonDim)
-    z_abs = abs(z_nonDim)
+    x_abs = abs(xSp_nonDim)
+    z_abs = abs(zSp_nonDim)
     
     if x_abs > max_CST_Boundary or z_abs > max_CST_Boundary:
         return False

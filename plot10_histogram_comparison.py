@@ -197,8 +197,8 @@ def plot10_distribution_histogram_comparison(
 
     # Verify the DataFrame has the required columns
     required_columns = ['d_cell_distribution_nonDim', 'd_cell_SRec_distribution_nonDim', 
-                         'image_file_path', 'masks', 'centroid_x_distribution_px', 
-                         'centroid_y_distribution_px', 'A_cell_distribution_nonDim2', 
+                         'image_file_path', 'masks', 'centroid_xIm_distribution_px', 
+                         'centroid_yIm_distribution_px', 'A_cell_distribution_nonDim2', 
                          'A_cell_SRec_distribution_nonDim2']
     
     for col in required_columns:
@@ -386,9 +386,9 @@ def plot10_distribution_histogram_comparison(
                 ax_inset.imshow(masked_data, cmap=cmap, alpha=mask_alpha)
 
                 # Show centroids if requested
-                if show_centroids and 'centroid_x_distribution_px' in SRec_df.columns:
-                    centroids_x = SRec_df.iloc[i]['centroid_x_distribution_px']
-                    centroids_y = SRec_df.iloc[i]['centroid_y_distribution_px']
+                if show_centroids and 'centroid_xIm_distribution_px' in SRec_df.columns:
+                    centroids_x = SRec_df.iloc[i]['centroid_xIm_distribution_px']
+                    centroids_y = SRec_df.iloc[i]['centroid_yIm_distribution_px']
                     if len(centroids_x) > 0 and len(centroids_y) > 0:
                         # Adjust centroid coordinates for zoomed view
                         valid_centroids = [(x, y) for x, y in zip(centroids_x, centroids_y)

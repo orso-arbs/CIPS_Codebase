@@ -111,16 +111,30 @@ def dim3_A11(
     # Add new columns for dimensionalization
     dim_columns = [
         'd_T_per_px', 'image_Nx_nonDim', 'image_Ny_nonDim', 
-        'diameter_training_nonDim', 'diameter_estimate_used_nonDim',
-        'diameter_mean_nonDim', 'diameter_median_nonDim', 'diameter_distribution_nonDim',
+        'diameter_training_nonDim', 'diameter_estimate_used_nonDim', 
+        'd_cell_mean_nonDim', 'd_cell_median_nonDim',
         'A_image_nonDim2', 'A_empty_nonDim2', 'A_SF_nonDim2', 
         'D_SF_nonDim', 'R_SF_nonDim', 'A_CP_mask_nonDim',
-        'd_cell_mean_nonDim', 'd_cell_median_nonDim'
     ]
     
+    # Array-valued columns that need object dtype
+    array_columns = [
+        'diameter_distribution_nonDim',
+        'd_cell_distribution_nonDim', 
+        'centroid_xIm_distribution_nonDim', 
+        'centroid_yIm_distribution_nonDim',
+        'A_cell_distribution_nonDim2',
+    ]
+    
+    # Initialize regular columns with NaN
     for col in dim_columns:
         if col not in Analysis_A11_df.columns:
             Analysis_A11_df[col] = np.nan
+    
+    # Initialize array columns with object dtype
+    for col in array_columns:
+        if col not in Analysis_A11_df.columns:
+            Analysis_A11_df[col] = pd.Series(dtype='object')
     
     #################################################### Calculate Dimensionalization Factor
     # Calculate d_T_per_px from VisIt data
@@ -154,35 +168,56 @@ def dim3_A11(
         Analysis_A11_df.at[i, 'image_Nx_nonDim'] = row['image_Nx_px'] * d_T_per_px_i
         Analysis_A11_df.at[i, 'image_Ny_nonDim'] = row['image_Ny_px'] * d_T_per_px_i
         
-        # Diameter values in non-dimensional units
+        # Length values in non-dimensional units (scalar values)
         for dim_field, px_field in [
             ('diameter_training_nonDim', 'diameter_training_px'),
             ('diameter_estimate_used_nonDim', 'diameter_estimate_used_px'),
-            ('diameter_mean_nonDim', 'diameter_mean_px'),
-            ('diameter_median_nonDim', 'diameter_median_px'),
             ('d_cell_mean_nonDim', 'd_cell_mean_px'),
-            ('d_cell_median_nonDim', 'd_cell_median_px')
+            ('d_cell_median_nonDim', 'd_cell_median_px'),
         ]:
             if px_field in Analysis_A11_df.columns:
                 px_value = row[px_field]
                 Analysis_A11_df.at[i, dim_field] = px_value * d_T_per_px_i if pd.notna(px_value) else np.nan
         
-        # Handle array-valued diameter distribution
-        if 'diameter_distribution_px' in Analysis_A11_df.columns:
-            px_array = row['diameter_distribution_px']
-            if isinstance(px_array, np.ndarray):
-                Analysis_A11_df.at[i, 'diameter_distribution_nonDim'] = px_array * d_T_per_px_i
+        # Handle array-valued length distributions
+        array_fields = [
+            ('d_cell_distribution_nonDim', 'd_cell_distribution_px'),
+            ('centroid_xIm_distribution_nonDim', 'centroid_xIm_distribution_px'),
+            ('centroid_yIm_distribution_nonDim', 'centroid_yIm_distribution_px'),
+        ]
         
-        # Area values in non-dimensional units (multiply by d_T_per_px_i²)
+        for dim_field, px_field in array_fields:
+            if px_field in Analysis_A11_df.columns:
+                px_array = row[px_field]
+                # Check if array exists and has elements
+                if isinstance(px_array, (np.ndarray, list)) and len(px_array) > 0:
+                    # Create new numpy array directly with scaling applied
+                    Analysis_A11_df.at[i, dim_field] = np.array(px_array) * d_T_per_px_i
+                else:
+                    # Consistent empty array format
+                    Analysis_A11_df.at[i, dim_field] = np.array([])
+        
+        # Area values in non-dimensional units (scalar values)
         for dim_field, px_field in [
             ('A_image_nonDim2', 'A_image_px2'),
             ('A_empty_nonDim2', 'A_empty_px2'),
             ('A_SF_nonDim2', 'A_SF_px2'),
-            ('A_CP_mask_nonDim', 'A_CP_mask_px')
+            ('A_CP_mask_nonDim', 'A_CP_mask_px'),
         ]:
             if px_field in Analysis_A11_df.columns:
                 px_value = row[px_field]
                 Analysis_A11_df.at[i, dim_field] = px_value * (d_T_per_px_i**2) if pd.notna(px_value) else np.nan
+        
+        # Handle array-valued area distributions
+        if 'A_cell_distribution_px2' in Analysis_A11_df.columns:
+            px_array = row['A_cell_distribution_px2']
+            # Check if array exists and has elements
+            if isinstance(px_array, (np.ndarray, list)) and len(px_array) > 0:
+                # Create new numpy array directly with scaling applied
+                Analysis_A11_df.at[i, 'A_cell_distribution_nonDim2'] = np.array(px_array) * (d_T_per_px_i**2)
+            else:
+                # Consistent empty array format
+                Analysis_A11_df.at[i, 'A_cell_distribution_nonDim2'] = np.array([])
         
         # Length values derived from areas
         Analysis_A11_df.at[i, 'D_SF_nonDim'] = row['D_SF_px'] * d_T_per_px_i

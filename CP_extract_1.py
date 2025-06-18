@@ -217,7 +217,7 @@ def CP_extract_1(
         'A_CP_mask_px2', 'Ar_px2_CP_maskperImage', 'Ar_px2_CP_maskperSF',
         # Add cell-wise metrics columns
         'A_cell_distribution_px2', 'd_cell_distribution_px',
-        'centroid_x_distribution_px', 'centroid_y_distribution_px',
+        'centroid_xIm_distribution_px', 'centroid_yIm_distribution_px',
         'd_cell_mean_px', 'A_cell_mean_px2',
         'd_cell_median_px', 'A_cell_median_px2',  # Add new columns
         # Added columns from CP_settings that were previously read but not explicitly added here
@@ -237,7 +237,7 @@ def CP_extract_1(
         'outlines', 'masks', 'CP_out_diameter_distribution_px',
         # cell-wise metrics 
         'A_cell_distribution_px2', 'd_cell_distribution_px',
-        'centroid_x_distribution_px', 'centroid_y_distribution_px'
+        'centroid_xIm_distribution_px', 'centroid_yIm_distribution_px'
     ]
     for column in columns_with_lists:
         # Check if column exists before setting dtype, as some might be added later
@@ -330,8 +330,8 @@ def CP_extract_1(
         # Initialize cell property arrays - even if empty
         A_cell_distribution_px2 = []
         d_cell_distribution_px = []
-        centroid_x_distribution_px = []
-        centroid_y_distribution_px = []
+        centroid_xIm_distribution_px = []
+        centroid_yIm_distribution_px = []
         
         # If no cells found, set placeholder values but don't skip the image
         if len(cell_ids) == 0:
@@ -363,8 +363,8 @@ def CP_extract_1(
                 # Append values to respective lists
                 A_cell_distribution_px2.append(A_cell_px2)
                 d_cell_distribution_px.append(d_cell_px)
-                centroid_x_distribution_px.append(centroid_x_px)
-                centroid_y_distribution_px.append(centroid_y_px)
+                centroid_xIm_distribution_px.append(centroid_x_px)
+                centroid_yIm_distribution_px.append(centroid_y_px)
             
                 print(f"Processed cell {cell_id}: "
                     f"length A_cell_distribution_px2={len(A_cell_distribution_px2)}, "
@@ -386,8 +386,8 @@ def CP_extract_1(
         # Ensure we always set an array value even if empty
         A_cell_distribution_px2 = np.array(A_cell_distribution_px2)
         d_cell_distribution_px = np.array(d_cell_distribution_px)
-        centroid_x_distribution_px = np.array(centroid_x_distribution_px)
-        centroid_y_distribution_px = np.array(centroid_y_distribution_px)
+        centroid_xIm_distribution_px = np.array(centroid_xIm_distribution_px)
+        centroid_yIm_distribution_px = np.array(centroid_yIm_distribution_px)
 
         # Fill DataFrame row with current image data
         # Data from VisIt
@@ -447,8 +447,8 @@ def CP_extract_1(
         # from Cell-wise calculated properties      
         extracted_df.at[i, 'A_cell_distribution_px2'] = np.array(A_cell_distribution_px2)
         extracted_df.at[i, 'd_cell_distribution_px'] = np.array(d_cell_distribution_px)
-        extracted_df.at[i, 'centroid_x_distribution_px'] = np.array(centroid_x_distribution_px)
-        extracted_df.at[i, 'centroid_y_distribution_px'] = np.array(centroid_y_distribution_px)
+        extracted_df.at[i, 'centroid_xIm_distribution_px'] = np.array(centroid_xIm_distribution_px)
+        extracted_df.at[i, 'centroid_yIm_distribution_px'] = np.array(centroid_yIm_distribution_px)
         extracted_df.at[i, 'd_cell_mean_px'] = d_cell_mean_px
         extracted_df.at[i, 'A_cell_mean_px2'] = A_cell_mean_px2
         extracted_df.at[i, 'd_cell_median_px'] = d_cell_median_px

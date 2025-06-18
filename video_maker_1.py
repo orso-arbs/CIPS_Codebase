@@ -15,39 +15,39 @@ import Format_1 as F_1
 
 
 
-def create_video_from_images(plot_image_folders, video_output_dirs=None, fps=5, output_dir_comments=None, n_images=None):
+def create_video_from_images(plot_image_folder, video_output_dir=None, fps=5, output_dir_comment=None, n_images=None):
     """
     Create videos from images in one or multiple folders.
     
     Args:
-        plot_image_folders: str or list of str, paths to folders containing images
-        video_output_dirs: str or list of str or None, paths for video output
+        plot_image_folder: str or list of str, paths to folders containing images
+        video_output_dir: str or list of str or None, paths for video output
         fps: int, frames per second
-        output_dir_comments: str or list of str or None, comments for video filenames
+        output_dir_comment: str or list of str or None, comments for video filenames
         n_images: int or None, number of images to use (None for all images)
     """
     # Convert inputs to lists if they're not already
-    if isinstance(plot_image_folders, str):
-        plot_image_folders = [plot_image_folders]
+    if isinstance(plot_image_folder, str):
+        plot_image_folder = [plot_image_folder]
     
     # Default to same directory as images if output_dirs not specified
-    if video_output_dirs is None:
-        video_output_dirs = plot_image_folders
-    elif isinstance(video_output_dirs, str):
-        video_output_dirs = [video_output_dirs] * len(plot_image_folders)
+    if video_output_dir is None:
+        video_output_dir = plot_image_folder
+    elif isinstance(video_output_dir, str):
+        video_output_dir = [video_output_dir] * len(plot_image_folder)
         
     # Handle comments
-    if output_dir_comments is None:
-        output_dir_comments = [""] * len(plot_image_folders)
-    elif isinstance(output_dir_comments, str):
-        output_dir_comments = [output_dir_comments] * len(plot_image_folders)
+    if output_dir_comment is None:
+        output_dir_comment = [""] * len(plot_image_folder)
+    elif isinstance(output_dir_comment, str):
+        output_dir_comment = [output_dir_comment] * len(plot_image_folder)
         
     # Ensure all lists have the same length
-    if not (len(plot_image_folders) == len(video_output_dirs) == len(output_dir_comments)):
+    if not (len(plot_image_folder) == len(video_output_dir) == len(output_dir_comment)):
         raise ValueError("Number of input folders, output directories, and comments must match")
     
     # Process each folder
-    for img_dir, vid_dir, comment in zip(plot_image_folders, video_output_dirs, output_dir_comments):
+    for img_dir, vid_dir, comment in zip(plot_image_folder, video_output_dir, output_dir_comment):
         print(f"Processing folder: {img_dir}")
         
         output_video = os.path.join(vid_dir, f"FB_segmented_growth_statistics_{comment}.mp4")
@@ -103,9 +103,9 @@ if __name__ == "__main__":
     
     # Example 1: Test with just 3 images
     create_video_from_images(
-        plot_image_folders=image_dirs,
-        video_output_dirs=image_dirs,
+        plot_image_folder=image_dirs,
+        video_output_dir=image_dirs,
         fps=5,
-        output_dir_comments=comments,
+        output_dir_comment=comments,
         n_images=None  # Only use first n_images images for testing. None for all images
     )

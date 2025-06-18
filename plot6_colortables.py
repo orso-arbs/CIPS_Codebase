@@ -316,8 +316,8 @@ def plotter_6_colortables(
             ax_1_12_R = ax_1_12.twinx()
             
             # Plot data using Time_VisIt as x-axis
-            ax_1_12.plot(df['Time_VisIt'], df['diameter_mean_px'], label='Cell Mean Diameter [px]', color='green')
-            #ax_1_12.plot(df['Time_VisIt'], df['diameter_median_px'], label='Cell Median Diameter [px]', color='darkgreen')
+            ax_1_12.plot(df['Time_VisIt'], df['d_cell_mean_px'], label='Cell Mean Diameter [px]', color='green')
+            #ax_1_12.plot(df['Time_VisIt'], df['d_cell_median_px'], label='Cell Median Diameter [px]', color='darkgreen')
             ax_1_12.plot(df['Time_VisIt'], df['diameter_training_px'], label='Cellpose Training Diameter [px]', color='violet')
             ax_1_12.plot(df['Time_VisIt'], df['diameter_estimate_used_px'], label='Cellpose Estimate Diameter [px]', color='purple')
             
@@ -341,8 +341,8 @@ def plotter_6_colortables(
 
             # Set axis limits and labels
             ax_1_12.set_xlim(df['Time_VisIt'].min(), df['Time_VisIt'].max())
-            ax_1_12.set_ylim(0, max(df['diameter_mean_px'].max(), 
-                                   df['diameter_median_px'].max(), 
+            ax_1_12.set_ylim(0, max(df['d_cell_mean_px'].max(), 
+                                   df['d_cell_median_px'].max(), 
                                    df['D_SF_px'].max() * S2) * 1.05)
             ax_1_12_R.set_ylim(df['N_cells'].min(), df['N_cells'].max() * 1.05)
 

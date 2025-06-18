@@ -76,7 +76,7 @@ def plotter_4_dimentionalisation(input_dir, # Format_1 requires input_dir
         N_images = len(CP_data)
 
         # Find the maximum frequency for all histograms
-        max_diameter = max([diameter for sublist in CP_data['diameter_distribution_nonDim'] for diameter in sublist])
+        max_diameter = max([diameter for sublist in CP_data['d_cell_distribution_nonDim'] for diameter in sublist])
     
         print("\nPlotting Panel 1: dimentionalisation with A11 manually extracted data from the thesis\n") if Plot_log_level >= 1 else None
         fig, (ax_1, ax_2, ax_3, ax_4) = plt.subplots(4, 1, figsize=(8, 10))  # 2 rows, 1 column
@@ -113,15 +113,15 @@ def plotter_4_dimentionalisation(input_dir, # Format_1 requires input_dir
         ax_2.legend(loc='upper left')
 
 
-        # Third axis for diameter_mean_nonDim
-        ax_3.plot(CP_data['time'], CP_data['diameter_mean_nonDim'], label="diameter_mean_nonDim", color='red', linestyle='solid')
-        ax_3.set_ylabel('diameter_mean_nonDim', color='red')
+        # Third axis for d_cell_mean_nonDim
+        ax_3.plot(CP_data['time'], CP_data['d_cell_mean_nonDim'], label="d_cell_mean_nonDim", color='red', linestyle='solid')
+        ax_3.set_ylabel('d_cell_mean_nonDim', color='red')
         ax_3.tick_params(axis='y', labelcolor='red')
         ax_3.legend(loc='upper left')
 
 
         ax_3_twin = ax_3.twinx()  # Create a twin axes sharing the same x-axis
-        ax_3_twin.plot(CP_data['time'], CP_data['diameter_mean_px'], label="diameter_mean_px", color='green', linestyle='dashed')
+        ax_3_twin.plot(CP_data['time'], CP_data['d_cell_mean_px'], label="d_cell_mean_px", color='green', linestyle='dashed')
         ax_3_twin.spines["right"].set_position(("outward", 0))  # Slightly to the right
 
         # # Collect handles and labels from all axes
@@ -157,7 +157,7 @@ def plotter_4_dimentionalisation(input_dir, # Format_1 requires input_dir
         N_images = len(CP_data)
 
         # Find the maximum frequency for all histograms
-        max_diameter = max([diameter for sublist in CP_data['diameter_distribution_nonDim'] for diameter in sublist])
+        max_diameter = max([diameter for sublist in CP_data['d_cell_distribution_nonDim'] for diameter in sublist])
     
         fig, (ax_1, ax_2, ax_3) = plt.subplots(3, 1, figsize=(8, 10), sharex=True, gridspec_kw={'hspace': 0})  # 2 rows, 1 column
         
@@ -179,15 +179,15 @@ def plotter_4_dimentionalisation(input_dir, # Format_1 requires input_dir
         ax_1.tick_params(axis='x', top=True, labeltop=True)
         ax_1.grid(True, which='both', axis='x', linestyle='--', color='gray', alpha=0.5)
 
-        # Third axis for diameter_mean_nonDim
-        ax_2.plot(CP_data['Time_VisIt'], CP_data['diameter_mean_nonDim'], label="diameter_mean_nonDim", color='blue', linestyle='solid')
+        # Third axis for d_cell_mean_nonDim
+        ax_2.plot(CP_data['Time_VisIt'], CP_data['d_cell_mean_nonDim'], label="d_cell_mean_nonDim", color='blue', linestyle='solid')
         ax_2.set_xlabel('Time')
         ax_2.set_ylabel("R_SF_nonDim")
         ax_2.text(0.5, 0.95, 'cell diameters', transform=ax_2.transAxes, ha='center', va='top', fontsize='medium', fontweight='bold')
 
         ax_2_twin = ax_2.twinx()  # Create a twin axes sharing the same x-axis
-        ax_2_twin.plot(CP_data['Time_VisIt'], CP_data['diameter_mean_px'], label="diameter_mean_px", color='green', linestyle='solid')
-        ax_2_twin.set_ylabel("diameter_mean_px")
+        ax_2_twin.plot(CP_data['Time_VisIt'], CP_data['d_cell_mean_px'], label="d_cell_mean_px", color='green', linestyle='solid')
+        ax_2_twin.set_ylabel("d_cell_mean_px")
         ax_2_twin.spines["right"].set_position(("outward", 0))  # Slightly to the right
 
         lines1, labels1 = ax_2.get_legend_handles_labels()
@@ -218,3 +218,33 @@ def plotter_4_dimentionalisation(input_dir, # Format_1 requires input_dir
 
 
     return output_dir
+
+# Example usage when script is run directly
+if __name__ == "__main__":
+    print("Running plotter_4_dimentionalisation as standalone module...")
+    
+    # Input should be the directory containing the processed data files
+    # Typically this would be the output directory from dim3_A11 or similar
+    input_dir = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_Pipe_Default_dir\20250618_1754539\20250618_1754549\20250618_1756011\20250618_2318069\20250618_2318169\20250618_2318169"
+    
+    # Try to load the DataFrame directly
+    try:
+        df_path = os.path.join(input_dir, "Analysis_A11_df.pkl")
+        analysis_df = pd.read_pickle(df_path)
+        print(f"Loaded Analysis_A11_df from: {df_path}")
+    except FileNotFoundError:
+        print(f"DataFrame not found at {df_path}")
+        # Will try to load from a .pkl file in the directory
+        analysis_df = None
+    
+    output_dir = plotter_4_dimentionalisation(
+        input_dir=input_dir,
+        CP_data=analysis_df,  # Pass the DataFrame or None
+        Plot_log_level=2,  # Higher log level for more information
+        show_plot=True,  # Set to True to display plots during execution
+        Panel_1_A11=0,  # Set to 1 to generate Panel 1 plots
+        Panel_2_Dimentionalised_from_VisIt=1,  # Generate Panel 2 plots
+        output_dir_comment="test_standalone"
+    )
+    
+    print(f"Plotting complete. Results in: {output_dir}")
