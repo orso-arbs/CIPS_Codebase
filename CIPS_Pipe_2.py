@@ -63,8 +63,8 @@ def CIPS_pipeline_2(
     vp_imageZoom=1,
     vp_parallelScale=80,
     vp_perspective=0,
-    vp_WindowWidth=3000,
-    vp_WindowHeight=3000,
+    vp_WindowWidth=2000,
+    vp_WindowHeight=2000,
     vp_Visit_projector_1_log_level=2,
     vp_Visit_projector_1_show_windows=0,
     vp_output_dir_manual="",
@@ -550,13 +550,13 @@ if __name__ == "__main__":
     
     CIPS_pipeline_2(
         cips_pipeline_global_log_level=2, 
-        cips_pipeline_output_dir_comment="T3_vmag_3000px_WWBBWW_cyto3_flowThres0p5",
+        cips_pipeline_output_dir_comment="T3_vmag_2000px_WWBBWW_cyto3_flowThres0p5_batchsize4_bsize160",
         
         # Visit_Projector parameters
         
         # Cellpose segmentation parameters
         cps_max_images_per_batch=40,
-        cps_batch_size=2,
+        cps_batch_size=4,
         cps_augment=True,
         cps_tile_overlap=0.1,
         cps_bsize=160,
@@ -574,7 +574,7 @@ if __name__ == "__main__":
         a11_plot_CST_selection=True,
         
         # Run all pipeline steps
-        run_visit_projector=True, #cips_VP1_output_dir_override=r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_variations\BW vars\20250610_0004544\20250610_0004569",
+        run_visit_projector=True, #cips_VP1_output_dir_override=r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_Pipe_Default_dir\20250619_0038404\20250619_0038415",
         run_cp_segment=True, #cips_CPs1_output_dir_override=r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_Pipe_Default_dir\20250618_1754539\20250618_1754549\20250618_1756011",
         run_cp_extract=True,
         run_analysis_a11=True, #cips_A11_output_dir_override=r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_Pipe_Default_dir\20250618_1754539\20250618_1754549\20250618_1756011\20250618_2359067\20250618_2359162",

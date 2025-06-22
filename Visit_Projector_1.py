@@ -436,7 +436,7 @@ def Visit_projector_1(
             Max_Psuedocolored_variable_SF_VisIt.append(obj["max"])
             print(f"Min_Psuedocolored_variable_SF_VisIt = {obj['min']}, Max_Psuedocolored_variable_SF_VisIt = {obj['max']}") if Visit_projector_1_log_level >= 2 else None
             vi.ChangeActivePlotsVar("R")
-            vi.Query("Average Value") # This query might not exist. Common queries are "Min", "Max", "Weighted Variable Sum"
+            vi.Query("Average Value")
             R_SF_Average_state = vi.GetQueryOutputValue()
             R_SF_Average_VisIt.append(R_SF_Average_state)
             # Change back to original variable for next iteration's plot setup if necessary
