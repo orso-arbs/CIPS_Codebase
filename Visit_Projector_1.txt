@@ -29,7 +29,7 @@ def Visit_projector_1(
     Plots = ["Pseudocolor - Isosurface"], # Plots
     Isosurface_Variable = "temperature", Isosurface_ContourValue = 3,
     Pseudocolor_Variable = "velocity_magnitude", 
-    Pseudocolor_colortable = "PointWise", # Can be "hot", "Cu stomBW1", "PeriodicBW", "PointWise", etc.
+    Pseudocolor_colortable = "PointWise", # Can be "hot", "CustomBW1", "PeriodicBW", "PointWise", etc.
     pointwise_color_points=[
         [0.0, 255, 255, 255, 255],  # White
         [0.3, 255, 255, 255, 255],  # White
@@ -49,7 +49,7 @@ def Visit_projector_1(
     curve_color = 'red',  # Color for the white-black curve and labels
 
     no_annotations = 1, viewNormal = [0,-1,0], viewUp = [0,0,1], imageZoom = 1, parallelScale = 100, perspective = 0, # View
-    WindowWidth = 2000, WindowHeight = 2000, # Window size
+    WindowWidth = 1024, WindowHeight = 1024, # Window size
     Visit_projector_1_show_windows = 0, # Window
 
     # output and logging
@@ -147,7 +147,7 @@ def Visit_projector_1(
         _VISIT_INITIALIZED = True
 
         # visit import and launch on the first run
-        sys.path.append(VisIt_sitepackages_path)
+        sys.path.append(VisIt_sitepackages_path) # Consider making this path more flexible or an argument
         import visit as vi
         print("imported visit \n") if Visit_projector_1_log_level >= 2 else None
         vi.AddArgument("-nowin") if Visit_projector_1_show_windows == 0 else None
@@ -955,7 +955,7 @@ if __name__ == "__main__":
     cluster_args_numProcessors = 4, # Number of processors to use
     cluster_args_numNodes = 1, # Number of nodes to use
     cluster_args_timeLimit = "05:00:00",
-    cluster_args_additional = f"--mem-per-cpu=6G --tmp=6G --output=/cluster/scratch/orsob/orsoMT_orsob/VisIt_logs_and_error_output/%j_visit.out --error=/cluster/scratch/orsob/orsoMT_orsob/VisIt_logs_and_error_output/%j_visit.err",
+    cluster_args_additional = f"--mem-per-cpu=2G --tmp=2G --output=/cluster/scratch/orsob/orsoMT_orsob/VisIt_logs_and_error_output/%j_visit.out --error=/cluster/scratch/orsob/orsoMT_orsob/VisIt_logs_and_error_output/%j_visit.err",
     VisIt_sitepackages_path = r"C:\Users\obs\LLNL\VisIt3.4.2\lib\site-packages",
     Database = r"euler.ethz.ch:/cluster/scratch/orsob/orsoMT_orsob/A11_states/A11_all_states.visit",
     # Plotting parametersi
@@ -970,7 +970,7 @@ if __name__ == "__main__":
     Visit_projector_1_show_windows = 0, # Window
 
     # output and logging
-    Visit_projector_1_log_level = 5,
+    Visit_projector_1_log_level = 2,
     output_dir_manual = "", output_dir_comment = "",
 
     )

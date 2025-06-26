@@ -21,7 +21,7 @@ def CIPS_pipeline_2(
     # General control
     input_dir=r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_Pipe_Default_dir",
     cips_pipeline_output_dir_manual="",
-    cips_pipeline_output_dir_comment="T3_vmag_3000px_WWBBWW_cyto3_flowThres0p5", 
+    cips_pipeline_output_dir_comment="T3_vmag_2000px_WWBB_cyto3_flowThres0p5", 
     cips_pipeline_global_log_level=None,
 
     # Stage output overrides (for resuming pipeline)
@@ -46,12 +46,10 @@ def CIPS_pipeline_2(
     distance_bw=1.0,
     # Parameters for the pointwise color table
     pointwise_color_points=[
-        [0.0, 255, 255, 255, 255],  # White
-        [0.3, 255, 255, 255, 255],  # White
-        [0.45, 0, 0, 0, 255], # Black
-        [0.55, 0, 0, 0, 255], # Black
-        [0.7, 255, 255, 255, 255],  # White
         [1.0, 255, 255, 255, 255],  # White
+        [0.7, 255, 255, 255, 255],  # White
+        [0.3, 0, 0, 0, 255], # Black
+        [0.0, 0, 0, 0, 255], # Black
     ],  
     show_color_table_markers=True,
     
@@ -546,11 +544,11 @@ def CIPS_pipeline_2(
 
 # Example of how to run the pipeline with the new unified approach
 if __name__ == "__main__":
-    print("Running CIPS-Pipeline 2 with unified Analysis_Altantzis2011 approach")
+    print("Running CIPS-Pipeline 2")
     
     CIPS_pipeline_2(
         cips_pipeline_global_log_level=2, 
-        cips_pipeline_output_dir_comment="T3_vmag_2000px_WWBBWW_cyto3_flowThres0p5_batchsize4_bsize160",
+        cips_pipeline_output_dir_comment="T3_vmag_2000px_BBWW_cyto3_flowThres0p5",
         
         # Visit_Projector parameters
         
@@ -574,8 +572,11 @@ if __name__ == "__main__":
         a11_plot_CST_selection=True,
         
         # Run all pipeline steps
-        run_visit_projector=True, #cips_VP1_output_dir_override=r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_Pipe_Default_dir\20250619_0038404\20250619_0038415",
-        run_cp_segment=True, #cips_CPs1_output_dir_override=r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_Pipe_Default_dir\20250618_1754539\20250618_1754549\20250618_1756011",
+        
+        run_visit_projector=True, #cips_VP1_output_dir_override=r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\FB images\FrouzakisSF_Images",
+        # Frouzakis extended SF images: 
+        #cips_VP1_output_dir_override=r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\FB images\FrouzakisSF_Images",
+        run_cp_segment=True, #cips_CPs1_output_dir_override=r"",
         run_cp_extract=True,
         run_analysis_a11=True, #cips_A11_output_dir_override=r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_Pipe_Default_dir\20250618_1754539\20250618_1754549\20250618_1756011\20250618_2359067\20250618_2359162",
         run_plotter_1=True,
