@@ -6,7 +6,7 @@ import pandas as pd
 import matplotlib.gridspec as gridspec
 import matplotlib.ticker as mticker
 import matplotlib.lines as mlines
-plt.rcParams['text.usetex'] = False  # Keep False unless you have a full LaTeX installation
+plt.rcParams['text.usetex'] = True  # Changed to True to enable LaTeX rendering
 
 import sys
 import os
@@ -22,6 +22,12 @@ def plotter_3_CPvsA11_CST_Panel(input_dir, # Format_1 requires input_dir
     cst_expansion_factor = 1, # Factor to multiply CST values by (e.g. 6 for extrapolating from 1/6 of the sphere)
     show_plot = 0,
     Plot_log_level=1, # Added Plot_log_level argument
+    # New parameters for controlling text elements
+    textbox_font_size=15,
+    legend_font_size=15,
+    axis_label_font_size=15,
+    textbox_y_pos=-0.06,  # Position below the plots
+    legend_y_pos=-0.02,   # Position below the plots but above the textbox
     ):
 
     """
@@ -55,6 +61,18 @@ def plotter_3_CPvsA11_CST_Panel(input_dir, # Format_1 requires input_dir
     Plot_log_level : int, optional
         Controls the verbosity of logging for this plotting function.
         Currently not implemented beyond accepting the parameter. Defaults to 1.
+    textbox_font_size : int, optional
+        Font size for the textbox with variable definitions. Defaults to 10.
+    legend_font_size : int, optional
+        Font size for the legend. Defaults to 12.
+    axis_label_font_size : int, optional
+        Font size for the axis labels. Defaults to 11.
+    textbox_y_pos : float, optional
+        Y-position for the textbox with variable definitions, relative to the plot area.
+        Defaults to -0.06 (below the plots).
+    legend_y_pos : float, optional
+        Y-position for the legend, relative to the plot area.
+        Defaults to -0.02 (below the plots but above the textbox).
 
     Returns
     -------
@@ -151,13 +169,14 @@ def plotter_3_CPvsA11_CST_Panel(input_dir, # Format_1 requires input_dir
     gs = gridspec.GridSpec(5, 2, figure=fig, height_ratios=[1, 1, 1, 1, 1])
     gs.update(hspace=0)  # Remove gaps
 
-    solid_line = mlines.Line2D([], [], color='black', linestyle='-', label="Cellpose (CST)")
+    solid_line = mlines.Line2D([], [], color='black', linestyle='-', label="Cellpose")
     dashed_line = mlines.Line2D([], [], color='black', linestyle='--', label="Altantzis 2011")
 
-    title = f"CST Analysis Panel (Expansion Factor: {cst_expansion_factor})"
+    title = f"Spherical Flame Analysis Panel"
     fig.suptitle(title, fontsize=20, fontweight='bold', y=1.02)  # Adjust y for spacing
-    fig.legend(handles=[dashed_line, solid_line], loc='upper center', fontsize=12, frameon=False, ncol=2)
-
+    
+    # Legend will be added later, not here
+    
     # Create left column subplots with shared x-axis
     ax_0_0 = fig.add_subplot(gs[0, 0])
     ax_1_0 = fig.add_subplot(gs[1, 0], sharex=ax_0_0)
@@ -171,61 +190,59 @@ def plotter_3_CPvsA11_CST_Panel(input_dir, # Format_1 requires input_dir
     ax_3_1 = fig.add_subplot(gs[3, 1], sharex=ax_0_1)
     ax_4_1 = fig.add_subplot(gs[4, 1], sharex=ax_0_1)
 
-    # A11 first plot column
-    ax_0_0.plot(A11_SF_A['time'], A11_SF_A['A'] ,
-                label="A11 Spherical Flame Area $A_{SF}$", color='black', linestyle='dashed')
-    ax_0_0.set_ylim(0, A11_SF_A['A'].max()*1.05)
+    # Find the scientific notation multiplier for axis scaling
+    A_SF_scale = np.floor(np.log10(A11_SF_A['A'].max()))
+    iHRR_scale = np.floor(np.log10(A11_SF_iHRR['iHRR'].max()))
+    
+    # A11 first plot column - include scientific notation in axis labels
+    ax_0_0.plot(A11_SF_A['time'], A11_SF_A['A'] / 10**A_SF_scale,
+                label="$A_{SF}$", color='black', linestyle='dashed')
+    ax_0_0.set_ylim(0, A11_SF_A['A'].max() / 10**A_SF_scale * 1.05)
     ax_0_0.tick_params(axis='y', labelcolor='black')
     ax_0_0.spines["left"].set_color('black')
-    ax_0_0.yaxis.set_major_formatter(mticker.ScalarFormatter(useMathText=True))
-    ax_0_0.ticklabel_format(style='sci', axis='y', scilimits=(0, 0))
-    offset_text = ax_0_0.yaxis.get_offset_text()
-    offset_text.set_position((0, 1))  # Move to the right and above the axis
-    ax_0_0.set_ylabel("A11 Spherical Flame Area $A_{SF}$", color='black')
+    ax_0_0.yaxis.set_major_formatter(mticker.FormatStrFormatter('%.1f'))  # Use regular formatting
+    ax_0_0.set_ylabel(f"$A_{{SF}} \\times 10^{{{int(A_SF_scale)}}}$", color='black', fontsize=axis_label_font_size)
 
-    ax_1_0.plot(A11_SF_iHRR['time'], A11_SF_iHRR['iHRR'],
-                label="A11 Integral heat release rate $iHRR$", color='black', linestyle='dashed')
-    ax_1_0.set_ylim(0, A11_SF_iHRR['iHRR'].max()*1.05)
+    ax_1_0.plot(A11_SF_iHRR['time'], A11_SF_iHRR['iHRR'] / 10**iHRR_scale,
+                label="$iHRR$", color='black', linestyle='dashed')
+    ax_1_0.set_ylim(0, A11_SF_iHRR['iHRR'].max() / 10**iHRR_scale * 1.05)
     ax_1_0.tick_params(axis='y', labelcolor='black')
     ax_1_0.spines["left"].set_color('black')
-    ax_1_0.yaxis.set_major_formatter(mticker.ScalarFormatter(useMathText=True))
-    ax_1_0.ticklabel_format(style='sci', axis='y', scilimits=(0, 0))
-    offset_text = ax_1_0.yaxis.get_offset_text()
-    offset_text.set_position((-0.5, -0.5))  # Move offset text to the left side (x=-0.1)
-    ax_1_0.set_ylabel("A11 Integral Heat Release Rate $iHRR$", color='black')
-
-    ax_2_0.plot(A11_SF_R_mean['time'], A11_SF_R_mean['R_mean'] ,
-                label="A11 Spherical Flame Radius $R_{mean}$", color='black', linestyle='dashed')
-    ax_2_0.set_ylabel("A11 Spherical Flame Radius $R_{mean}$", color='black')
+    ax_1_0.yaxis.set_major_formatter(mticker.FormatStrFormatter('%.1f'))  # Use regular formatting
+    ax_1_0.set_ylabel(f"$iHRR \\times 10^{{{int(iHRR_scale)}}}$", color='black', fontsize=axis_label_font_size)
+    
+    ax_2_0.plot(A11_SF_R_mean['time'], A11_SF_R_mean['R_mean'],
+                label="$R_{mean}$", color='black', linestyle='dashed')
+    ax_2_0.set_ylabel("$R_{mean}$", color='black', fontsize=axis_label_font_size)
     ax_2_0.tick_params(axis='y', labelcolor='black')
 
-    ax_3_0.plot(A11_SF_R_mean_dot['time'], A11_SF_R_mean_dot['R_mean_dot'] ,
-                label="A11 Spherical Flame Radius first \ntime derivative $\dot{R}_{\text{mean}}$", color='black', linestyle='dashed')
-    ax_3_0.set_ylabel("A11 Spherical Flame Radius first \ntime derivative $\dot{R}_{\text{mean}}$", color='black')
+    ax_3_0.plot(A11_SF_R_mean_dot['time'], A11_SF_R_mean_dot['R_mean_dot'],
+                label="$\dot{R}_{mean}$", color='black', linestyle='dashed')
+    ax_3_0.set_ylabel("$\dot{R}_{mean}$", color='black', fontsize=axis_label_font_size)
     ax_3_0.tick_params(axis='y', labelcolor='black')
 
-    ax_4_0.plot(A11_SF_N_c['time'], A11_SF_N_c['N_c'] ,
-                label="A11 Number of cells $N_c$", color='black', linestyle='dashed')
-    ax_4_0.set_ylabel("A11 Number of cells $N_c$", color='black')
+    ax_4_0.plot(A11_SF_N_c['time'], A11_SF_N_c['N_c'],
+                label="$N_c$", color='black', linestyle='dashed')
+    ax_4_0.set_ylabel("$N_c$", color='black', fontsize=axis_label_font_size)
     ax_4_0.tick_params(axis='y', labelcolor='black')
 
     # A11 second plot column
-    ax_0_1.plot(A11_SF_K_geom['time'], A11_SF_K_geom['K_geom'] ,
-                label="A11 geometric stretch rate $K_{geom}$", color='black', linestyle='dashed')
-    ax_0_1.plot(A11_SF_K_mean['time'], A11_SF_K_mean['K_mean'] ,
-                label="A11 mean stretch rate $K_{mean}$", color='blue', linestyle='dashed')
+    ax_0_1.plot(A11_SF_K_geom['time'], A11_SF_K_geom['K_geom'],
+                label="$K_{geom}$", color='black', linestyle='dashed')
+    ax_0_1.plot(A11_SF_K_mean['time'], A11_SF_K_mean['K_mean'],
+                label="$K_{mean}$", color='blue', linestyle='dashed')
 
-    ax_1_1.plot(A11_SF_a_t['time'], A11_SF_a_t['a_t'] ,
-                label="A11 average total areodynamic strain $a_t$", color='black', linestyle='dashed')
+    ax_1_1.plot(A11_SF_a_t['time'], A11_SF_a_t['a_t'],
+                label="$a_t$", color='black', linestyle='dashed')
 
-    ax_2_1.plot(A11_SF_s_a['time'], A11_SF_s_a['s_a'] ,
-                label="A11 average normal absolute propagation velocity $s_a$", color='black', linestyle='dashed')
+    ax_2_1.plot(A11_SF_s_a['time'], A11_SF_s_a['s_a'],
+                label="$s_a$", color='black', linestyle='dashed')
 
-    ax_3_1.plot(A11_SF_s_d['time'], A11_SF_s_d['s_d'] ,
-                label="A11 average density weighed displacement speed $s_d$", color='black', linestyle='dashed')
+    ax_3_1.plot(A11_SF_s_d['time'], A11_SF_s_d['s_d'],
+                label="$s_d$", color='black', linestyle='dashed')
 
-    ax_4_1.plot(CP_data_df['time'], CP_data_df['d_T_per_px'] ,
-                label="Dimentionalisation $d_T/px$", color='black', linestyle='dotted')
+    ax_4_1.plot(CP_data_df['time'], CP_data_df['d_T_per_px'] * 1e4,
+                label="$\\delta_T/px \\times 10^4$", color='black', linestyle='dotted')
 
     axes = [
         ax_0_0, ax_1_0, ax_2_0, ax_3_0, ax_4_0,
@@ -320,10 +337,10 @@ def plotter_3_CPvsA11_CST_Panel(input_dir, # Format_1 requires input_dir
 
 
     # Explicitly set x-axis labels for the first and last row
-    ax_0_0.set_xlabel("Time")  # Top-left subplot
-    ax_0_1.set_xlabel("Time")  # Top-right subplot
-    ax_4_0.set_xlabel("Time")  # Bottom-left subplot
-    ax_4_1.set_xlabel("Time")  # Bottom-right subplot
+    ax_0_0.set_xlabel(r"$\tau$", fontsize=axis_label_font_size)  # Top-left subplot
+    ax_0_1.set_xlabel(r"$\tau$", fontsize=axis_label_font_size)  # Top-right subplot
+    ax_4_0.set_xlabel(r"$\tau$", fontsize=axis_label_font_size)  # Bottom-left subplot
+    ax_4_1.set_xlabel(r"$\tau$", fontsize=axis_label_font_size)  # Bottom-right subplot
 
     # Move top x-axis labels to the top row
     ax_0_0.xaxis.set_label_position("top")
@@ -331,31 +348,32 @@ def plotter_3_CPvsA11_CST_Panel(input_dir, # Format_1 requires input_dir
 
 
     # Set y-axis labels for the right column
-    ax_0_1.set_ylabel(r"A11 stretch rate $K$", color='black')
+    ax_0_1.set_ylabel("$K$", color='black', fontsize=axis_label_font_size)
     ax_0_1.tick_params(axis='y', labelcolor='black')
     black_label = mlines.Line2D([], [], color='black', label=r"$K_{geom}$", linestyle='dashed')
     blue_label = mlines.Line2D([], [], color='blue', label=r"$K_{mean}$", linestyle='dashed')
     ax_0_1.legend(handles=[black_label, blue_label], loc='upper left', fontsize=10, frameon=False)
 
-    ax_1_1.set_ylabel("A11 average total\nareodynamic strain $a_t$", color='black')
+    ax_1_1.set_ylabel("$a_t$", color='black', fontsize=axis_label_font_size)
     ax_1_1.tick_params(axis='y', labelcolor='black')
 
-    ax_2_1.set_ylabel("A11 average normal absolute\npropagation velocity $s_a$", color='black')
+    ax_2_1.set_ylabel("$s_a$", color='black', fontsize=axis_label_font_size)
     ax_2_1.tick_params(axis='y', labelcolor='black')
 
-    ax_3_1.set_ylabel("A11 average density weighed\ndisplacement speed $s_d$", color='black')
+    ax_3_1.set_ylabel("$s_d$", color='black', fontsize=axis_label_font_size)
     ax_3_1.tick_params(axis='y', labelcolor='black')
 
-    ax_4_1.set_ylabel("Dimentionalisation $d_T/px$", color='black')
+    ax_4_1.set_ylabel("$\\delta_T/px \\times 10^4$", color='black', fontsize=axis_label_font_size)
     ax_4_1.tick_params(axis='y', labelcolor='black')
 
 
-    # Move scientific notation from A and iHRR 
-    offset_text = ax_0_0.yaxis.get_offset_text()
-    offset_text.set_position((-0.08, 0))  # Move offset text to the left side (x=-0.1)
-
-    offset_text = ax_1_0.yaxis.get_offset_text()
-    offset_text.set_position((-0.08, 0))  # Move offset text to the left side (x=-0.1)
+    # Remove the code that moves scientific notation offsets
+    # (These lines can be deleted)
+    # offset_text = ax_0_0.yaxis.get_offset_text()
+    # offset_text.set_position((-0.08, 0))
+    
+    # offset_text = ax_1_0.yaxis.get_offset_text()
+    # offset_text.set_position((-0.08, 0))
     
     # Apply subplot adjustments before modifying tick labels
     plt.subplots_adjust(hspace=0)  # This removes the vertical spacing
@@ -374,9 +392,52 @@ def plotter_3_CPvsA11_CST_Panel(input_dir, # Format_1 requires input_dir
         # Apply new labels
         axis.set_yticklabels(new_labels)
 
+    # Set the y-axis limits for ax_4_0 to match the cell count limits
+    max_y_value = max(CP_data_df['N_cells_CST'].max(), A11_SF_N_c['N_c'].max())
+    min_y_value = min(CP_data_df['N_cells_CST'].min(), A11_SF_N_c['N_c'].min())
+    ax_4_0.set_ylim(min_y_value, max_y_value * 1.05)  # Apply same 5% padding as other plots
+
+    # Add text box with variable definitions in two columns
+    # Left column definitions
+    left_definitions = (
+        r"$\tau$ : Time $\cdot \delta_L/S_L$" + "\n" +
+        r"$A_{SF}$ : Spherical Flame Area /$\delta_T^2$" + "\n" +
+        r"$iHRR$ : Integral heat release rate" + "\n" +
+        r"$R_{mean}$ : Spherical Flame Radius /$\delta_T$" + "\n" +
+        r"$\dot{R}_{mean}$ : Spherical Flame Radius first time derivative" + "\n" +
+        r"$N_c$ : Number of cells"
+    )
+    
+    # Right column definitions
+    right_definitions = (
+        r"$K_{geom}$ : Geometric stretch rate" + "\n" +
+        r"$K_{mean}$ : Mean stretch rate" + "\n" +
+        r"$a_t$ : Average total aerodynamic strain" + "\n" +
+        r"$s_a$ : Average normal absolute propagation velocity" + "\n" +
+        r"$s_d$ : Average density weighted displacement speed" + "\n" +
+        r"$\delta_T/px$ : Thermal thickness per pixel dimensionalization factor"
+    )
+    
+    # Add the main legend at the bottom (but above the text boxes)
+    fig.legend(handles=[dashed_line, solid_line], 
+               loc='lower center', 
+               fontsize=legend_font_size, 
+               frameon=False, 
+               ncol=2,
+               bbox_to_anchor=(0.5, legend_y_pos))
+    
+    # Add text boxes with definitions - side by side
+    fig.text(0.3, textbox_y_pos, left_definitions, 
+             ha='center', va='top', fontsize=textbox_font_size,
+             bbox=dict(boxstyle='round', facecolor='white', alpha=0.0))
+    
+    fig.text(0.7, textbox_y_pos, right_definitions, 
+             ha='center', va='top', fontsize=textbox_font_size,
+             bbox=dict(boxstyle='round', facecolor='white', alpha=0.0))
+    
     # Save the plot
     plot_filename = os.path.join(output_dir, f'plot_panel_CST.png')
-    plt.savefig(plot_filename)
+    plt.savefig(plot_filename, bbox_inches='tight')  # Added bbox_inches='tight' to ensure text box is included
     if show_plot == 1:
         plt.show()
     plt.close(fig)
@@ -401,4 +462,7 @@ if __name__ == "__main__":
         output_dir_comment=f"CST_Panel_x{6}"
     )
 
+    print(f"\nAnalysis complete! Results saved to: {output_dir}")
+    print(f"\nAnalysis complete! Results saved to: {output_dir}")
+    print(f"\nAnalysis complete! Results saved to: {output_dir}")
     print(f"\nAnalysis complete! Results saved to: {output_dir}")
