@@ -238,14 +238,23 @@ def plotter_3_CPvsA11_CST_Panel(input_dir, # Format_1 requires input_dir
         ax_0_1, ax_1_1, ax_2_1, ax_3_1, ax_4_1
     ]
 
+    # Create a list to store references to the green twin axes
+    green_axes = []
+    
     # Loop through each subplot and apply the plots
-    for ax in axes_R:
+    for i, ax in enumerate(axes_R):
         # Add Twin Axes
         ax_R1 = ax.twinx()
+        # Store reference to green axis
+        green_axes.append(ax_R1)
+        
         ax_R1.plot(CP_data_df['time'], CP_data_df['d_cell_CST_mean_nonDim'],
                     label="CST Cell Mean Diameter $D_{c,mean}$", color='green')
         ax_R1.set_ylabel("CST Cell Mean Diameter $ D_{c,mean}$", color='green')
-
+        
+        # Format tick labels consistently with 3 decimal places
+        ax_R1.yaxis.set_major_formatter(mticker.FormatStrFormatter('%.3f'))
+        
         ax_R2 = ax.twinx()
         ax_R2.plot(CP_data_df['time'], CP_data_df['N_cells_CST'],
                     label=f"CST Cell Count × {cst_expansion_factor}" if cst_expansion_factor > 1 else "CST Cell Count",
@@ -309,6 +318,7 @@ def plotter_3_CPvsA11_CST_Panel(input_dir, # Format_1 requires input_dir
         ax.tick_params(axis='x', direction='in', which='both', top=True, bottom=True)  # Make tick lines face inside
 
 
+
     # Explicitly set x-axis labels for the first and last row
     ax_0_0.set_xlabel("Time")  # Top-left subplot
     ax_0_1.set_xlabel("Time")  # Top-right subplot
@@ -346,10 +356,25 @@ def plotter_3_CPvsA11_CST_Panel(input_dir, # Format_1 requires input_dir
 
     offset_text = ax_1_0.yaxis.get_offset_text()
     offset_text.set_position((-0.08, 0))  # Move offset text to the left side (x=-0.1)
-
+    
+    # Apply subplot adjustments before modifying tick labels
     plt.subplots_adjust(hspace=0)  # This removes the vertical spacing
     plt.tight_layout(rect=[0, 0, 0.95, 1])  # Adjusted rect to provide more space on the right margin
+    
+    # Hide the minimum tick label for CST cell diameter as the absolute last step
+    # Use the directly stored green_axes references
+    for i in range(len(green_axes) - 1):  # All but the last one
+        axis = green_axes[i]
+        # Force drawing the figure to ensure tick labels are created
+        plt.draw()
+        # Get current tick positions and labels
+        ticks = axis.get_yticks()
+        # Create new labels with empty first label and consistent formatting
+        new_labels = [''] + [f"{tick:.3f}" for tick in ticks[1:]]
+        # Apply new labels
+        axis.set_yticklabels(new_labels)
 
+    # Save the plot
     plot_filename = os.path.join(output_dir, f'plot_panel_CST.png')
     plt.savefig(plot_filename)
     if show_plot == 1:
@@ -359,12 +384,13 @@ def plotter_3_CPvsA11_CST_Panel(input_dir, # Format_1 requires input_dir
     print(f"CST Panel plotter finished. Output in {output_dir}")
     return output_dir # Format_1 requires output_dir as first return
 
+
 # Example usage when script is run directly
 if __name__ == "__main__":
     print("Running plotter_3_CPvsA11_CST_Panel as standalone module...")
     
     # Get input directory from user
-    input_dir = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_Pipe_Default_dir\20250621_1325208\20250621_1325282\20250621_1621429\20250621_2245499\20250621_2253452"
+    input_dir = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_Pipe_Default_dir\20250625_1528537\20250625_1528554\20250625_1626096\20250626_1700136\20250626_1706361"
     
     # Run the plotter function
     output_dir = plotter_3_CPvsA11_CST_Panel(
@@ -374,5 +400,5 @@ if __name__ == "__main__":
         Plot_log_level=2,
         output_dir_comment=f"CST_Panel_x{6}"
     )
-    
+
     print(f"\nAnalysis complete! Results saved to: {output_dir}")

@@ -1,316 +1,276 @@
 import os
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib as mpl
-import pandas as pd
-from matplotlib import rcParams
-import matplotlib.colors as mcolors
-from matplotlib.patches import Polygon
-from matplotlib.collections import PatchCollection
-import matplotlib.patheffects as PathEffects
-from scipy.ndimage import binary_dilation
+from matplotlib import rc
+from skimage import measure
 import pickle
+from pathlib import Path
+import Format_1 as F_1
 
-# Set LaTeX font
-plt.rcParams.update({
-    "text.usetex": True,
-    "font.family": "serif",
-    "font.serif": ["Computer Modern Roman"],
-})
+# Set up LaTeX font
+rc('font', **{'family': 'serif', 'serif': ['Computer Modern Roman']})
+rc('text', usetex=True)
 
-def format_1(input_dir):
+def plot_segmented_image(
+    input_dir,
+    output_dir_manual="",
+    output_dir_comment="",
+    image_numbers=None, 
+    show_masks=True, 
+    show_outlines=True, 
+    cells_to_color=None,  # New parameter to specify which cells to color
+    alpha=0.5, 
+    zoom_factor=2, 
+    label_text="", 
+    label_size=12, 
+    label_pos=(0.05, 0.95),
+    contour_color='w',    # Parameter for contour color
+    contour_linestyle='-', # Parameter for contour line style
+    contour_linewidth=0.8, # Parameter for contour line width
+    show_radius=False,    # Parameter to display flame radius circle
+    radius_color='r',     # Color for the radius circle
+    radius_linestyle='--', # Line style for the radius circle
+    radius_linewidth=1.5, # Line width for the radius circle
+    show_plot=0):
     """
-    Format directory paths based on Format_1 convention.
+    Plot segmented images with masks and outlines.
     
     Parameters:
     -----------
-    input_dir : str
-        Input directory path.
-        
-    Returns:
-    --------
-    tuple
-        (input_dir, output_dir)
+    input_dir : str or Path
+        Directory containing Analysis_A11_final_df.pkl
+    output_dir_manual : str, optional
+        Manual output directory, by default ""
+    output_dir_comment : str, optional
+        Comment to append to the output directory name, by default ""
+    image_numbers : list
+        List of image numbers to plot. If empty, all images are plotted.
+    show_masks : bool
+        Whether to show masks overlay
+    show_outlines : bool
+        Whether to show cell outlines
+    cells_to_color : list, optional
+        List of cell IDs to color. If empty or None, all cells are colored.
+    alpha : float
+        Transparency of the masks (0-1)
+    zoom_factor : float
+        Factor to zoom in to the center of the image
+    label_text : str
+        Text for label on the plot
+    label_size : int
+        Font size for the label
+    label_pos : tuple
+        Position of label (x, y) in axis coordinates
+    contour_color : str
+        Color of the cell outlines, by default 'w' (white)
+    contour_linestyle : str
+        Line style of the cell outlines, by default '-' (solid)
+    contour_linewidth : float
+        Line width of the cell outlines, by default 0.8
+    show_radius : bool
+        Whether to display reference radius circle, by default False
+    radius_color : str
+        Color for the radius circle, by default 'r' (red)
+    radius_linestyle : str
+        Line style for the radius circle, by default '--' (dashed)
+    radius_linewidth : float
+        Line width for the radius circle, by default 1.5
+    show_plot : int, optional
+        Whether to display the plot (1) or not (0), by default 0
     """
-    if input_dir[-1] != '/':
-        input_dir = input_dir + '/'
-    output_dir = input_dir + "Plots/"
+    # Create output directory using Format_1
+    output_dir = F_1.F_out_dir(input_dir=input_dir, script_path=__file__, output_dir_comment=output_dir_comment, output_dir_manual=output_dir_manual)
     
-    # Create output directory if it doesn't exist
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
-        
-    return input_dir, output_dir
-
-def load_data(input_dir, image_number=100):
-    """
-    Load the dataframe and extract data for the specified image number.
+    print(f"Output directory: {output_dir}")
     
-    Parameters:
-    -----------
-    input_dir : str
-        Directory containing the analysis dataframe.
-    image_number : int, optional
-        Image number to visualize. Default is 100.
-        
-    Returns:
-    --------
-    dict
-        Dictionary containing image data, masks, and metadata.
-    """
-    # Load the dataframe
-    df_path = os.path.join(input_dir, 'Analysis_A11_final_df.pkl')
+    # Ensure directories are Path objects
+    input_dir = Path(input_dir)
+    output_dir = Path(output_dir)
+    
+    # Load the dataframe from pickle
+    df_path = input_dir / "Analysis_A11_final_df.pkl"
     with open(df_path, 'rb') as f:
         df = pickle.load(f)
     
-    # Extract data for the specified image number
-    img_data = df[df['image_number'] == image_number]
+    # If no image numbers provided, use all images
+    if not image_numbers:
+        image_numbers = df['image_number'].unique()
     
-    if img_data.empty:
-        raise ValueError(f"Image number {image_number} not found in the dataframe.")
+    print(f"Processing {len(image_numbers)} images...")
     
-    # Get the first row (should be metadata for the image)
-    img_row = img_data.iloc[0]
-    
-    # Extract image, mask, outlines
-    img = img_row.get('img', None)
-    masks = img_row.get('masks', None)
-    outlines = img_row.get('outlines', None)
-    
-    return {
-        'image': img,
-        'masks': masks,
-        'outlines': outlines,
-        'metadata': img_row,
-        'df_data': img_data
-    }
-
-def plot_segmented_image(data, show_masks=True, show_outlines=True, mask_alpha=0.5, 
-                         zoom_factor=2, label_content=None, label_position=(0.05, 0.95),
-                         label_size=12, figsize=(8, 8)):
-    """
-    Plot the segmented image with masks and outlines.
-    
-    Parameters:
-    -----------
-    data : dict
-        Dictionary containing image data and masks from load_data function.
-    show_masks : bool, optional
-        Whether to show cell masks. Default is True.
-    show_outlines : bool, optional
-        Whether to show cell outlines. Default is True.
-    mask_alpha : float, optional
-        Transparency of the masks. Default is 0.5.
-    zoom_factor : float, optional
-        Factor to zoom in to the center. Default is 2.
-    label_content : str, optional
-        Content of the label to display. Default is None (no label).
-    label_position : tuple, optional
-        Position of the label (x, y) in figure coordinates. Default is (0.05, 0.95).
-    label_size : int, optional
-        Size of the label font. Default is 12.
-    figsize : tuple, optional
-        Figure size in inches. Default is (8, 8).
+    # Process each row in the DataFrame
+    for idx, row in df.iterrows():
+        # Only process images in the image_numbers list
+        image_num = row['image_number']
+        if image_numbers and image_num not in image_numbers:
+            continue
+            
+        print(f"Processing image number {image_num}...")
         
-    Returns:
-    --------
-    tuple
-        (figure, axis) matplotlib objects
-    """
-    # Extract data
-    img = data['image']
-    masks = data['masks']
-    
-    if img is None:
-        raise ValueError("Image data not found.")
-    if masks is None and show_masks:
-        print("Warning: Mask data not found, proceeding without masks.")
-        show_masks = False
-    
-    # Create figure and axis
-    fig, ax = plt.subplots(figsize=figsize)
-    
-    # Calculate zoom window
-    if zoom_factor > 1:
-        h, w = img.shape[:2]
-        center_h, center_w = h // 2, w // 2
-        new_h, new_w = h // zoom_factor, w // zoom_factor
-        y_start = center_h - new_h // 2
-        y_end = y_start + new_h
-        x_start = center_w - new_w // 2
-        x_end = x_start + new_w
-        
-        # Ensure bounds are within image dimensions
-        y_start = max(0, y_start)
-        y_end = min(h, y_end)
-        x_start = max(0, x_start)
-        x_end = min(w, x_end)
-        
-        # Crop image and masks
-        img = img[y_start:y_end, x_start:x_end]
-        if masks is not None:
-            masks = masks[y_start:y_end, x_start:x_end]
-    
-    # Display the base image
-    if len(img.shape) == 2:  # Grayscale image
-        ax.imshow(img, cmap='gray')
-    else:  # Color image
-        ax.imshow(img)
-    
-    # Overlay masks if requested
-    if show_masks and masks is not None:
-        # Create colormap for masks
-        unique_cells = np.unique(masks)
-        unique_cells = unique_cells[unique_cells > 0]  # Skip background (0)
-        
-        # Random colors for each cell
-        np.random.seed(42)  # For reproducibility
-        colors = np.random.rand(len(unique_cells), 4)
-        colors[:, -1] = mask_alpha  # Set alpha
-        
-        # Create and apply mask overlay
-        mask_overlay = np.zeros((*masks.shape, 4))
-        for i, cell_id in enumerate(unique_cells):
-            cell_mask = masks == cell_id
-            for c in range(4):
-                mask_overlay[cell_mask, c] = colors[i % len(colors), c]
-        
-        ax.imshow(mask_overlay)
-    
-    # Add outlines if requested
-    if show_outlines and data['outlines'] is not None:
-        outlines = data['outlines']
-        if zoom_factor > 1:
-            outlines = outlines[y_start:y_end, x_start:x_end]
-        
-        # Create a binary mask for outlines
-        outline_mask = outlines > 0
-        
-        # Display outlines in white
-        y_coords, x_coords = np.where(outline_mask)
-        ax.scatter(x_coords, y_coords, s=0.5, color='white', alpha=1)
-    
-    # Remove axis ticks and labels
-    ax.set_xticks([])
-    ax.set_yticks([])
-    ax.spines['top'].set_visible(False)
-    ax.spines['right'].set_visible(False)
-    ax.spines['bottom'].set_visible(False)
-    ax.spines['left'].set_visible(False)
-    
-    # Add label if content is provided
-    if label_content:
-        ax.text(label_position[0], label_position[1], label_content,
-                transform=ax.transAxes, fontsize=label_size, 
-                verticalalignment='top', color='white',
-                bbox=dict(facecolor='black', alpha=0.7, boxstyle='round,pad=0.3'))
-    
-    plt.tight_layout()
-    return fig, ax
-
-def save_plot(fig, output_dir, image_number, dpi=300):
-    """
-    Save the plot as SVG and PNG files.
-    
-    Parameters:
-    -----------
-    fig : matplotlib.figure.Figure
-        Figure object to save.
-    output_dir : str
-        Directory to save the plot.
-    image_number : int
-        Image number for filename.
-    dpi : int, optional
-        Resolution for PNG export. Default is 300.
-    """
-    base_filename = f"plot13_segmented_image_{image_number}"
-    
-    # Save as SVG
-    svg_path = os.path.join(output_dir, f"{base_filename}.svg")
-    fig.savefig(svg_path, format='svg', bbox_inches='tight')
-    
-    # Save as PNG
-    png_path = os.path.join(output_dir, f"{base_filename}.png")
-    fig.savefig(png_path, format='png', dpi=dpi, bbox_inches='tight')
-    
-    print(f"Plots saved to {svg_path} and {png_path}")
-
-def main(input_dir, image_number=100, show_masks=True, show_outlines=True, 
-         mask_alpha=0.5, zoom_factor=2, label_content=None, 
-         label_position=(0.05, 0.95), label_size=12, figsize=(8, 8)):
-    """
-    Main function to create and save the segmented image plot.
-    
-    Parameters:
-    -----------
-    input_dir : str
-        Directory containing the analysis dataframe.
-    image_number : int, optional
-        Image number to visualize. Default is 100.
-    show_masks : bool, optional
-        Whether to show cell masks. Default is True.
-    show_outlines : bool, optional
-        Whether to show cell outlines. Default is True.
-    mask_alpha : float, optional
-        Transparency of the masks. Default is 0.5.
-    zoom_factor : float, optional
-        Factor to zoom in to the center. Default is 2.
-    label_content : str, optional
-        Content of the label to display. Default is None (no label).
-    label_position : tuple, optional
-        Position of the label (x, y) in figure coordinates. Default is (0.05, 0.95).
-    label_size : int, optional
-        Size of the label font. Default is 12.
-    figsize : tuple, optional
-        Figure size in inches. Default is (8, 8).
-    """
-    # Format directories
-    input_dir, output_dir = format_1(input_dir)
-    
-    # Load data
-    data = load_data(input_dir, image_number)
-    
-    # Create plot
-    fig, ax = plot_segmented_image(
-        data,
-        show_masks=show_masks,
-        show_outlines=show_outlines,
-        mask_alpha=mask_alpha,
-        zoom_factor=zoom_factor,
-        label_content=label_content,
-        label_position=label_position,
-        label_size=label_size,
-        figsize=figsize
-    )
-    
-    # Save plot
-    save_plot(fig, output_dir, image_number)
-    
-    # Show plot
-    plt.show()
+        # Get data for this image from the row
+        try:
+            image_file_path = row['image_file_path']
+            mask_from_df = row['masks']  # Get mask from DataFrame
+            D_SF_px = row['D_SF_px']
+            R_SF_px = D_SF_px / 2  # Calculate radius from diameter
+            current_time = df.iloc[idx]['Time_VisIt']
+            
+            # Read the image from file
+            original_img = plt.imread(image_file_path)
+            if original_img is None:
+                print(f"Error: Could not read image file: {image_file_path}")
+                continue
+                
+            # Create figure
+            fig, ax = plt.subplots(figsize=(8, 8))
+            
+            # Get image dimensions
+            height, width = original_img.shape[:2]
+            
+            # Calculate zoom area centered on the image
+            center_x, center_y = width // 2, height // 2
+            new_width = int(width / zoom_factor)
+            new_height = int(height / zoom_factor)
+            x_min = max(0, center_x - new_width // 2)
+            x_max = min(width, center_x + new_width // 2)
+            y_min = max(0, center_y - new_height // 2)
+            y_max = min(height, center_y + new_height // 2)
+            
+            # Display zoomed image
+            zoomed_image = original_img[y_min:y_max, x_min:x_max]
+            
+            # Get the corresponding part of the mask
+            if mask_from_df is not None and isinstance(mask_from_df, np.ndarray):
+                zoomed_mask = mask_from_df[y_min:y_max, x_min:x_max]
+            else:
+                print(f"Warning: Mask not available for image {image_num}")
+                zoomed_mask = None
+            
+            # Show the image
+            if len(original_img.shape) == 3 and original_img.shape[2] == 3:  # RGB image
+                ax.imshow(zoomed_image)
+            else:  # Grayscale image
+                ax.imshow(zoomed_image, cmap='gray')
+            
+            if show_masks and zoomed_mask is not None:
+                # Define a list of 10 distinct colors (RGB format) like in plot6_colortables
+                distinct_colors = [
+                    (255, 0, 0), (0, 255, 0), (0, 0, 255), (255, 255, 0),
+                    (0, 255, 255), (255, 0, 255), (255, 165, 0), (128, 0, 128),
+                    (165, 42, 42), (255, 192, 203)
+                ]
+                
+                # Get unique cell IDs (excluding background)
+                unique_cells = np.unique(zoomed_mask)
+                unique_cells = unique_cells[unique_cells > 0]
+                
+                # Create overlay for all cells
+                mask_overlay = np.zeros((*zoomed_mask.shape, 4))
+                
+                # Apply colors to each cell
+                for cell_id in unique_cells:
+                    # Skip cells not in cells_to_color if it's specified
+                    if cells_to_color is not None and len(cells_to_color) > 0:
+                        if cell_id not in cells_to_color:
+                            continue
+                    
+                    cell_mask = zoomed_mask == cell_id
+                    color_index = int(cell_id) % 10  # Use modulo to cycle through colors
+                    color_rgb = distinct_colors[color_index]
+                    # Convert RGB (0-255) to normalized values (0-1) for the overlay
+                    normalized_color = (color_rgb[0]/255, color_rgb[1]/255, color_rgb[2]/255, alpha)
+                    mask_overlay[cell_mask] = normalized_color
+                
+                ax.imshow(mask_overlay)
+            
+            if show_outlines and zoomed_mask is not None:
+                # Draw outlines for each cell
+                for cell_id in np.unique(zoomed_mask)[1:]:  # Skip background (0)
+                    # Skip cells not in cells_to_color if it's specified
+                    if cells_to_color is not None and len(cells_to_color) > 0:
+                        if cell_id not in cells_to_color:
+                            continue
+                    
+                    cell_mask = zoomed_mask == cell_id
+                    contours = measure.find_contours(cell_mask, 0.5)
+                    
+                    for contour in contours:
+                        ax.plot(contour[:, 1], contour[:, 0], 
+                               color=contour_color, 
+                               linestyle=contour_linestyle, 
+                               linewidth=contour_linewidth)
+            
+            # Add reference radius circle if requested
+            if show_radius:
+                # Calculate center of zoomed image in original coordinates
+                orig_center_x, orig_center_y = width // 2, height // 2
+                
+                # Calculate zoomed image center
+                zoomed_center_x = orig_center_x - x_min
+                zoomed_center_y = orig_center_y - y_min
+                
+                # Plot circle representing the flame radius
+                theta = np.linspace(0, 2*np.pi, 200)
+                # Scale radius based on zoom factor
+                visible_radius = R_SF_px
+                
+                # Make sure circle is within zoomed boundaries
+                if visible_radius > 0:
+                    circle_x = zoomed_center_x + visible_radius * np.cos(theta)
+                    circle_y = zoomed_center_y + visible_radius * np.sin(theta)
+                    ax.plot(circle_x, circle_y, 
+                           color=radius_color, 
+                           linestyle=radius_linestyle, 
+                           linewidth=radius_linewidth)
+            
+            # Add label if provided
+            if label_text:
+                ax.text(label_pos[0], label_pos[1], label_text, 
+                        transform=ax.transAxes, fontsize=label_size,
+                        verticalalignment='top', horizontalalignment='left',
+                        bbox=dict(boxstyle='round', facecolor='white', alpha=0.7))
+            
+            # Remove axes
+            ax.set_axis_off()
+            
+            # Save figure
+            fig.tight_layout()
+            output_filename = f"plot13_segmented_image_{int(image_num):04d}"
+            fig.savefig(output_dir / f"{output_filename}.png", format="png", dpi=300, bbox_inches='tight')
+            fig.savefig(output_dir / f"{output_filename}.svg", format="svg", dpi=300, bbox_inches='tight')
+            
+            if show_plot:
+                plt.show()
+            else:
+                plt.close(fig)
+            
+            print(f"Saved plot for image number {image_num}")
+            
+        except Exception as e:
+            print(f"Error processing image {image_num}: {e}")
 
 if __name__ == "__main__":
-    # Set parameters here for VSCode execution
-    INPUT_DIR = r"C:\your\path\to\data\directory"  # Replace with your actual path
-    IMAGE_NUMBER = 100
-    SHOW_MASKS = True
-    SHOW_OUTLINES = True
-    MASK_ALPHA = 0.5
-    ZOOM_FACTOR = 2
-    LABEL_CONTENT = "Segmented Cells"  # Set to None for no label
-    LABEL_POSITION = (0.05, 0.95)  # (x, y) in figure coordinates
-    LABEL_SIZE = 12
-    FIGSIZE = (8, 8)  # inches
-    
-    main(
-        input_dir=INPUT_DIR,
-        image_number=IMAGE_NUMBER,
-        show_masks=SHOW_MASKS,
-        show_outlines=SHOW_OUTLINES,
-        mask_alpha=MASK_ALPHA,
-        zoom_factor=ZOOM_FACTOR,
-        label_content=LABEL_CONTENT,
-        label_position=LABEL_POSITION,
-        label_size=LABEL_SIZE,
-        figsize=FIGSIZE
+    # Example usage
+    plot_segmented_image(
+        input_dir=r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_Pipe_Default_dir\20250625_1528537\20250625_1528554\20250625_1626096\20250626_1700136\20250626_1706361",
+        output_dir_comment="segmented_images",
+        image_numbers=[79],  # Use empty list [] to plot all images
+        show_masks=True,
+        show_outlines=True,
+        cells_to_color=[95],  # Only color cell IDs 1, 2, and 5 (use [] for all cells)
+        alpha=0.5,           # Transparency of mask overlay
+        zoom_factor=1.5,     # How much to zoom in to center (higher = more zoom)
+        #label_text=r"Segmented cells",  # Use LaTeX formatting if needed
+        label_size=12,
+        label_pos=(0.05, 0.95),  # Position in relative coordinates (0-1)
+        contour_color='w',    # White outlines
+        contour_linestyle='-', # Solid line
+        contour_linewidth=0.8, # Line width
+        show_radius=True,     # Show the flame radius circle
+        radius_color='r',     # Red circle
+        radius_linestyle='--', # Dashed line
+        radius_linewidth=3,    # Line width for radius
+        show_plot=0
     )

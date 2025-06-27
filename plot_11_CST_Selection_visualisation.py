@@ -405,8 +405,8 @@ def plot_CST_Selection_visualisation(
 
 if __name__ == "__main__":
     # Example usage - these values can be modified directly in the code
-    input_dir = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_Pipe_Default_dir\20250621_1325208\20250621_1325282\20250621_1621429\20250621_2245499\20250621_2253452"
-    image_number = 100  # Change this to the desired image index
+    input_dir = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_Pipe_Default_dir\20250625_1528537\20250625_1528554\20250625_1626096\20250626_1700136\20250626_1706361"
+    image_number = 79  # Change this to the desired image index
     
     output_dir = plot_CST_Selection_visualisation(
         input_dir=input_dir,
