@@ -20,19 +20,29 @@ def plot_segmented_image(
     image_numbers=None, 
     show_masks=True, 
     show_outlines=True, 
-    cells_to_color=None,  # New parameter to specify which cells to color
+    cells_to_color=None,  
     alpha=0.5, 
     zoom_factor=2, 
+    # New text customization parameters
+    title_text="",            # Title text (empty for no title)
+    title_fontsize=16,        # Font size for title
+    x_label="",               # x-axis label (empty for no label)
+    y_label="",               # y-axis label (empty for no label)
+    axis_label_fontsize=12,   # Font size for axis labels
+    legend_text=[],           # List of legend entries
+    legend_fontsize=10,       # Font size for legend text
+    legend_position="lower right",  # Position for legend
+    # Existing parameters
     label_text="", 
     label_size=12, 
     label_pos=(0.05, 0.95),
-    contour_color='w',    # Parameter for contour color
-    contour_linestyle='-', # Parameter for contour line style
-    contour_linewidth=0.8, # Parameter for contour line width
-    show_radius=False,    # Parameter to display flame radius circle
-    radius_color='r',     # Color for the radius circle
-    radius_linestyle='--', # Line style for the radius circle
-    radius_linewidth=1.5, # Line width for the radius circle
+    contour_color='w',    
+    contour_linestyle='-', 
+    contour_linewidth=0.8, 
+    show_radius=False,    
+    radius_color='r',     
+    radius_linestyle='--', 
+    radius_linewidth=1.5, 
     show_plot=0):
     """
     Plot segmented images with masks and outlines.
@@ -57,12 +67,22 @@ def plot_segmented_image(
         Transparency of the masks (0-1)
     zoom_factor : float
         Factor to zoom in to the center of the image
-    label_text : str
-        Text for label on the plot
-    label_size : int
-        Font size for the label
-    label_pos : tuple
-        Position of label (x, y) in axis coordinates
+    title_text : str, optional
+        Title text to display on the plot. Empty string for no title.
+    title_fontsize : int, optional
+        Font size for the title, by default 16
+    x_label : str, optional
+        Label for x-axis. Empty string for no label.
+    y_label : str, optional
+        Label for y-axis. Empty string for no label.
+    axis_label_fontsize : int, optional
+        Font size for axis labels, by default 12
+    legend_text : list, optional
+        List of strings for legend entries. Empty list for no legend.
+    legend_fontsize : int, optional
+        Font size for legend text, by default 10
+    legend_position : str, optional
+        Position for the legend (matplotlib position string), by default "lower right"
     contour_color : str
         Color of the cell outlines, by default 'w' (white)
     contour_linestyle : str
@@ -231,6 +251,36 @@ def plot_segmented_image(
                         transform=ax.transAxes, fontsize=label_size,
                         verticalalignment='top', horizontalalignment='left',
                         bbox=dict(boxstyle='round', facecolor='white', alpha=0.7))
+            
+            # Add title if provided
+            if title_text:
+                # You can include formatting like image number or time if needed
+                formatted_title = title_text.format(image_num=image_num, time=current_time)
+                ax.set_title(formatted_title, fontsize=title_fontsize)
+            
+            # Add axis labels if provided
+            if x_label:
+                ax.set_xlabel(x_label, fontsize=axis_label_fontsize)
+            if y_label:
+                ax.set_ylabel(y_label, fontsize=axis_label_fontsize)
+            
+            # Create legend handles if legend_text is provided
+            if legend_text:
+                from matplotlib.patches import Patch
+                legend_handles = []
+                
+                # Create basic legend entries
+                for i, text in enumerate(legend_text):
+                    color = distinct_colors[i % len(distinct_colors)]
+                    color_normalized = (color[0]/255, color[1]/255, color[2]/255)
+                    legend_handles.append(Patch(facecolor=color_normalized, edgecolor='black', label=text))
+                
+                # Add legend
+                ax.legend(handles=legend_handles, loc=legend_position, fontsize=legend_fontsize)
+            
+            # Remove axes if both x_label and y_label are empty
+            if not x_label and not y_label:
+                ax.set_axis_off()
             
             # Remove axes
             ax.set_axis_off()

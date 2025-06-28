@@ -65,6 +65,22 @@ def plot10_distribution_histogram_comparison(
     y_axis_limit=None,            # Manual y-axis limit (overrides extension factor)
     Frequency_percent_of_max=True,  # If True, normalize frequency as percentage of max
     output_filename_template='Histogram_comparison_{:04d}',  # Template for output filenames
+    
+    # NEW: List of image numbers to process (empty list = all images)
+    image_numbers=[],      
+    
+    # New text and legend customization parameters
+    x_label_fontsize=16,       # Font size for x-axis label
+    y_label_fontsize=16,       # Font size for y-axis label 
+    title_fontsize=18,         # Font size for plot title
+    legend_fontsize=14,        # Font size for legend text
+    legend_framealpha=1,     # Legend box transparency (0-1)
+    legend_position="upper left", # Position of the legend
+    legend_bbox_to_anchor=(0, 1), # Fine-tuning of legend position
+    tick_label_fontsize=12,    # Font size for axis tick labels
+    info_box_fontsize=10,      # Font size for info box text
+    mean_line_label_template='Mean {}: {:.3f}', # Template for mean value labels
+    
 ):
     """
     Creates comparative histograms of two distributions from a DataFrame.
@@ -145,6 +161,29 @@ def plot10_distribution_histogram_comparison(
     output_filename_template : str, optional
         Template for output filenames. Must contain exactly one placeholder '{}' 
         for the image index. Default is 'Histogram_comparison_{:04d}'.
+    image_numbers : list, optional
+        List of specific image numbers to process. If empty, all images are processed.
+        Defaults to [] (process all images).
+    x_label_fontsize : int, optional
+        Font size for x-axis label. Defaults to 16.
+    y_label_fontsize : int, optional
+        Font size for y-axis label. Defaults to 16.
+    title_fontsize : int, optional
+        Font size for plot title. Defaults to 18.
+    legend_fontsize : int, optional
+        Font size for legend text. Defaults to 14.
+    legend_framealpha : float, optional
+        Transparency of the legend box (0-1). Defaults to 0.7.
+    legend_position : str, optional
+        Position of the legend. Defaults to "upper center".
+    legend_bbox_to_anchor : tuple, optional
+        Fine-tuning of legend position (x, y). Defaults to (0.5, 0.98).
+    tick_label_fontsize : int, optional
+        Font size for axis tick labels. Defaults to 12.
+    info_box_fontsize : int, optional
+        Font size for info box text. Defaults to 10.
+    mean_line_label_template : str, optional
+        Template for mean value labels. Defaults to 'Mean {}: {:.3f}'.
     
     Returns
     -------
@@ -229,6 +268,19 @@ def plot10_distribution_histogram_comparison(
         print("Error: No valid data found after cleaning") if Plot_log_level >= 0 else None
         return output_dir
 
+    #################################################### Apply image number filtering if specified
+    if image_numbers:
+        if 'image_number' in SRec_df.columns:
+            SRec_df = SRec_df[SRec_df['image_number'].isin(image_numbers)].reset_index(drop=True)
+            print(f"Filtered to {len(SRec_df)} images based on specified image numbers") if Plot_log_level >= 1 else None
+        else:
+            print(f"Warning: image_number column not found in DataFrame, cannot filter by image numbers") if Plot_log_level >= 0 else None
+
+    # Verify we have data after filtering
+    if len(SRec_df) == 0:
+        print("Error: No images to process after filtering") if Plot_log_level >= 0 else None
+        return output_dir
+
     #################################################### Calculate global statistics
     # Number of rows in the DataFrame
     N_images = len(SRec_df)
@@ -265,6 +317,9 @@ def plot10_distribution_histogram_comparison(
         # Get the cleaned distributions
         dist1_data = SRec_df.iloc[i][dist1_clean_column]
         dist2_data = SRec_df.iloc[i][dist2_clean_column]
+        
+        # Get the actual image number from the DataFrame (if available)
+        image_num = SRec_df.iloc[i]['image_number'] if 'image_number' in SRec_df.columns else i+1
         
         # Create bins for this specific image
         bins = np.linspace(min_val, max_val, bin_count + 1)
@@ -304,29 +359,33 @@ def plot10_distribution_histogram_comparison(
             ax.hist(dist2_data, bins=bins, alpha=0.6, color=dist2_color, 
                    label=dist2_label, edgecolor='black', linewidth=0.5)
         
-        # Add mean area lines
+        # Add mean area lines with customized labels
         mean_1 = np.mean(dist1_data)
         mean_2 = np.mean(dist2_data)
         ax.axvline(mean_1, color=dist1_color, linestyle='--', linewidth=2, 
-                  label=f'Mean {dist1_label}: {mean_1:.3f}')
+                  label=mean_line_label_template.format(dist1_label, mean_1))
         ax.axvline(mean_2, color=dist2_color, linestyle='--', linewidth=2, 
-                  label=f'Mean {dist2_label}: {mean_2:.3f}')
+                  label=mean_line_label_template.format(dist2_label, mean_2))
         
-        # Set axis limits and labels
+        # Set axis limits and labels with customized font sizes
         x_min = min_val * 0.95
         x_max = x_axis_limit if x_axis_limit is not None else max_val * x_axis_extension
         ax.set_xlim(x_min, x_max)
         ax.set_ylim(0, y_max)
         
-        ax.set_xlabel(x_label)
-        ax.set_ylabel(y_label)
-        ax.set_title(plot_title_template.format(i+1, dist1_label, dist2_label))
+        ax.set_xlabel(x_label, fontsize=x_label_fontsize)
+        ax.set_ylabel(y_label, fontsize=y_label_fontsize)
+        ax.set_title(plot_title_template.format(image_num, dist1_label, dist2_label), fontsize=title_fontsize)
+        
+        # Set tick label font sizes
+        ax.tick_params(axis='both', which='major', labelsize=tick_label_fontsize)
         
         # Add grid
         ax.grid(True, alpha=grid_alpha, linestyle='--')
         
-        # Add legends centered at the top of the plot
-        ax.legend(loc='upper center', bbox_to_anchor=(0.5, 0.98))
+        # Add legends with customized appearance
+        ax.legend(loc=legend_position, bbox_to_anchor=legend_bbox_to_anchor, 
+                 fontsize=legend_fontsize, framealpha=legend_framealpha)
 
         # Add image inset if requested
         if show_image_inset:
@@ -413,7 +472,7 @@ def plot10_distribution_histogram_comparison(
             except Exception as e:
                 print(f"\nWarning: Could not display image inset for image {i+1}: {str(e)}") if Plot_log_level >= 1 else None
         
-        # Add cell count and diameter info in a separate box
+        # Add cell count and diameter info in a separate box with customized font size
         if show_info_box:
             try:
                 d_2d = np.mean(SRec_df.iloc[i]['d_cell_distribution_nonDim'])
@@ -422,13 +481,19 @@ def plot10_distribution_histogram_comparison(
                 cell_count = len(dist1_data)
                 box_text = f"Cell count: {cell_count}\n{diameter_str}"
                 ax.text(0.02, 0.88, box_text, 
-                       transform=ax.transAxes, fontsize=10,
+                       transform=ax.transAxes, fontsize=info_box_fontsize,
                        bbox=dict(boxstyle='round', facecolor='white', alpha=0.7))
             except Exception as e:
                 print(f"\nWarning: Could not add diameter info: {str(e)}") if Plot_log_level >= 1 else None
 
-        # Save plots with configurable filename
-        base_filename = output_filename_template.format(i+1)
+        # Save plots with configurable filename - use actual image number
+        # Convert image_num to int to avoid format errors with float values
+        try:
+            image_num_int = int(image_num)
+        except (ValueError, TypeError):
+            image_num_int = i + 1  # Fallback to loop index if conversion fails
+        
+        base_filename = output_filename_template.format(image_num_int)
         
         if save_png:
             png_path = os.path.join(png_dir, f'{base_filename}.png')
@@ -464,33 +529,40 @@ def plot10_distribution_histogram_comparison(
 # Example usage
 if __name__ == "__main__":
     print("Running Generic Distribution Comparison Plotter...")
+    # Example for diameter distributions
     plot10_distribution_histogram_comparison(
-        input_dir=r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_variations\20250607_2240236\20250608_0303173\20250608_0303173\20250608_0409296\20250608_0643128\20250608_0645118\20250612_1349113",
+        input_dir=r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_Pipe_Default_dir\20250625_1528537\20250625_1528554\20250625_1626096\20250626_1700136\20250626_1706361",
+        image_numbers=[],
         dist1_column='d_cell_distribution_nonDim',
         dist2_column='d_cell_SRec_distribution_nonDim',
         dist1_label='2D',
         dist2_label='3D',
         x_label=r'Cell Diameter / $\delta_T$',
-        output_filename_template='Diameter_2Dvs3D_histogram_{:04d}',  # Custom filename template
-        save_svg=False,
+        plot_title_template='Image {}: {} vs {}\nDiameter Distribution Comparison',
+        output_filename_template='Diameter_2Dvs3D_histogram_{:04d}',  # Use :04d format for integers
+        save_svg=True,
         save_png=True,
         show_plots=False,
         create_video=True,
         show_image_inset=True,
         Plot_log_level=1
     )
+
+    # Example for area distributions
     plot10_distribution_histogram_comparison(
-        input_dir=r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_variations\20250607_2240236\20250608_0303173\20250608_0303173\20250608_0409296\20250608_0643128\20250608_0645118\20250612_1349113",
+        input_dir=r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_Pipe_Default_dir\20250625_1528537\20250625_1528554\20250625_1626096\20250626_1700136\20250626_1706361",
+        image_numbers=[],
         dist1_column='A_cell_distribution_nonDim2',
         dist2_column='A_cell_SRec_distribution_nonDim2',
         dist1_label='2D',
         dist2_label='3D',
         x_label=r'Cell Area / $\delta_T^2$',
-        output_filename_template='Area_2Dvs3D_histogram_{:04d}',  # Custom filename template
-        save_svg=False,
+        plot_title_template='Image {}: {} vs {}\nArea Distribution Comparison',
+        output_filename_template='Area_2Dvs3D_histogram_{:04d}',  # Use :04d format for integers
+        save_svg=True,
         save_png=True,
         show_plots=False,
         create_video=True,
         show_image_inset=True,
-        Plot_log_level=1
+        Plot_log_level=1,
     )

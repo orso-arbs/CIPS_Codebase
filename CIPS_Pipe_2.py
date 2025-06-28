@@ -12,9 +12,13 @@ import CP_extract_1 as CPe1
 import Analysis_Altantzis2011 as A11
 import plot1 as p1
 import plot2_CPvsA11 as p2
+import plot2_CPvsA11_CST_zoom as p2_zoom
 import plot3_CPvsA11_Panel as p3_panel
+import plot3_CPvsA11_CST_Panel as p3_cst_panel
 import plot4_dimentions as p4
 import plot6_colortables as p6c
+import plot10_histogram_comparison as p10
+import plot13_segmented_image as p13
 
 @F_1.ParameterLog(max_size = 1024 * 10)
 def CIPS_pipeline_2(
@@ -129,6 +133,16 @@ def CIPS_pipeline_2(
     p2_video=1,
     p2_Plot_log_level=1,
 
+    # plotter_2_CPvsA11_CST_zoom args
+    p2_zoom_output_dir_manual="",
+    p2_zoom_output_dir_comment="",
+    p2_zoom_video=1,
+    p2_zoom_Plot_log_level=1,
+    p2_zoom_ScaleFactor=1.5,
+    p2_zoom_cst_expansion_factor=6,
+    p2_zoom_image_numbers=None,
+    p2_zoom_cells_to_color=None,
+    
     # plotter_3_CPvsA11_Panel args
     p3_output_dir_manual="",
     p3_output_dir_comment="",
@@ -140,26 +154,46 @@ def CIPS_pipeline_2(
     p3_Panel_3=0,
     p3_Panel_4=1,
 
-    # plotter_6_colortables args
-    p6c_output_dir_manual="",
-    p6c_output_dir_comment="",
-    p6c_show_plot=0,
-    p6c_Plot_log_level=1,
-    p6c_image_width_ratio=0.5,
-    p6c_plot_width_ratio=0.5,
-    p6c_plot_spacing=0.0,
-    p6c_colorbar_width=0.1,
-    p6c_colorbar_height=0.6,
-    p6c_colorbar_x_pos=0.1,
-    p6c_ScaleFactor=1.5,
-    p6c_figsize=(18, 6),
-    p6c_FontSizeFactor_Legends=1.4,
-    p6c_FontSizeFactor_Axis=1.0,
-    p6c_Legend_y_offset=1.3,
-    p6c_dpi=100,
-    p6c_save_fig=True,
-    p6c_video=True,
-
+    # plotter_3_CPvsA11_CST_Panel args
+    p3_cst_panel_output_dir_manual="",
+    p3_cst_panel_output_dir_comment="",
+    p3_cst_panel_show_plot=0,
+    p3_cst_panel_Plot_log_level=1,
+    p3_cst_panel_cst_expansion_factor=6,
+    p3_cst_panel_textbox_font_size=15,
+    p3_cst_panel_legend_font_size=15,
+    p3_cst_panel_axis_label_font_size=15,
+    
+    # plot10_histogram_comparison args
+    p10_output_dir_manual="",
+    p10_output_dir_comment="",
+    p10_dist1_column='A_cell_distribution_CST_nonDim2',
+    p10_dist2_column='d_cell_distribution_CST_nonDim',
+    p10_dist1_label='Cell Area',
+    p10_dist2_label='Cell Diameter',
+    p10_dist1_color='orange',
+    p10_dist2_color='green',
+    p10_x_label='Non-Dimensional Value',
+    p10_save_svg=True,
+    p10_save_png=True,
+    p10_show_plots=False,
+    p10_create_video=True,
+    p10_Plot_log_level=1,
+    p10_image_numbers=[],  # Added parameter for specific image numbers
+    
+    # plot13_segmented_image args
+    p13_output_dir_manual="",
+    p13_output_dir_comment="",
+    p13_image_numbers=[],  # Changed from None to empty list for consistency
+    p13_show_masks=True,
+    p13_show_outlines=True,
+    p13_cells_to_color=None,
+    p13_alpha=0.5,
+    p13_zoom_factor=1.5,
+    p13_show_radius=True,
+    p13_show_plot=0,
+    p13_contour_color='w',
+    
     # Control flags for pipeline sections
     run_visit_projector=True,
     run_cp_segment=True,
@@ -170,6 +204,10 @@ def CIPS_pipeline_2(
     run_plotter_4=True,
     run_plotter_2=True,
     run_plotter_3_panel=True,
+    run_plotter_2_zoom=True,
+    run_plotter_3_cst_panel=True,
+    run_plotter_10=True,
+    run_plotter_13=True,
 ):
     """
     Runs the enhanced CIPS pipeline with unified Analysis_Altantzis2011 module.
@@ -206,6 +244,14 @@ def CIPS_pipeline_2(
     cips_A11_output_dir_override : str, optional
         If run_analysis_a11 is False, use this path as Analysis_Altantzis2011 output.
         Default is "".
+    run_plotter_2_zoom : bool, optional
+        If True, runs the CST zoom plotting function. Default is True.
+    run_plotter_3_cst_panel : bool, optional
+        If True, runs the CST panel plotting function. Default is True.
+    run_plotter_10 : bool, optional
+        If True, runs the histogram comparison plotting function. Default is True.
+    run_plotter_13 : bool, optional
+        If True, runs the segmented image plotting function. Default is True.
     
     Returns
     -------
@@ -458,6 +504,96 @@ def CIPS_pipeline_2(
                     print("--- Skipping plotter_3_CPvsA11_Panel (missing analysis output) ---")
             else:
                 print("--- Skipping plotter_3_CPvsA11_Panel ---")
+                
+            # Run plotter_2_CPvsA11_CST_zoom
+            if run_plotter_2_zoom:
+                if plot_input_dir:
+                    print(f"--- Running plotter_2_CPvsA11_CST_zoom ---")
+                    p2_zoom_out_dir = p2_zoom.plotter_2_CPvsA11_CST_zoom(
+                        input_dir=plot_input_dir,
+                        output_dir_manual=p2_zoom_output_dir_manual,
+                        output_dir_comment=p2_zoom_output_dir_comment,
+                        video=p2_zoom_video,
+                        Plot_log_level=p2_zoom_Plot_log_level,
+                        ScaleFactor=p2_zoom_ScaleFactor,
+                        cst_expansion_factor=p2_zoom_cst_expansion_factor,
+                        image_numbers=p2_zoom_image_numbers,
+                        cells_to_color=p2_zoom_cells_to_color,
+                    )
+                else:
+                    print("--- Skipping plotter_2_CPvsA11_CST_zoom (missing analysis output) ---")
+            else:
+                print("--- Skipping plotter_2_CPvsA11_CST_zoom ---")
+                
+            # Run plotter_3_CPvsA11_CST_Panel
+            if run_plotter_3_cst_panel:
+                if plot_input_dir:
+                    print(f"--- Running plotter_3_CPvsA11_CST_Panel ---")
+                    p3_cst_out_dir = p3_cst_panel.plotter_3_CPvsA11_CST_Panel(
+                        input_dir=plot_input_dir,
+                        output_dir_manual=p3_cst_panel_output_dir_manual,
+                        output_dir_comment=p3_cst_panel_output_dir_comment,
+                        show_plot=p3_cst_panel_show_plot,
+                        Plot_log_level=p3_cst_panel_Plot_log_level,
+                        cst_expansion_factor=p3_cst_panel_cst_expansion_factor,
+                        textbox_font_size=p3_cst_panel_textbox_font_size,
+                        legend_font_size=p3_cst_panel_legend_font_size,
+                        axis_label_font_size=p3_cst_panel_axis_label_font_size,
+                    )
+                else:
+                    print("--- Skipping plotter_3_CPvsA11_CST_Panel (missing analysis output) ---")
+            else:
+                print("--- Skipping plotter_3_CPvsA11_CST_Panel ---")
+                
+            # Run plot10_histogram_comparison
+            if run_plotter_10:
+                if plot_input_dir:
+                    print(f"--- Running plot10_histogram_comparison ---")
+                    p10_out_dir = p10.plot10_distribution_histogram_comparison(
+                        input_dir=plot_input_dir,
+                        output_dir_manual=p10_output_dir_manual,
+                        output_dir_comment=p10_output_dir_comment,
+                        dist1_column=p10_dist1_column,
+                        dist2_column=p10_dist2_column,
+                        dist1_label=p10_dist1_label,
+                        dist2_label=p10_dist2_label,
+                        dist1_color=p10_dist1_color,
+                        dist2_color=p10_dist2_color,
+                        x_label=p10_x_label,
+                        save_svg=p10_save_svg,
+                        save_png=p10_save_png,
+                        show_plots=p10_show_plots,
+                        create_video=p10_create_video,
+                        Plot_log_level=p10_Plot_log_level,
+                        image_numbers=p10_image_numbers,  # Pass the image numbers parameter
+                    )
+                else:
+                    print("--- Skipping plot10_histogram_comparison (missing analysis output) ---")
+            else:
+                print("--- Skipping plot10_histogram_comparison ---")
+                
+            # Run plot13_segmented_image
+            if run_plotter_13:
+                if plot_input_dir:
+                    print(f"--- Running plot13_segmented_image ---")
+                    p13_out_dir = p13.plot_segmented_image(
+                        input_dir=plot_input_dir,
+                        output_dir_manual=p13_output_dir_manual,
+                        output_dir_comment=p13_output_dir_comment,
+                        image_numbers=p13_image_numbers,  # Already using the parameter correctly
+                        show_masks=p13_show_masks,
+                        show_outlines=p13_show_outlines,
+                        cells_to_color=p13_cells_to_color,
+                        alpha=p13_alpha,
+                        zoom_factor=p13_zoom_factor,
+                        show_radius=p13_show_radius,
+                        show_plot=p13_show_plot,
+                        contour_color=p13_contour_color,
+                    )
+                else:
+                    print("--- Skipping plot13_segmented_image (missing analysis output) ---")
+            else:
+                print("--- Skipping plot13_segmented_image ---")
 
             #########################################        Color Table Plotting
             if run_plotter_6_colortables:
@@ -498,9 +634,13 @@ def CIPS_pipeline_2(
                 "VP1_output_dir": VP1_output_dir,
                 "CPs1_output_dir": CPs1_output_dir,
                 "CPe1_output_dir": CPe1_output_dir,
-                "A11_output_dir": A11_output_dir,  # New unified analysis output
+                "A11_output_dir": A11_output_dir, 
                 "p6c_output_dir": p6c_output_dir,
-                "plot_input_dir": plot_input_dir
+                "plot_input_dir": plot_input_dir,
+                "p2_zoom_out_dir": p2_zoom_out_dir if run_plotter_2_zoom else None,
+                "p3_cst_out_dir": p3_cst_out_dir if run_plotter_3_cst_panel else None,
+                "p10_out_dir": p10_out_dir if run_plotter_10 else None,
+                "p13_out_dir": p13_out_dir if run_plotter_13 else None
             }
             results = list(results_dict.values())
 
@@ -571,19 +711,32 @@ if __name__ == "__main__":
         a11_plot_CST_detJ=True,
         a11_plot_CST_selection=True,
         
-        # Run all pipeline steps
+        # Plotter 10 parameters
+        p10_dist1_column='d_cell_distribution_CST_nonDim',
+        p10_dist2_column='A_cell_distribution_CST_nonDim2',
+        p10_dist1_label='Cell Diameter',
+        p10_dist2_label='Cell Area',
+        p10_x_label=r'Non-Dimensional Value',
+        p10_image_numbers=[79],  # Example: only process image #100
         
-        run_visit_projector=True, #cips_VP1_output_dir_override=r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\FB images\FrouzakisSF_Images",
-        # Frouzakis extended SF images: 
-        #cips_VP1_output_dir_override=r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\FB images\FrouzakisSF_Images",
-        run_cp_segment=True, #cips_CPs1_output_dir_override=r"",
+        # Plotter 13 parameters
+        p13_image_numbers=[79],  # Example: only process image #100
+        p13_cells_to_color=[],  # Example: only color cell #95
+        
+        # Run all pipeline steps
+        run_visit_projector=True,
+        run_cp_segment=True,
         run_cp_extract=True,
-        run_analysis_a11=True, #cips_A11_output_dir_override=r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_Pipe_Default_dir\20250618_1754539\20250618_1754549\20250618_1756011\20250618_2359067\20250618_2359162",
+        run_analysis_a11=True,
         run_plotter_1=True,
         run_plotter_4=True,
         run_plotter_2=True,
         run_plotter_3_panel=True,
         run_plotter_6_colortables=True,
+        run_plotter_2_zoom=True,
+        run_plotter_3_cst_panel=True,
+        run_plotter_10=True,
+        run_plotter_13=True,
     )
     
     print("CIPS-Pipeline 2 run finished.")
