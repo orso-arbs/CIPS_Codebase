@@ -23,6 +23,7 @@ def plot_segmented_image(
     cells_to_color=[], # For the Panel describing the pipeline, the cell is [95]
     alpha=0.5, 
     zoom_factor=1.5, # Changed from 2 to 1.5
+    ScaleFactor=None,  # New parameter for radius-based zoom
     # New text customization parameters
     title_text="",            # Title text (empty for no title)
     title_fontsize=16,        # Font size for title
@@ -39,7 +40,7 @@ def plot_segmented_image(
     contour_color='w',    
     contour_linestyle='-', 
     contour_linewidth=0.8, 
-    show_radius=True, # Changed from False to True    
+    show_radius=False, # Changed from False to True    
     radius_color='r',     
     radius_linestyle='--', 
     radius_linewidth=3, # Changed from 1.5 to 3
@@ -66,7 +67,10 @@ def plot_segmented_image(
     alpha : float
         Transparency of the masks (0-1)
     zoom_factor : float
-        Factor to zoom in to the center of the image
+        Factor to zoom in to the center of the image (used if ScaleFactor is None)
+    ScaleFactor : float, optional
+        Scale factor for zooming based on flame radius (D_SF_px). If provided, this takes 
+        precedence over zoom_factor. Similar to plot6_colortables.py.
     title_text : str, optional
         Title text to display on the plot. Empty string for no title.
     title_fontsize : int, optional
@@ -118,6 +122,10 @@ def plot_segmented_image(
     if not image_numbers:
         image_numbers = df['image_number'].unique()
     
+    # Convert image_numbers to a standard Python list if it's a NumPy array
+    if isinstance(image_numbers, np.ndarray):
+        image_numbers = image_numbers.tolist()
+    
     print(f"Processing {len(image_numbers)} images...")
     
     # Process each row in the DataFrame
@@ -128,10 +136,15 @@ def plot_segmented_image(
         # Handle the case where image_num might be a numpy array
         if isinstance(image_num, np.ndarray):
             if len(image_num) > 0:
-                image_num = image_num[0]  # Take the first element if it's an array
+                image_num = int(image_num[0])  # Convert to int to ensure scalar
             else:
                 continue  # Skip if empty array
+                
+        # Convert to int if it's a float to avoid comparison issues
+        if isinstance(image_num, (float, np.float64, np.float32)):
+            image_num = int(image_num)
         
+        # Now check if we should process this image
         if image_numbers and image_num not in image_numbers:
             continue
             
@@ -159,12 +172,22 @@ def plot_segmented_image(
             
             # Calculate zoom area centered on the image
             center_x, center_y = width // 2, height // 2
-            new_width = int(width / zoom_factor)
-            new_height = int(height / zoom_factor)
-            x_min = max(0, center_x - new_width // 2)
-            x_max = min(width, center_x + new_width // 2)
-            y_min = max(0, center_y - new_height // 2)
-            y_max = min(height, center_y + new_height // 2)
+            
+            if ScaleFactor is not None:
+                # Calculate zoom based on flame radius and ScaleFactor (similar to plot6_colortables.py)
+                zoom_half_size = int(D_SF_px * ScaleFactor / 2)
+                x_min = max(0, center_x - zoom_half_size)
+                x_max = min(width, center_x + zoom_half_size)
+                y_min = max(0, center_y - zoom_half_size)
+                y_max = min(height, center_y + zoom_half_size)
+            else:
+                # Original zoom calculation using zoom_factor
+                new_width = int(width / zoom_factor)
+                new_height = int(height / zoom_factor)
+                x_min = max(0, center_x - new_width // 2)
+                x_max = min(width, center_x + new_width // 2)
+                y_min = max(0, center_y - new_height // 2)
+                y_max = min(height, center_y + new_height // 2)
             
             # Display zoomed image
             zoomed_image = original_img[y_min:y_max, x_min:x_max]
@@ -312,21 +335,22 @@ def plot_segmented_image(
 if __name__ == "__main__":
     # Example usage
     plot_segmented_image(
-        input_dir=r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_Pipe_Default_dir\20250628_1636311\20250628_1636322\20250628_1637345\20250628_1638434\20250628_1638484",
+        input_dir=r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_Pipe_Default_dir\20250625_1528537\20250625_1528554\20250625_1626096\20250626_1700136\20250628_2007187",
         output_dir_comment="segmented_images",
-        image_numbers=[79],  # Use empty list [] to plot all images
+        image_numbers=[],  # Use empty list [] to plot all images
         show_masks=True,
         show_outlines=True,
         cells_to_color=[],  # Only color cell IDs 1, 2, and 5 (use [] for all cells)
         alpha=0.5,           # Transparency of mask overlay
-        zoom_factor=1.5,     # How much to zoom in to center (higher = more zoom)
+        # zoom_factor=1.5,     # How much to zoom in to center (higher = more zoom)
+        ScaleFactor=1.5,     # Use radius-based zooming like in plot6_colortables.py
         #label_text=r"Segmented cells",  # Use LaTeX formatting if needed
         label_size=12,
         label_pos=(0.05, 0.95),  # Position in relative coordinates (0-1)
         contour_color='w',    # White outlines
         contour_linestyle='-', # Solid line
         contour_linewidth=0.8, # Line width
-        show_radius=True,     # Show the flame radius circle
+        show_radius=False,     # Show the flame radius circle
         radius_color='r',     # Red circle
         radius_linestyle='--', # Dashed line
         radius_linewidth=3,    # Line width for radius
