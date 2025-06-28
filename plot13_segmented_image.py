@@ -124,6 +124,14 @@ def plot_segmented_image(
     for idx, row in df.iterrows():
         # Only process images in the image_numbers list
         image_num = row['image_number']
+        
+        # Handle the case where image_num might be a numpy array
+        if isinstance(image_num, np.ndarray):
+            if len(image_num) > 0:
+                image_num = image_num[0]  # Take the first element if it's an array
+            else:
+                continue  # Skip if empty array
+        
         if image_numbers and image_num not in image_numbers:
             continue
             
@@ -304,12 +312,12 @@ def plot_segmented_image(
 if __name__ == "__main__":
     # Example usage
     plot_segmented_image(
-        input_dir=r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_Pipe_Default_dir\20250625_1528537\20250625_1528554\20250625_1626096\20250626_1700136\20250626_1706361",
+        input_dir=r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_Pipe_Default_dir\20250628_1636311\20250628_1636322\20250628_1637345\20250628_1638434\20250628_1638484",
         output_dir_comment="segmented_images",
         image_numbers=[79],  # Use empty list [] to plot all images
         show_masks=True,
         show_outlines=True,
-        cells_to_color=[95],  # Only color cell IDs 1, 2, and 5 (use [] for all cells)
+        cells_to_color=[],  # Only color cell IDs 1, 2, and 5 (use [] for all cells)
         alpha=0.5,           # Transparency of mask overlay
         zoom_factor=1.5,     # How much to zoom in to center (higher = more zoom)
         #label_text=r"Segmented cells",  # Use LaTeX formatting if needed

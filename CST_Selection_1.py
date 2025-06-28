@@ -101,6 +101,29 @@ def CST_Selection_1(
         if col not in Analysis_A11_df.columns:
             Analysis_A11_df[col] = None
     
+    # Add new columns for cell count and expanded distributions
+    if 'N_cells_CST' not in Analysis_A11_df.columns:
+        Analysis_A11_df['N_cells_CST'] = 0
+    
+    if 'N_cells_CSTx6' not in Analysis_A11_df.columns:
+        Analysis_A11_df['N_cells_CSTx6'] = 0
+        
+    # Add new columns for the x6 expanded distributions
+    distribution_columns = [
+        'A_cell_distribution_CSTx6_px2',
+        'A_cell_distribution_CSTx6_nonDim2',
+        'd_cell_distribution_CSTx6_px',
+        'd_cell_distribution_CSTx6_nonDim',
+        'A_cell_SRec_distribution_CSTx6_nonDim2',
+        'A_cell_SRec_distribution_CSTx6_px2',
+        'd_cell_SRec_distribution_CSTx6_nonDim',
+        'd_cell_SRec_distribution_CSTx6_px'
+    ]
+    
+    for col in distribution_columns:
+        if col not in Analysis_A11_df.columns:
+            Analysis_A11_df[col] = None
+    
     #################################################### Create Plot Directory
     # Create directory for classification plots
     if plot_CST_selection:
@@ -299,6 +322,37 @@ def CST_Selection_1(
         Analysis_A11_df.at[i, 'centroid_yIm_distribution_CST_px'] = np.array(centroid_yIm_distribution_CST_px)
         Analysis_A11_df.at[i, 'centroid_xSp_distribution_CST_nonDim'] = np.array(centroid_xSp_distribution_CST_nonDim)
         Analysis_A11_df.at[i, 'centroid_zSp_distribution_CST_nonDim'] = np.array(centroid_zSp_distribution_CST_nonDim)
+        
+        # Calculate the number of cells in the CST
+        N_cells_CST = len(A_cell_distribution_CST_px2)
+        Analysis_A11_df.at[i, 'N_cells_CST'] = N_cells_CST
+        Analysis_A11_df.at[i, 'N_cells_CSTx6'] = N_cells_CST * 6
+        
+        # Create expanded distributions with each element repeated 6 times
+        if N_cells_CST > 0:
+            # For each distribution, create a new array with each element repeated 6 times
+            A_cell_distribution_CSTx6_px2 = np.repeat(A_cell_distribution_CST_px2, 6)
+            A_cell_distribution_CSTx6_nonDim2 = np.repeat(A_cell_distribution_CST_nonDim2, 6)
+            d_cell_distribution_CSTx6_px = np.repeat(d_cell_distribution_CST_px, 6)
+            d_cell_distribution_CSTx6_nonDim = np.repeat(d_cell_distribution_CST_nonDim, 6)
+            A_cell_SRec_distribution_CSTx6_nonDim2 = np.repeat(A_cell_SRec_distribution_CST_nonDim2, 6)
+            A_cell_SRec_distribution_CSTx6_px2 = np.repeat(A_cell_SRec_distribution_CST_px2, 6)
+            d_cell_SRec_distribution_CSTx6_nonDim = np.repeat(d_cell_SRec_distribution_nonDim, 6)
+            d_cell_SRec_distribution_CSTx6_px = np.repeat(d_cell_SRec_distribution_px, 6)
+            
+            # Store the expanded distributions in the DataFrame
+            Analysis_A11_df.at[i, 'A_cell_distribution_CSTx6_px2'] = A_cell_distribution_CSTx6_px2
+            Analysis_A11_df.at[i, 'A_cell_distribution_CSTx6_nonDim2'] = A_cell_distribution_CSTx6_nonDim2
+            Analysis_A11_df.at[i, 'd_cell_distribution_CSTx6_px'] = d_cell_distribution_CSTx6_px
+            Analysis_A11_df.at[i, 'd_cell_distribution_CSTx6_nonDim'] = d_cell_distribution_CSTx6_nonDim
+            Analysis_A11_df.at[i, 'A_cell_SRec_distribution_CSTx6_nonDim2'] = A_cell_SRec_distribution_CSTx6_nonDim2
+            Analysis_A11_df.at[i, 'A_cell_SRec_distribution_CSTx6_px2'] = A_cell_SRec_distribution_CSTx6_px2
+            Analysis_A11_df.at[i, 'd_cell_SRec_distribution_CSTx6_nonDim'] = d_cell_SRec_distribution_CSTx6_nonDim
+            Analysis_A11_df.at[i, 'd_cell_SRec_distribution_CSTx6_px'] = d_cell_SRec_distribution_CSTx6_px
+        else:
+            # If no cells in CST, store empty arrays
+            for col in distribution_columns:
+                Analysis_A11_df.at[i, col] = np.array([])
         
         # Generate classification plots
         if plot_CST_selection and len(cell_classifications) > 0:
@@ -520,7 +574,7 @@ def plot_CST_selection_sanity_check(image_RGB, masks, outlines, CST_Boundary_com
     
     # Save the figure
     plt.savefig(output_path, format='png', bbox_inches='tight', dpi=300)
-    print(f"CST classification plot saved to {output_path}") if CST_log_level >= 2 else None
+    print(f"CST classification plot saved to {output_path}") if CST_log_level >= 3 else None
     
     if show_plot:
         plt.show()
@@ -624,7 +678,7 @@ def plot_CST_inclusion(image_RGB, masks, outlines, CST_Boundary_combined_px, R, 
     
     # Save the figure
     plt.savefig(output_path, format='png', bbox_inches='tight', dpi=300)
-    print(f"CST inclusion plot saved to {output_path}") if CST_log_level >= 2 else None
+    print(f"CST inclusion plot saved to {output_path}") if CST_log_level >= 3 else None
     
     if show_plot:
         plt.show()

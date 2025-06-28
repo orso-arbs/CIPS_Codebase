@@ -146,7 +146,7 @@ def dim3_A11(
     # Analysis_A11_df['d_T_per_px'] = (Analysis_A11_df['R_SF_Average_VisIt'] * ref_values['d_T']) / Analysis_A11_df['R_SF_px'] # this was used erroneously as nonDin_per_px untill 27.06.2025
     
     # Print the nonDim_per_px values for verification
-    if dim3_A11_log_level >= 2:
+    if dim3_A11_log_level >= 3:
         print("\nDimensionalization factors (nonDim_per_px):")
         # Corrected loop: Iterate with enumerate to get both index and value
         for i, value in enumerate(Analysis_A11_df['nonDim_per_px']):

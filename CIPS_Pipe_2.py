@@ -704,10 +704,10 @@ if __name__ == "__main__":
     
     CIPS_pipeline_2(
         cips_pipeline_global_log_level=2, 
-        cips_pipeline_output_dir_comment="S79only_T3_vmag_2000px_BBWW_cyto3_flowThres0p5",
+        cips_pipeline_output_dir_comment="S79a100_T3_vmag_2000px_BBWW_cyto3_flowThres0p5",
         
         # Visit_Projector parameters
-        vp_State_range_manual=[79],
+        vp_State_range_manual=[79,100],
         
         # Cellpose segmentation parameters
         cps_max_images_per_batch=40,
@@ -722,7 +722,7 @@ if __name__ == "__main__":
         cpe_CP_extract_log_level=2,	
 
         # Analysis Altantzis2011 parameters
-        a11_output_dir_comment="",
+        a11_output_dir_comment="correct dimentionalisation",
         a11_Analysis_A11_log_level=2,
         a11_show_plots=False,
         a11_plot_CST_detJ=True,
@@ -741,10 +741,10 @@ if __name__ == "__main__":
         p10_area_dist2_label='3D',
         p10_area_x_label=r'Cell Area / $\delta_T^2$',
         
-        p10_image_numbers=[79],  # Example: only process image #79
+        p10_image_numbers=[],  # Example: only process image #79
         
         # Plotter 13 parameters
-        p13_image_numbers=[79],  # Example: only process image #79
+        p13_image_numbers=[],  # Example: only process image #79
         p13_cells_to_color=[],  # Example: no specific cells to color
         
         # Plotter 14 parameters
@@ -762,9 +762,9 @@ if __name__ == "__main__":
         p6c_video=True,
         
         # Run all pipeline steps
-        run_visit_projector=True,
-        run_cp_segment=True,
-        run_cp_extract=True,       #cips_CPe1_output_dir_override  = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_Pipe_Default_dir\20250625_1528537\20250625_1528554\20250625_1626096\20250626_1700136",
+        run_visit_projector=False,
+        run_cp_segment=False,
+        run_cp_extract=False,       cips_CPe1_output_dir_override  = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_Pipe_Default_dir\20250625_1528537\20250625_1528554\20250625_1626096\20250626_1700136",
         run_analysis_a11=True,
         run_plotter_1=True,
         run_plotter_4=True,

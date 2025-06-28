@@ -12,8 +12,10 @@ plt.rcParams['font.family'] = 'serif'
 
 def plotter_14_vsR(
     input_dir,
-    y_column='N',
     x_column='R_SF_Average_VisIt',  # Added x_column parameter with default value
+    x_scaling_factor=1,  # Added scaling factor for x values
+    y_column='N_cells',
+    y_scaling_factor=6,  # Added scaling factor for y values
     output_dir_manual="",
     output_dir_comment="",
     image_list=[],
@@ -47,6 +49,10 @@ def plotter_14_vsR(
         Column name to plot on y-axis
     x_column : str, optional
         Column name to plot on x-axis, by default 'R_SF_Average_VisIt'
+    x_scaling_factor : float, optional
+        Factor to multiply x-axis values by, by default 1
+    y_scaling_factor : float, optional
+        Factor to multiply y-axis values by, by default 1
     output_dir_manual : str, optional
         Manual output directory, by default ""
     output_dir_comment : str, optional
@@ -148,20 +154,20 @@ def plotter_14_vsR(
     
     # Create plot
     if connect_with_lines:
-        plt.plot(df[x_column], df[y_column], 
+        plt.plot(df[x_column] * x_scaling_factor, df[y_column] * y_scaling_factor, 
                 marker=marker_style, markersize=marker_size, 
                 linestyle=line_style, linewidth=line_width,
                 color=line_color, markerfacecolor=marker_color, 
                 markeredgecolor='black', label=y_column)
     else:
-        plt.scatter(df[x_column], df[y_column], 
+        plt.scatter(df[x_column] * x_scaling_factor, df[y_column] * y_scaling_factor, 
                   s=marker_size**2, marker=marker_style,
                   color=marker_color, edgecolors='black', 
                   label=y_column)
     
     # Set labels
-    plt.xlabel(x_label if x_label else x_column, fontsize=x_label_fontsize)
-    plt.ylabel(y_label if y_label else y_column, fontsize=y_label_fontsize)
+    plt.xlabel(x_label if x_label else f"{x_column} (×{x_scaling_factor})", fontsize=x_label_fontsize)
+    plt.ylabel(y_label if y_label else f"{y_column} (×{y_scaling_factor})", fontsize=y_label_fontsize)
     
     # Set tick parameters for inward facing ticks
     plt.tick_params(axis='both', direction='in', which='both', labelsize=tick_label_fontsize)
@@ -197,6 +203,8 @@ if __name__ == "__main__":
         input_dir=r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_Pipe_Default_dir\20250625_1528537\20250625_1528554\20250625_1626096\20250626_1700136\20250626_1706361",
         x_column="R_SF_nonDim",
         y_column="d_cell_mean_nonDim",
+        x_scaling_factor=1,  # Added scaling factor for x values
+        y_scaling_factor=1,  # Added scaling factor for y values
         output_dir_comment="example_plot",
         image_list=[],
         connect_with_lines=True,
