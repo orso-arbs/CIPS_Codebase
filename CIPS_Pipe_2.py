@@ -576,6 +576,21 @@ def CIPS_pipeline_2(
                         input_dir=plot_input_dir,
                         output_dir_manual=p10_output_dir_manual,
                         output_dir_comment=f"{p10_output_dir_comment}_Diameter",
+                        dist1_column=p10_diam_dist1_column,
+                        dist2_column=p10_diam_dist2_column,
+                        dist1_label=p10_diam_dist1_label,
+                        dist2_label=p10_diam_dist2_label,
+                        dist1_color=p10_diam_dist1_color,
+                        dist2_color=p10_diam_dist2_color,
+                        x_label=p10_diam_x_label,
+                        plot_title_template=p10_diam_plot_title_template,
+                        output_filename_template=p10_diam_output_filename_template,
+                        save_svg=p10_save_svg,
+                        save_png=p10_save_png,
+                        show_plots=p10_show_plots,
+                        create_video=p10_create_video,
+                        Plot_log_level=p10_Plot_log_level,
+                        image_numbers=p10_image_numbers
                     )
                     
                     print(f"--- Running plot10_histogram_comparison for areas ---")
@@ -583,10 +598,21 @@ def CIPS_pipeline_2(
                         input_dir=plot_input_dir,
                         output_dir_manual=p10_output_dir_manual,
                         output_dir_comment=f"{p10_output_dir_comment}_Area",
-                        dist1_column='A_cell_distribution_nonDim2',
-                        dist2_column='A_cell_SRec_distribution_nonDim2',
-                        x_label=r'Cell Area / $\delta_T^2$',
-                        output_filename_template='Area_2Dvs3D_histogram_{:04d}',
+                        dist1_column=p10_area_dist1_column,
+                        dist2_column=p10_area_dist2_column,
+                        dist1_label=p10_area_dist1_label,
+                        dist2_label=p10_area_dist2_label,
+                        dist1_color=p10_area_dist1_color,
+                        dist2_color=p10_area_dist2_color,
+                        x_label=p10_area_x_label,
+                        plot_title_template=p10_area_plot_title_template,
+                        output_filename_template=p10_area_output_filename_template,
+                        save_svg=p10_save_svg,
+                        save_png=p10_save_png,
+                        show_plots=p10_show_plots,
+                        create_video=p10_create_video,
+                        Plot_log_level=p10_Plot_log_level,
+                        image_numbers=p10_image_numbers
                     )
                     
                     # Store both output directories in a tuple
@@ -704,7 +730,7 @@ if __name__ == "__main__":
     
     CIPS_pipeline_2(
         cips_pipeline_global_log_level=2, 
-        cips_pipeline_output_dir_comment="S79a100_T3_vmag_2000px_BBWW_cyto3_flowThres0p5",
+        cips_pipeline_output_dir_comment="S79a100_T3_vmag_2000px_BBWW_cyto3_flowThres0p5 - contour lengths",
         
         # Visit_Projector parameters
         vp_State_range_manual=[79,100],
@@ -722,7 +748,7 @@ if __name__ == "__main__":
         cpe_CP_extract_log_level=2,	
 
         # Analysis Altantzis2011 parameters
-        a11_output_dir_comment="correct dimentionalisation",
+        a11_output_dir_comment="correct dimentionalisation and contour lengths",
         a11_Analysis_A11_log_level=2,
         a11_show_plots=False,
         a11_plot_CST_detJ=True,
@@ -749,12 +775,12 @@ if __name__ == "__main__":
         
         # Plotter 14 parameters
         p14_x_column="R_SF_nonDim",
-        p14_y_column="d_cell_mean_nonDim",
+        p14_y_column="contour_length_total_CSTx6_nonDim",
         p14_image_list=[],  # Process all images
-        p14_line_color='blue',
+        p14_line_color='black',
         p14_marker_color='red',
-        p14_x_label=r'$R_{SF}$ (Non-Dimensional)',
-        p14_y_label=r'Mean Cell Diameter ($\delta_T$)',
+        p14_x_label=r'$R_{SF}/\delta_T$ ',
+        p14_y_label=r'Contour Length /$\delta_T$',
         
         # Plotter 6 colortables parameters
         p6c_show_plot=0,
@@ -766,6 +792,7 @@ if __name__ == "__main__":
         run_cp_segment=False,
         run_cp_extract=False,       cips_CPe1_output_dir_override  = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_Pipe_Default_dir\20250625_1528537\20250625_1528554\20250625_1626096\20250626_1700136",
         run_analysis_a11=True,
+
         run_plotter_1=True,
         run_plotter_4=True,
         run_plotter_2=True,
@@ -774,8 +801,19 @@ if __name__ == "__main__":
         run_plotter_2_zoom=True,
         run_plotter_3_cst_panel=True,
         run_plotter_10=True,
-        run_plotter_13=True,
+        #run_plotter_13=True,
         run_plotter_14=True,
+
+        # run_plotter_1=False,
+        # run_plotter_4=False,
+        # run_plotter_2=False,
+        # run_plotter_3_panel=False,
+        # run_plotter_6_colortables=False,
+        # run_plotter_2_zoom=False,
+        # run_plotter_3_cst_panel=False,
+        # run_plotter_10=False,
+        run_plotter_13=False,
+        # run_plotter_14=False,
     )
     
     print("CIPS-Pipeline 2 run finished.")

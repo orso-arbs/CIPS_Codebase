@@ -531,9 +531,9 @@ if __name__ == "__main__":
     print("Running Generic Distribution Comparison Plotter...")
     # Example for diameter distributions
     plot10_distribution_histogram_comparison(
-        input_dir=r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_Pipe_Default_dir\20250625_1528537\20250625_1528554\20250625_1626096\20250626_1700136\20250626_1706361",
+        input_dir=r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_Pipe_Default_dir\20250625_1528537\20250625_1528554\20250625_1626096\20250626_1700136\20250628_1647163",
         output_dir_comment="Diameter Distribution Comparison",
-        image_numbers=[],
+        image_numbers=[0,10,50],
         dist1_column='d_cell_distribution_nonDim',
         dist2_column='d_cell_SRec_distribution_nonDim',
         dist1_label='2D',
@@ -551,9 +551,9 @@ if __name__ == "__main__":
 
     # Example for area distributions
     plot10_distribution_histogram_comparison(
-        input_dir=r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_Pipe_Default_dir\20250625_1528537\20250625_1528554\20250625_1626096\20250626_1700136\20250626_1706361",
+        input_dir=r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_Pipe_Default_dir\20250625_1528537\20250625_1528554\20250625_1626096\20250626_1700136\20250628_1647163",
         output_dir_comment="Area Distribution Comparison",
-        image_numbers=[],
+        image_numbers=[0,10,50],
         dist1_column='A_cell_distribution_nonDim2',
         dist2_column='A_cell_SRec_distribution_nonDim2',
         dist1_label='2D',

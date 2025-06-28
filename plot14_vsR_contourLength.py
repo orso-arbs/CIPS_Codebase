@@ -5,34 +5,37 @@ import numpy as np
 import matplotlib.pyplot as plt
 import glob
 import Format_1 as F_1
+from skimage import measure
 
 # LaTeX settings
 plt.rcParams['text.usetex'] = True
 plt.rcParams['font.family'] = 'serif'
 
-def plotter_14_vsR(
+def plotter_14_vsR_contourLength(
     input_dir,
-    y_column='N_cells_CSTx6',  # Default y_column
-    x_column='R_SF_nonDim',  # Added x_column parameter with default value
+    x_column='R_SF_nonDim',  # Default to non-dimensional radius
+    x_scaling_factor=1,  
+    y_column='contour_length_nonDim',  # This will be calculated
+    y_scaling_factor=1,  
     output_dir_manual="",
     output_dir_comment="",
     image_list=[],
-    omit_image_list=[106],  # New parameter to omit specific images
+    omit_image_list=[],  # New parameter to omit specific images
     connect_with_lines=True,
-    marker_style='',
+    marker_style='o',
     marker_size=6,
-    marker_color='blue',
     line_style='-',
     line_width=1.5,
-    line_color='blue',
-    show_grid=True,     # New parameter to control grid display
+    line_color='black',
+    marker_color='blue',
+    show_grid=True,      # New parameter to control grid display
     grid_style='--',     # New parameter for grid line style
     grid_width=0.5,      # New parameter for grid line width
     grid_color='gray',   # New parameter for grid color
     grid_alpha=0.5,      # New parameter for grid transparency
-    x_label=None,  # Changed to None to use x_column as default
+    x_label=None,
     y_label=None,
-    legend_label=None,  # New parameter for custom legend label
+    legend_label=None,   # New parameter for custom legend label
     x_label_fontsize=20,
     y_label_fontsize=20,
     tick_label_fontsize=20,
@@ -41,19 +44,23 @@ def plotter_14_vsR(
     figsize=(10, 6),
     dpi=100,
     show_plot=0,
-    Plot_log_level=1
+    Plot_log_level=2
 ):
     """
-    Creates an x-y plot with configurable x and y axis columns.
+    Creates a plot of the total contour length of cell outlines vs. non-dimensional radius.
     
     Parameters
     ----------
     input_dir : str
         Directory containing the Analysis_A11_final_df.pkl file
-    y_column : str
-        Column name to plot on y-axis
     x_column : str, optional
-        Column name to plot on x-axis, by default 'R_SF_Average_VisIt'
+        Column name to plot on x-axis, by default 'R_SF_nonDim'
+    x_scaling_factor : float, optional
+        Factor to multiply x-axis values by, by default 1
+    y_column : str, optional
+        Column name to plot on y-axis, by default 'contour_length_nonDim'
+    y_scaling_factor : float, optional
+        Factor to multiply y-axis values by, by default 1
     output_dir_manual : str, optional
         Manual output directory, by default ""
     output_dir_comment : str, optional
@@ -77,7 +84,7 @@ def plotter_14_vsR(
     marker_color : str, optional
         Color of markers, by default 'blue'
     show_grid : bool, optional
-        Whether to show grid lines, by default False
+        Whether to show grid lines, by default True
     grid_style : str, optional
         Style of grid lines, by default '--'
     grid_width : float, optional
@@ -122,7 +129,7 @@ def plotter_14_vsR(
                              output_dir_manual=output_dir_manual)
     
     if Plot_log_level >= 1:
-        print(f"plotter_14_vsR: Output directory: {output_dir}")
+        print(f"plotter_14_vsR_contourLength: Output directory: {output_dir}")
 
     # Create directories for PNG and SVG outputs
     png_dir = os.path.join(output_dir, "png")
@@ -145,21 +152,19 @@ def plotter_14_vsR(
     if Plot_log_level >= 1:
         print(f"Loaded DataFrame from {df_path}")
     
-    # Check if the required columns exist
+    # Check if the required columns exist for x-axis
     if x_column not in df.columns:
         print(f"Column '{x_column}' not found in DataFrame. Available columns: {df.columns.tolist()}")
         return output_dir
     
-    if y_column not in df.columns:
-        print(f"Column '{y_column}' not found in DataFrame. Available columns: {df.columns.tolist()}")
-        return output_dir
-    
-    # Filter DataFrame based on image_list if provided
+    # Filter DataFrame based on image_list if provided (do this BEFORE calculating contour lengths)
     if image_list:
         df = df[df['image_number'].isin(image_list)]
         if df.empty:
             print(f"No matching images found for the provided image_list: {image_list}")
             return output_dir
+        if Plot_log_level >= 1:
+            print(f"Processing only {len(df)} images from image_list")
     
     # Exclude images in omit_image_list if provided
     if omit_image_list:
@@ -170,6 +175,103 @@ def plotter_14_vsR(
         if Plot_log_level >= 1:
             print(f"Excluded {len(omit_image_list)} images: {omit_image_list}")
     
+    # Calculate contour length for each image (now only for filtered images)
+    contour_length_px = []
+    contour_length_nonDim = []
+    contour_length_CST_px = []
+    contour_length_CST_nonDim = []
+    contour_length_CSTx6_px = []
+    contour_length_CSTx6_nonDim = []
+    
+    for i, row in df.iterrows():
+        # Get the masks and nonDim_per_px from the DataFrame
+        masks = row['masks']
+        nonDim_per_px = row['nonDim_per_px']
+        
+        # Get CST inclusion array if it exists
+        has_cst_inclusion = 'CST_inclusion' in row and row['CST_inclusion'] is not None and len(row['CST_inclusion']) > 0
+        if has_cst_inclusion:
+            cst_inclusion = row['CST_inclusion']
+            if Plot_log_level >= 2:
+                print(f"Found CST inclusion data with {len(cst_inclusion)} entries")
+        else:
+            if Plot_log_level >= 1:
+                print(f"Warning: No CST inclusion data found for image {i+1}, will calculate total contour length only")
+        
+        if Plot_log_level >= 2:
+            print(f"Processing image {i+1}/{len(df)} for contour length calculation")
+        
+        # Calculate total contour length in pixels
+        total_length_px = 0
+        cst_length_px = 0
+        
+        # Get unique cell IDs (excluding background)
+        cell_ids = np.unique(masks)
+        cell_ids = cell_ids[cell_ids > 0]
+        
+        for idx, cell_id in enumerate(cell_ids):
+            # Check if we have valid CST inclusion data for this cell
+            is_in_cst = False
+            if has_cst_inclusion and idx < len(cst_inclusion):
+                is_in_cst = cst_inclusion[idx]
+            
+            # Create binary mask for this cell
+            print(f"Processing cell ID {cell_id}/{len(cell_ids)} in image {i+1}", end='\r', flush=True)
+            cell_mask = masks == cell_id
+            
+            # Find contours for this cell
+            contours = measure.find_contours(cell_mask, 0.5)
+            
+            # Calculate length of this cell's contour
+            cell_length_px = 0
+            
+            for contour in contours:
+                for j in range(len(contour)-1):
+                    dy = contour[j+1, 0] - contour[j, 0]
+                    dx = contour[j+1, 1] - contour[j, 1]
+                    segment_length = np.sqrt(dx**2 + dy**2)
+                    cell_length_px += segment_length
+            
+            # Add to total length for all cells
+            total_length_px += cell_length_px
+            
+            # If the cell is in the CST, add to CST length
+            if is_in_cst:
+                cst_length_px += cell_length_px
+        
+        # Convert to non-dimensional units
+        total_length_nonDim = total_length_px * nonDim_per_px
+        cst_length_nonDim = cst_length_px * nonDim_per_px
+        
+        # Calculate CST x6 (total sphere) values
+        cst_length_x6_px = cst_length_px * 6
+        cst_length_x6_nonDim = cst_length_nonDim * 6
+        
+        # Append to lists
+        contour_length_px.append(total_length_px)
+        contour_length_nonDim.append(total_length_nonDim)
+        contour_length_CST_px.append(cst_length_px)
+        contour_length_CST_nonDim.append(cst_length_nonDim)
+        contour_length_CSTx6_px.append(cst_length_x6_px)
+        contour_length_CSTx6_nonDim.append(cst_length_x6_nonDim)
+        
+        if Plot_log_level >= 2:
+            print(f"\nImage {i+1} contour length calculations:")
+            print(f"  Total contour length = {total_length_px:.2f} px = {total_length_nonDim:.4f} non-dim")
+            print(f"  CST contour length = {cst_length_px:.2f} px = {cst_length_nonDim:.4f} non-dim")
+            print(f"  CST x6 contour length = {cst_length_x6_px:.2f} px = {cst_length_x6_nonDim:.4f} non-dim")
+    
+    # Add the calculated values to the DataFrame
+    df['contour_length_px'] = contour_length_px
+    df['contour_length_nonDim'] = contour_length_nonDim
+    df['contour_length_CST_px'] = contour_length_CST_px
+    df['contour_length_CST_nonDim'] = contour_length_CST_nonDim
+    df['contour_length_CSTx6_px'] = contour_length_CSTx6_px
+    df['contour_length_CSTx6_nonDim'] = contour_length_CSTx6_nonDim
+    
+    if Plot_log_level >= 1:
+        print(f"Calculated contour lengths for {len(df)} images")
+    
     # Create figure
     plt.figure(figsize=figsize, dpi=dpi)
     
@@ -178,20 +280,27 @@ def plotter_14_vsR(
     
     # Create plot
     if connect_with_lines:
-        plt.plot(df[x_column], df[y_column], 
+        plt.plot(df[x_column] * x_scaling_factor, df[y_column] * y_scaling_factor, 
                 marker=marker_style, markersize=marker_size, 
                 linestyle=line_style, linewidth=line_width,
                 color=line_color, markerfacecolor=marker_color, 
                 markeredgecolor='black', label=legend_label)
     else:
-        plt.scatter(df[x_column], df[y_column], 
+        plt.scatter(df[x_column] * x_scaling_factor, df[y_column] * y_scaling_factor, 
                   s=marker_size**2, marker=marker_style,
                   color=marker_color, edgecolors='black', 
                   label=legend_label)
     
+    # Set default labels if not provided
+    if x_label is None:
+        x_label = f"Non-dimensional Radius (R)"
+    
+    if y_label is None:
+        y_label = f"Total Contour Length (non-dim)"
+    
     # Set labels
-    plt.xlabel(x_label if x_label else x_column, fontsize=x_label_fontsize)
-    plt.ylabel(y_label if y_label else y_column, fontsize=y_label_fontsize)
+    plt.xlabel(x_label, fontsize=x_label_fontsize)
+    plt.ylabel(y_label, fontsize=y_label_fontsize)
     
     # Set tick parameters for inward facing ticks
     plt.tick_params(axis='both', direction='in', which='both', labelsize=tick_label_fontsize)
@@ -227,61 +336,26 @@ def plotter_14_vsR(
     
     return output_dir
 
-
-
 if __name__ == "__main__":
     # Example usage
-    # plotter_14_vsR(
-    #     input_dir=r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_Pipe_Default_dir\20250625_1528537\20250625_1528554\20250625_1626096\20250626_1700136\20250628_1647163",
-    #     x_column="R_SF_nonDim",
-    #     y_column="d_cell_mean_nonDim",
-    #     output_dir_comment="d_cell_mean_nonDim vs R_SF_nonDim",
-    #     image_list=[],
-    #     line_color='green',
-    #     x_label=r'$R_{SF}/\delta_T$',
-    #     y_label=r'$\overline{d}_c/\delta_T$',
-    # )
-
-    # plotter_14_vsR(
-    #     input_dir=r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_Pipe_Default_dir\20250625_1528537\20250625_1528554\20250625_1626096\20250626_1700136\20250628_1647163",
-    #     x_column="R_SF_nonDim",
-    #     y_column="A_cell_mean_nonDim2",
-    #     output_dir_comment="A_cell_mean_nonDim2 vs R_SF_nonDim",
-    #     image_list=[],
-    #     line_color='darkgreen',
-    #     x_label=r'$R_{SF}/\delta_T$',
-    #     y_label=r'$\overline{A}_c/\delta_T$',
-    # )
-
-    # plotter_14_vsR(
-    #     input_dir=r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_Pipe_Default_dir\20250625_1528537\20250625_1528554\20250625_1626096\20250626_1700136\20250628_1647163",
-    #     x_column="R_SF_nonDim",
-    #     y_column="N_cells_CSTx6",
-    #     output_dir_comment="d_cell_mean_nonDim vs N_cells_CSTx6",
-    #     image_list=[],
-    #     line_color='red',
-    #     x_label=r'$R_{SF}/\delta_T$',
-    #     y_label=r'$N_{cells}$',
-    # )
-
-    # plotter_14_vsR(
-    #     input_dir=r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_Pipe_Default_dir\20250625_1528537\20250625_1528554\20250625_1626096\20250626_1700136\20250628_1647163",
-    #     x_column="Time_VisIt",
-    #     y_column="R_SF_nonDim",
-    #     output_dir_comment="R_SF_nonDim vs Time_VisIt",
-    #     image_list=[],
-    #     line_color='orange',
-    #     x_label=r'$\tau$',
-    #     y_label=r'$R_{SF}/\delta_T$',
-    # )
-
-    plotter_14_vsR(
-        input_dir=r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_Pipe_Default_dir\20250628_1636311\20250628_1636322\20250628_1637345\20250628_1638434\20250628_1959183",
+    plotter_14_vsR_contourLength(
+        input_dir=r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_Pipe_Default_dir\20250625_1528537\20250625_1528554\20250625_1626096\20250626_1700136\20250628_1647163",
+        output_dir_comment="contour_length_plot",
         x_column="R_SF_nonDim",
-        y_column="contour_length_total_CSTx6_nonDim",
-        output_dir_comment="contour_length_total_CSTx6_nonDim vs R_SF_nonDim",
+        # Use the CST x6 contour length for y-axis
+        y_column="contour_length_CSTx6_nonDim",
         image_list=[],
+        omit_image_list=[106],
+        connect_with_lines=True,
+        marker_style='',
+        marker_size=8,
         line_color='black',
+        marker_color='black',
+        show_grid=True,
+        grid_alpha=0.3,
+        legend_label="Total Interface Length",
         x_label=r'$R_{SF}/\delta_T$',
-        y_label=r'Contour Length /$\delta_T$',
+        y_label=r'Total Contour Length $/\delta_T$',
+        show_plot=1,
+        Plot_log_level=1
     )

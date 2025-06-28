@@ -4,6 +4,7 @@ import os
 import matplotlib.pyplot as plt
 import Format_1 as F_1
 import skimage.io as sk_io
+from skimage import measure  # Add this import for contour calculation
 from Spherical_Reconstruction_2 import Cubed_Sphere_Tile_Boundary, Coordinate_Transform_image_to_centered_Spherical, sphere_height_from_plane
 
 @F_1.ParameterLog(max_size=1024 * 10, log_level=0)
@@ -94,6 +95,29 @@ def CST_Selection_1(
         'centroid_yIm_distribution_CST_px',
         'centroid_xSp_distribution_CST_nonDim',
         'centroid_zSp_distribution_CST_nonDim',
+        # Add new columns for mean values
+        'A_cell_mean_CST_px2',
+        'A_cell_mean_CST_nonDim2',
+        'd_cell_mean_CST_px',
+        'd_cell_mean_CST_nonDim',
+        'A_cell_SRec_mean_CST_nonDim2',
+        'A_cell_SRec_mean_CST_px2',
+        'd_cell_SRec_mean_CST_nonDim',
+        'd_cell_SRec_mean_CST_px',
+        # Add new columns for contour lengths (distributions)
+        'contour_length_distribution_px',
+        'contour_length_distribution_nonDim',
+        'contour_length_distribution_CST_px',
+        'contour_length_distribution_CST_nonDim',
+        'contour_length_distribution_CSTx6_px',
+        'contour_length_distribution_CSTx6_nonDim',
+        # Add new columns for contour length totals
+        'contour_length_total_px',
+        'contour_length_total_nonDim',
+        'contour_length_total_CST_px',
+        'contour_length_total_CST_nonDim',
+        'contour_length_total_CSTx6_px',
+        'contour_length_total_CSTx6_nonDim',
     ]
     
     # Initialize columns to hold lists/arrays
@@ -120,7 +144,19 @@ def CST_Selection_1(
         'd_cell_SRec_distribution_CSTx6_px'
     ]
     
-    for col in distribution_columns:
+    # Add new columns for mean values of CSTx6 distributions
+    mean_columns = [
+        'A_cell_mean_CSTx6_px2',
+        'A_cell_mean_CSTx6_nonDim2',
+        'd_cell_mean_CSTx6_px',
+        'd_cell_mean_CSTx6_nonDim',
+        'A_cell_SRec_mean_CSTx6_nonDim2',
+        'A_cell_SRec_mean_CSTx6_px2',
+        'd_cell_SRec_mean_CSTx6_nonDim',
+        'd_cell_SRec_mean_CSTx6_px'
+    ]
+    
+    for col in distribution_columns + mean_columns:
         if col not in Analysis_A11_df.columns:
             Analysis_A11_df[col] = None
     
@@ -197,6 +233,12 @@ def CST_Selection_1(
         centroid_xSp_distribution_CST_nonDim = []
         centroid_zSp_distribution_CST_nonDim = []
         
+        # Lists for contour lengths
+        contour_length_distribution_px = []
+        contour_length_distribution_nonDim = []
+        contour_length_distribution_CST_px = []
+        contour_length_distribution_CST_nonDim = []
+        
         # Dictionary for cell classifications and centroids for plotting
         cell_classifications = {}
         cell_centroids_px = {}
@@ -204,7 +246,7 @@ def CST_Selection_1(
         
         # Process each cell
         for idx, cell_id in enumerate(cell_ids):
-            print(f"\rProcessing CST selection for image {i+1}/{N_images} - cell {idx+1}/{len(cell_ids)}", end='', flush=True) if CST_log_level >= 2 else None
+            print(f"\rProcessing CST selection for image {i+1}/{N_images} - cell {idx+1}/{len(cell_ids)}", end='', flush=True) if CST_log_level >= 3 else None
             
             # Get cell mask and centroid
             cell_mask = masks == cell_id
@@ -218,7 +260,31 @@ def CST_Selection_1(
             centroid_yIm_px = centroid_yIm_distribution_px[idx]
             centroid_xSp_nonDim = centroid_xSp_distribution_nonDim[idx]
             centroid_zSp_nonDim = centroid_zSp_distribution_nonDim[idx]
-                        
+            
+            # Calculate contour length for this cell
+            # Create binary mask for this cell
+            binary_mask = cell_mask.astype(np.uint8)
+            
+            # Find contours for this cell
+            contours = measure.find_contours(binary_mask, 0.5)
+            
+            # Calculate length of this cell's contour
+            cell_length_px = 0
+            
+            for contour in contours:
+                for j in range(len(contour)-1):
+                    dy = contour[j+1, 0] - contour[j, 0]
+                    dx = contour[j+1, 1] - contour[j, 1]
+                    segment_length = np.sqrt(dx**2 + dy**2)
+                    cell_length_px += segment_length
+            
+            # Convert to non-dimensional units
+            cell_length_nonDim = cell_length_px * nonDim_per_px
+            
+            # Add to distribution lists
+            contour_length_distribution_px.append(cell_length_px)
+            contour_length_distribution_nonDim.append(cell_length_nonDim)
+            
             # Check if centroid is inside CST boundary
             centroid_in_CST = point_in_CST_check(
                 xSp_nonDim=centroid_xSp_nonDim,
@@ -306,6 +372,22 @@ def CST_Selection_1(
                 centroid_yIm_distribution_CST_px.append(centroid_yIm_px)
                 centroid_xSp_distribution_CST_nonDim.append(centroid_xSp_nonDim)
                 centroid_zSp_distribution_CST_nonDim.append(centroid_zSp_nonDim)
+                
+                # Add contour length to CST distribution
+                contour_length_distribution_CST_px.append(cell_length_px)
+                contour_length_distribution_CST_nonDim.append(cell_length_nonDim)
+        
+        # Calculate the contour length for CSTx6 distribution
+        contour_length_distribution_CSTx6_px = np.repeat(contour_length_distribution_CST_px, 6).tolist() if contour_length_distribution_CST_px else []
+        contour_length_distribution_CSTx6_nonDim = np.repeat(contour_length_distribution_CST_nonDim, 6).tolist() if contour_length_distribution_CST_nonDim else []
+        
+        # Calculate total contour lengths
+        contour_length_total_px = sum(contour_length_distribution_px)
+        contour_length_total_nonDim = sum(contour_length_distribution_nonDim)
+        contour_length_total_CST_px = sum(contour_length_distribution_CST_px)
+        contour_length_total_CST_nonDim = sum(contour_length_distribution_CST_nonDim)
+        contour_length_total_CSTx6_px = contour_length_total_CST_px * 6
+        contour_length_total_CSTx6_nonDim = contour_length_total_CST_nonDim * 6
         
         # Store the filtered lists in the DataFrame
         Analysis_A11_df.at[i, 'CST_classification'] = np.array(CST_classification)
@@ -322,6 +404,32 @@ def CST_Selection_1(
         Analysis_A11_df.at[i, 'centroid_yIm_distribution_CST_px'] = np.array(centroid_yIm_distribution_CST_px)
         Analysis_A11_df.at[i, 'centroid_xSp_distribution_CST_nonDim'] = np.array(centroid_xSp_distribution_CST_nonDim)
         Analysis_A11_df.at[i, 'centroid_zSp_distribution_CST_nonDim'] = np.array(centroid_zSp_distribution_CST_nonDim)
+        
+        # Store contour length distributions
+        Analysis_A11_df.at[i, 'contour_length_distribution_px'] = np.array(contour_length_distribution_px)
+        Analysis_A11_df.at[i, 'contour_length_distribution_nonDim'] = np.array(contour_length_distribution_nonDim)
+        Analysis_A11_df.at[i, 'contour_length_distribution_CST_px'] = np.array(contour_length_distribution_CST_px)
+        Analysis_A11_df.at[i, 'contour_length_distribution_CST_nonDim'] = np.array(contour_length_distribution_CST_nonDim)
+        Analysis_A11_df.at[i, 'contour_length_distribution_CSTx6_px'] = np.array(contour_length_distribution_CSTx6_px)
+        Analysis_A11_df.at[i, 'contour_length_distribution_CSTx6_nonDim'] = np.array(contour_length_distribution_CSTx6_nonDim)
+        
+        # Store contour length totals
+        Analysis_A11_df.at[i, 'contour_length_total_px'] = contour_length_total_px
+        Analysis_A11_df.at[i, 'contour_length_total_nonDim'] = contour_length_total_nonDim
+        Analysis_A11_df.at[i, 'contour_length_total_CST_px'] = contour_length_total_CST_px
+        Analysis_A11_df.at[i, 'contour_length_total_CST_nonDim'] = contour_length_total_CST_nonDim
+        Analysis_A11_df.at[i, 'contour_length_total_CSTx6_px'] = contour_length_total_CSTx6_px
+        Analysis_A11_df.at[i, 'contour_length_total_CSTx6_nonDim'] = contour_length_total_CSTx6_nonDim
+        
+        # Calculate and store mean values for CST distributions
+        Analysis_A11_df.at[i, 'A_cell_mean_CST_px2'] = np.mean(A_cell_distribution_CST_px2) if len(A_cell_distribution_CST_px2) > 0 else np.nan
+        Analysis_A11_df.at[i, 'A_cell_mean_CST_nonDim2'] = np.mean(A_cell_distribution_CST_nonDim2) if len(A_cell_distribution_CST_nonDim2) > 0 else np.nan
+        Analysis_A11_df.at[i, 'd_cell_mean_CST_px'] = np.mean(d_cell_distribution_CST_px) if len(d_cell_distribution_CST_px) > 0 else np.nan
+        Analysis_A11_df.at[i, 'd_cell_mean_CST_nonDim'] = np.mean(d_cell_distribution_CST_nonDim) if len(d_cell_distribution_CST_nonDim) > 0 else np.nan
+        Analysis_A11_df.at[i, 'A_cell_SRec_mean_CST_nonDim2'] = np.mean(A_cell_SRec_distribution_CST_nonDim2) if len(A_cell_SRec_distribution_CST_nonDim2) > 0 else np.nan
+        Analysis_A11_df.at[i, 'A_cell_SRec_mean_CST_px2'] = np.mean(A_cell_SRec_distribution_CST_px2) if len(A_cell_SRec_distribution_CST_px2) > 0 else np.nan
+        Analysis_A11_df.at[i, 'd_cell_SRec_mean_CST_nonDim'] = np.mean(d_cell_SRec_distribution_CST_nonDim) if len(d_cell_SRec_distribution_CST_nonDim) > 0 else np.nan
+        Analysis_A11_df.at[i, 'd_cell_SRec_mean_CST_px'] = np.mean(d_cell_SRec_distribution_CST_px) if len(d_cell_SRec_distribution_CST_px) > 0 else np.nan
         
         # Calculate the number of cells in the CST
         N_cells_CST = len(A_cell_distribution_CST_px2)
@@ -349,10 +457,22 @@ def CST_Selection_1(
             Analysis_A11_df.at[i, 'A_cell_SRec_distribution_CSTx6_px2'] = A_cell_SRec_distribution_CSTx6_px2
             Analysis_A11_df.at[i, 'd_cell_SRec_distribution_CSTx6_nonDim'] = d_cell_SRec_distribution_CSTx6_nonDim
             Analysis_A11_df.at[i, 'd_cell_SRec_distribution_CSTx6_px'] = d_cell_SRec_distribution_CSTx6_px
+            
+            # Calculate and store means for CSTx6 distributions
+            Analysis_A11_df.at[i, 'A_cell_mean_CSTx6_px2'] = np.mean(A_cell_distribution_CSTx6_px2)
+            Analysis_A11_df.at[i, 'A_cell_mean_CSTx6_nonDim2'] = np.mean(A_cell_distribution_CSTx6_nonDim2)
+            Analysis_A11_df.at[i, 'd_cell_mean_CSTx6_px'] = np.mean(d_cell_distribution_CSTx6_px)
+            Analysis_A11_df.at[i, 'd_cell_mean_CSTx6_nonDim'] = np.mean(d_cell_distribution_CSTx6_nonDim)
+            Analysis_A11_df.at[i, 'A_cell_SRec_mean_CSTx6_nonDim2'] = np.mean(A_cell_SRec_distribution_CSTx6_nonDim2)
+            Analysis_A11_df.at[i, 'A_cell_SRec_mean_CSTx6_px2'] = np.mean(A_cell_SRec_distribution_CSTx6_px2)
+            Analysis_A11_df.at[i, 'd_cell_SRec_mean_CSTx6_nonDim'] = np.mean(d_cell_SRec_distribution_CSTx6_nonDim)
+            Analysis_A11_df.at[i, 'd_cell_SRec_mean_CSTx6_px'] = np.mean(d_cell_SRec_distribution_CSTx6_px)
         else:
-            # If no cells in CST, store empty arrays
+            # If no cells in CST, store empty arrays for distributions and NaN for means
             for col in distribution_columns:
                 Analysis_A11_df.at[i, col] = np.array([])
+            for col in mean_columns:
+                Analysis_A11_df.at[i, col] = np.nan
         
         # Generate classification plots
         if plot_CST_selection and len(cell_classifications) > 0:
