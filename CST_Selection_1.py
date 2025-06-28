@@ -121,7 +121,7 @@ def CST_Selection_1(
         R_SF_nonDim = Analysis_A11_df.loc[i, 'R_SF_nonDim']
         image_Nx_px = Analysis_A11_df.loc[i, 'image_Ny_px']  # These are swapped in the code
         image_Ny_px = Analysis_A11_df.loc[i, 'image_Nx_px']  # These are swapped in the code
-        d_T_per_px = Analysis_A11_df.loc[i, 'd_T_per_px']
+        nonDim_per_px = Analysis_A11_df.loc[i, 'nonDim_per_px']
         
         # Get cell IDs
         cell_ids = np.unique(masks)
@@ -131,10 +131,10 @@ def CST_Selection_1(
         CST_Boundary, CST_Boundary_combined = Cubed_Sphere_Tile_Boundary(R_SF_nonDim, N_pts=500)
         
         # Convert non-dimensional boundary to pixel coordinates
-        # Step 1: Convert to centered pixel coordinates by dividing by d_T_per_px
+        # Step 1: Convert to centered pixel coordinates by dividing by nonDim_per_px
         centered_px_coords = np.zeros_like(CST_Boundary_combined)
-        centered_px_coords[0] = CST_Boundary_combined[0] / d_T_per_px
-        centered_px_coords[1] = CST_Boundary_combined[1] / d_T_per_px
+        centered_px_coords[0] = CST_Boundary_combined[0] / nonDim_per_px
+        centered_px_coords[1] = CST_Boundary_combined[1] / nonDim_per_px
         
         # Step 2: Transform to image coordinates
         CST_Boundary_combined_px = Coordinate_Transform_image_to_centered_Spherical(
@@ -216,8 +216,8 @@ def CST_Selection_1(
             
             # Step 2: Scale to non-dimensional units
             mask_coords_nonDim = np.zeros_like(mask_coords_centered)
-            mask_coords_nonDim[0] = mask_coords_centered[0] * d_T_per_px
-            mask_coords_nonDim[1] = mask_coords_centered[1] * d_T_per_px
+            mask_coords_nonDim[0] = mask_coords_centered[0] * nonDim_per_px
+            mask_coords_nonDim[1] = mask_coords_centered[1] * nonDim_per_px
             
             # Check if all points are inside CST boundary
             all_points_in = True
@@ -317,7 +317,7 @@ def CST_Selection_1(
                     outlines=outlines,
                     CST_Boundary_combined_px=CST_Boundary_combined_px,
                     R=R_SF_nonDim,
-                    d_T_per_px=d_T_per_px,
+                    nonDim_per_px=nonDim_per_px,
                     image_Nx_px=image_Nx_px,
                     image_Ny_px=image_Ny_px,
                     cell_classifications=cell_classifications,
@@ -337,7 +337,7 @@ def CST_Selection_1(
                     outlines=outlines,
                     CST_Boundary_combined_px=CST_Boundary_combined_px,
                     R=R_SF_nonDim,
-                    d_T_per_px=d_T_per_px,
+                    nonDim_per_px=nonDim_per_px,
                     image_Nx_px=image_Nx_px,
                     image_Ny_px=image_Ny_px,
                     cell_inclusion=cell_inclusion,
@@ -418,7 +418,7 @@ def point_in_CST_check(xSp_nonDim, zSp_nonDim, R_SF_nonDim):
     # Default case if we reach here
     return False
 
-def plot_CST_selection_sanity_check(image_RGB, masks, outlines, CST_Boundary_combined_px, R, d_T_per_px, 
+def plot_CST_selection_sanity_check(image_RGB, masks, outlines, CST_Boundary_combined_px, R, nonDim_per_px, 
                                    image_Nx_px, image_Ny_px, cell_classifications, cell_centroids_px,
                                    output_path, show_plot=False, CST_log_level=1, title_prefix="Image", 
                                    Convert_to_grayscale_image=True):
@@ -431,7 +431,7 @@ def plot_CST_selection_sanity_check(image_RGB, masks, outlines, CST_Boundary_com
         outlines: The cell outlines
         CST_Boundary_combined_px: The CST boundary coordinates in pixel space
         R: Radius of the sphere
-        d_T_per_px: Conversion factor from pixels to non-dimensional units
+        nonDim_per_px: Conversion factor from pixels to non-dimensional units
         image_Nx_px: Image width in pixels
         image_Ny_px: Image height in pixels
         cell_classifications: Dict mapping cell IDs to classification strings
@@ -494,7 +494,7 @@ def plot_CST_selection_sanity_check(image_RGB, masks, outlines, CST_Boundary_com
     
     # Plot reference circle
     theta = np.linspace(0, 2*np.pi, 200)
-    ax.plot(R*np.cos(theta) / d_T_per_px + image_Nx_px/2, R*np.sin(theta) / d_T_per_px + image_Ny_px/2, 'r--', 
+    ax.plot(R*np.cos(theta) / nonDim_per_px + image_Nx_px/2, R*np.sin(theta) / nonDim_per_px + image_Ny_px/2, 'r--', 
             label='Reference Circle', linewidth=1.5)
     
     # Plot cell centroids
@@ -526,7 +526,7 @@ def plot_CST_selection_sanity_check(image_RGB, masks, outlines, CST_Boundary_com
         plt.show()
     plt.close(fig)
 
-def plot_CST_inclusion(image_RGB, masks, outlines, CST_Boundary_combined_px, R, d_T_per_px, 
+def plot_CST_inclusion(image_RGB, masks, outlines, CST_Boundary_combined_px, R, nonDim_per_px, 
                        image_Nx_px, image_Ny_px, cell_inclusion, cell_centroids_px,
                        output_path, show_plot=False, CST_log_level=1, title_prefix="Image", 
                        Convert_to_grayscale_image=True):
@@ -539,7 +539,7 @@ def plot_CST_inclusion(image_RGB, masks, outlines, CST_Boundary_combined_px, R, 
         outlines: The cell outlines
         CST_Boundary_combined_px: The CST boundary coordinates in pixel space
         R: Radius of the sphere
-        d_T_per_px: Conversion factor from pixels to non-dimensional units
+        nonDim_per_px: Conversion factor from pixels to non-dimensional units
         image_Nx_px: Image width in pixels
         image_Ny_px: Image height in pixels
         cell_inclusion: Dict mapping cell IDs to boolean inclusion status
@@ -600,7 +600,7 @@ def plot_CST_inclusion(image_RGB, masks, outlines, CST_Boundary_combined_px, R, 
     
     # Plot reference circle
     theta = np.linspace(0, 2*np.pi, 200)
-    ax.plot(R*np.cos(theta) / d_T_per_px + image_Nx_px/2, R*np.sin(theta) / d_T_per_px + image_Ny_px/2, 'r--', 
+    ax.plot(R*np.cos(theta) / nonDim_per_px + image_Nx_px/2, R*np.sin(theta) / nonDim_per_px + image_Ny_px/2, 'r--', 
             label='Reference Circle', linewidth=1.5)
     
     # Plot cell centroids

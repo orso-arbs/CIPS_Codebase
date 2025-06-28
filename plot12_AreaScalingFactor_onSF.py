@@ -24,7 +24,7 @@ def setup_latex_fonts(fontsize=11):
     rcParams['ytick.labelsize'] = fontsize - 1
     rcParams['legend.fontsize'] = fontsize - 1
 
-def plot_area_scaling_factor(ax, R, d_T_per_px, image_Nx_px, image_Ny_px, 
+def plot_area_scaling_factor(ax, R, nonDim_per_px, image_Nx_px, image_Ny_px, 
                             resolution=100, colormap='viridis', alpha=0.7):
     """
     Plot the area scaling factor (detJ) on an existing axis.
@@ -35,7 +35,7 @@ def plot_area_scaling_factor(ax, R, d_T_per_px, image_Nx_px, image_Ny_px,
         The axes to plot on
     R : float
         Radius of the sphere (non-dimensional)
-    d_T_per_px : float
+    nonDim_per_px : float
         Conversion factor from non-dimensional to pixels
     image_Nx_px : int
         Image width in pixels
@@ -70,8 +70,8 @@ def plot_area_scaling_factor(ax, R, d_T_per_px, image_Nx_px, image_Ny_px,
     
     # Convert grid to image pixel coordinates
     # Step 1: Convert to centered pixel coordinates
-    X_px = X / d_T_per_px
-    Z_px = Z / d_T_per_px
+    X_px = X / nonDim_per_px
+    Z_px = Z / nonDim_per_px
     
     # Step 2: Transform to image coordinates
     # Create coordinate arrays in the shape needed by Coordinate_Transform
@@ -288,7 +288,7 @@ def plot_AreaScalingFactor_onSF(
     # Extract necessary parameters
     R_SF_nonDim = row['R_SF_nonDim']
     R_SF_px = row['R_SF_px']
-    d_T_per_px = row['d_T_per_px']
+    nonDim_per_px = row['nonDim_per_px']
     image_Nx_px = row['image_Ny_px']  # These are swapped in the code
     image_Ny_px = row['image_Nx_px']  # These are swapped in the code
     
@@ -316,10 +316,10 @@ def plot_AreaScalingFactor_onSF(
     CST_Boundary, CST_Boundary_combined = Cubed_Sphere_Tile_Boundary(R_SF_nonDim, N_pts=500)
     
     # Convert non-dimensional boundary to pixel coordinates
-    # Step 1: Convert to centered pixel coordinates by dividing by d_T_per_px
+    # Step 1: Convert to centered pixel coordinates by dividing by nonDim_per_px
     centered_px_coords = np.zeros_like(CST_Boundary_combined)
-    centered_px_coords[0] = CST_Boundary_combined[0] / d_T_per_px
-    centered_px_coords[1] = CST_Boundary_combined[1] / d_T_per_px
+    centered_px_coords[0] = CST_Boundary_combined[0] / nonDim_per_px
+    centered_px_coords[1] = CST_Boundary_combined[1] / nonDim_per_px
     
     # Step 2: Transform to image coordinates
     CST_Boundary_combined_px = Coordinate_Transform_image_to_centered_Spherical(
@@ -376,7 +376,7 @@ def plot_AreaScalingFactor_onSF(
     detJ_result = plot_area_scaling_factor(
         ax=ax,
         R=R_SF_nonDim,
-        d_T_per_px=d_T_per_px,
+        nonDim_per_px=nonDim_per_px,
         image_Nx_px=image_Nx_px,
         image_Ny_px=image_Ny_px,
         resolution=detJ_resolution,
@@ -392,8 +392,8 @@ def plot_AreaScalingFactor_onSF(
     # Add reference circle
     if show_ref_circle:
         theta = np.linspace(0, 2*np.pi, 200)
-        circle_x = R_SF_nonDim*np.cos(theta) / d_T_per_px + image_Nx_px/2
-        circle_y = R_SF_nonDim*np.sin(theta) / d_T_per_px + image_Ny_px/2
+        circle_x = R_SF_nonDim*np.cos(theta) / nonDim_per_px + image_Nx_px/2
+        circle_y = R_SF_nonDim*np.sin(theta) / nonDim_per_px + image_Ny_px/2
         ax.plot(circle_x, circle_y, 'r--', linewidth=ref_circle_linewidth, label='Reference Circle')
     
     # Set the axis limits to the zoom region
@@ -452,7 +452,7 @@ def plot_AreaScalingFactor_onSF(
         
         # Convert to image coordinates for plotting
         # Center point
-        mid_centered_px = np.array([[mid_x_nonDim / d_T_per_px], [mid_z_nonDim / d_T_per_px]])
+        mid_centered_px = np.array([[mid_x_nonDim / nonDim_per_px], [mid_z_nonDim / nonDim_per_px]])
         mid_img_px = Coordinate_Transform_image_to_centered_Spherical(
             Coordinates=mid_centered_px,
             centered_to_image=True,
@@ -462,7 +462,7 @@ def plot_AreaScalingFactor_onSF(
         mid_x_img, mid_y_img = mid_img_px[0][0], mid_img_px[1][0]
         
         # End point
-        end_centered_px = np.array([[end_x_nonDim / d_T_per_px], [end_z_nonDim / d_T_per_px]])
+        end_centered_px = np.array([[end_x_nonDim / nonDim_per_px], [end_z_nonDim / nonDim_per_px]])
         end_img_px = Coordinate_Transform_image_to_centered_Spherical(
             Coordinates=end_centered_px,
             centered_to_image=True,

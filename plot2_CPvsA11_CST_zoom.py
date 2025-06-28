@@ -24,23 +24,23 @@ rc('text', usetex=True)
 @F_1.ParameterLog(max_size = 1024 * 10) # 10KB 
 def plotter_2_CPvsA11_CST_zoom(input_dir, # Format_1 requires input_dir
     CP_data_df = None, # if None a .pkl file has to be in the input_dir. otherwise no CP_data data is provided.
-    output_dir_manual = "", output_dir_comment = "",
+    output_dir_manual = "", output_dir_comment = "CST_selected_zoom_expanded",
     video = 1,
-    Plot_log_level=1, # Added Plot_log_level argument
-    ScaleFactor=1.5,  # Added ScaleFactor for zooming, similar to plot6_colortables
-    cst_expansion_factor=1,  # Added expansion factor for CST-related properties
-    image_numbers=None,  # List of image numbers to plot (if None or [], plot all images)
-    cells_to_color=None,  # NEW: List of cell IDs to color (if None or [], show all cells)
-    contour_color='w',    # NEW: Parameter for contour color
-    contour_linestyle='-', # NEW: Parameter for contour line style
-    contour_linewidth=0.8, # NEW: Parameter for contour line width
-    title_fontsize=16,    # NEW: Font size for titles
-    axis_label_fontsize=12, # NEW: Font size for axis labels
-    legend_fontsize=10,   # NEW: Font size for legends
-    text_fontsize=10,     # NEW: Font size for text annotations
-    suptitle_fontsize=16, # NEW: Font size for figure suptitle
-    num_bins = 15,  # NEW: Number of bins for histogram
-    show_training_diameter=True,  # NEW: Option to show/hide training diameter
+    Plot_log_level=2, # Changed from 1 to 2
+    ScaleFactor=1.5,
+    cst_expansion_factor=6,  # Changed from 1 to 6
+    image_numbers=[100],  # Changed from None to [100]
+    cells_to_color=None,
+    contour_color='w',
+    contour_linestyle='-',
+    contour_linewidth=1.0, # Changed from 0.8 to 1.0
+    title_fontsize=18,     # Changed from 16 to 18
+    axis_label_fontsize=14, # Changed from 12 to 14
+    legend_fontsize=12,    # Changed from 10 to 12
+    text_fontsize=12,      # Changed from 10 to 12
+    suptitle_fontsize=20,  # Changed from 16 to 20
+    num_bins = 20,         # Changed from 15 to 20
+    show_training_diameter=False,  # Changed from True to False
     ):
 
     """

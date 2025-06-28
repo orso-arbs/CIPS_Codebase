@@ -18,10 +18,10 @@ import video_maker_1 as vm1
 @F_1.ParameterLog(max_size = 1024 * 10) # 10KB 
 def plotter_3_CPvsA11_CST_Panel(input_dir, # Format_1 requires input_dir
     CP_data_df = None, # if None a .pkl file has to be in the input_dir. otherwise no CP_data data is provided.
-    output_dir_manual = "", output_dir_comment = "",
-    cst_expansion_factor = 1, # Factor to multiply CST values by (e.g. 6 for extrapolating from 1/6 of the sphere)
+    output_dir_manual = "", output_dir_comment = f"CST_Panel_x6",
+    cst_expansion_factor = 6, # Factor to multiply CST values by (e.g. 6 for extrapolating from 1/6 of the sphere)
     show_plot = 0,
-    Plot_log_level=1, # Added Plot_log_level argument
+    Plot_log_level=2, # Changed from 1 to 2 to match if-main block
     ):
 
     """
@@ -224,7 +224,7 @@ def plotter_3_CPvsA11_CST_Panel(input_dir, # Format_1 requires input_dir
     ax_3_1.plot(A11_SF_s_d['time'], A11_SF_s_d['s_d'] ,
                 label="A11 average density weighed displacement speed $s_d$", color='black', linestyle='dashed')
 
-    ax_4_1.plot(CP_data_df['time'], CP_data_df['d_T_per_px'] ,
+    ax_4_1.plot(CP_data_df['time'], CP_data_df['nonDim_per_px'] ,
                 label="Dimentionalisation $d_T/px$", color='black', linestyle='dotted')
 
     axes = [

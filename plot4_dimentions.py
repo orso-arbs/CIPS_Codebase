@@ -100,15 +100,15 @@ def plotter_4_dimentionalisation(input_dir, # Format_1 requires input_dir
 
         # Calculate R_mean_interpolated_i
         ax_1_twin3 = ax_1.twinx()  # Create a twin axes sharing the same x-axis
-        CP_data['R_mean_interpolated_i'] = (CP_data['d_T_per_px'] * CP_data['D_SF_px']) / 2
+        CP_data['R_mean_interpolated_i'] = (CP_data['nonDim_per_px'] * CP_data['D_SF_px']) / 2
         ax_1_twin3.plot(CP_data['time'], CP_data['R_mean_interpolated_i'], label="R_mean_interpolated_i", color='black', linestyle='solid')
         ax_1_twin3.set_ylabel('R_mean_interpolated_i', color='black')
         ax_1_twin3.tick_params(axis='y', labelcolor='black')
         ax_1_twin3.spines["right"].set_position(("outward", 80))  # Slightly to the right
 
-        # Second axis for d_T_per_px
-        ax_2.plot(CP_data['time'], CP_data['d_T_per_px'], label="d_T_per_px", color='blue', linestyle='solid')
-        ax_2.set_ylabel('d_T_per_px', color='blue')
+        # Second axis for nonDim_per_px
+        ax_2.plot(CP_data['time'], CP_data['nonDim_per_px'], label="nonDim_per_px", color='blue', linestyle='solid')
+        ax_2.set_ylabel('nonDim_per_px', color='blue')
         ax_2.tick_params(axis='y', labelcolor='blue')
         ax_2.legend(loc='upper left')
 
@@ -195,8 +195,8 @@ def plotter_4_dimentionalisation(input_dir, # Format_1 requires input_dir
         ax_2.legend(lines1 + lines2, labels1 + labels2, loc='upper left')
         ax_2.grid(True, which='both', axis='x', linestyle='--', color='gray', alpha=0.5)
 
-        # Subplot 3: d_T_per_px vs time
-        ax_3.plot(CP_data['Time_VisIt'], CP_data['d_T_per_px'], label="d_T_per_px", color='black', linestyle='solid')
+        # Subplot 3: nonDim_per_px vs time
+        ax_3.plot(CP_data['Time_VisIt'], CP_data['nonDim_per_px'], label="nonDim_per_px", color='black', linestyle='solid')
         ax_3.set_xlabel('Time')
         ax_3.set_ylabel("dimentionalisation factor")
         ax_3.text(0.5, 0.95, 'pixel to', transform=ax_3.transAxes, ha='center', va='top', fontsize='medium', fontweight='bold')        #ax_3.xaxis.set_major_formatter(ticker.ScalarFormatter())

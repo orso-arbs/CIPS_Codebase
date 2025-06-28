@@ -19,6 +19,7 @@ import plot4_dimentions as p4
 import plot6_colortables as p6c
 import plot10_histogram_comparison as p10
 import plot13_segmented_image as p13
+import plot14_vsR as p14  # Add import for plot14_vsR
 
 @F_1.ParameterLog(max_size = 1024 * 10)
 def CIPS_pipeline_2(
@@ -136,50 +137,48 @@ def CIPS_pipeline_2(
     # plotter_2_CPvsA11_CST_zoom args
     p2_zoom_output_dir_manual="",
     p2_zoom_output_dir_comment="",
-    p2_zoom_video=1,
-    p2_zoom_Plot_log_level=1,
-    p2_zoom_ScaleFactor=1.5,
-    p2_zoom_cst_expansion_factor=6,
-    p2_zoom_image_numbers=None,
-    p2_zoom_cells_to_color=None,
     
     # plotter_3_CPvsA11_Panel args
     p3_output_dir_manual="",
     p3_output_dir_comment="",
-    p3_video=0,
-    p3_show_plot=0,
-    p3_Plot_log_level=1,
-    p3_Panel_1=0,
-    p3_Panel_2=0,
-    p3_Panel_3=0,
-    p3_Panel_4=1,
-
+    
     # plotter_3_CPvsA11_CST_Panel args
     p3_cst_panel_output_dir_manual="",
     p3_cst_panel_output_dir_comment="",
-    p3_cst_panel_show_plot=0,
-    p3_cst_panel_Plot_log_level=1,
-    p3_cst_panel_cst_expansion_factor=6,
-    p3_cst_panel_textbox_font_size=15,
-    p3_cst_panel_legend_font_size=15,
-    p3_cst_panel_axis_label_font_size=15,
     
-    # plot10_histogram_comparison args
+    # plot10_histogram_comparison args - separate parameters for diameter and area
     p10_output_dir_manual="",
     p10_output_dir_comment="",
-    p10_dist1_column='A_cell_distribution_CST_nonDim2',
-    p10_dist2_column='d_cell_distribution_CST_nonDim',
-    p10_dist1_label='Cell Area',
-    p10_dist2_label='Cell Diameter',
-    p10_dist1_color='orange',
-    p10_dist2_color='green',
-    p10_x_label='Non-Dimensional Value',
+    
+    # Diameter histogram parameters
+    p10_diam_dist1_column='d_cell_distribution_nonDim',
+    p10_diam_dist2_column='d_cell_SRec_distribution_nonDim',
+    p10_diam_dist1_label='2D',
+    p10_diam_dist2_label='3D',
+    p10_diam_dist1_color='orange',
+    p10_diam_dist2_color='green',
+    p10_diam_x_label=r'Cell Diameter / $\delta_T$',
+    p10_diam_plot_title_template='Image {}: {} vs {}\nDiameter Distribution Comparison',
+    p10_diam_output_filename_template='Diameter_2Dvs3D_histogram_{:04d}',
+    
+    # Area histogram parameters
+    p10_area_dist1_column='A_cell_distribution_nonDim2',
+    p10_area_dist2_column='A_cell_SRec_distribution_nonDim2',
+    p10_area_dist1_label='2D',
+    p10_area_dist2_label='3D',
+    p10_area_dist1_color='orange',
+    p10_area_dist2_color='green',
+    p10_area_x_label=r'Cell Area / $\delta_T^2$',
+    p10_area_plot_title_template='Image {}: {} vs {}\nArea Distribution Comparison',
+    p10_area_output_filename_template='Area_2Dvs3D_histogram_{:04d}',
+    
+    # Common histogram parameters
     p10_save_svg=True,
     p10_save_png=True,
     p10_show_plots=False,
     p10_create_video=True,
     p10_Plot_log_level=1,
-    p10_image_numbers=[],  # Added parameter for specific image numbers
+    p10_image_numbers=[],  # Parameter for specific image numbers
     
     # plot13_segmented_image args
     p13_output_dir_manual="",
@@ -193,6 +192,45 @@ def CIPS_pipeline_2(
     p13_show_radius=True,
     p13_show_plot=0,
     p13_contour_color='w',
+    
+    # plot6_colortables args
+    p6c_output_dir_manual="",
+    p6c_output_dir_comment="",
+    p6c_show_plot=0,
+    p6c_Plot_log_level=1,
+    p6c_image_width_ratio=0.5, 
+    p6c_plot_width_ratio=0.5,
+    p6c_plot_spacing=0.0,
+    p6c_colorbar_width=0.1,
+    p6c_colorbar_height=0.6,
+    p6c_colorbar_x_pos=0.1,
+    p6c_ScaleFactor=1.5,
+    p6c_figsize=(18, 6),
+    p6c_FontSizeFactor_Legends=1.4,
+    p6c_FontSizeFactor_Axis=1.0,
+    p6c_Legend_y_offset=1.3,
+    p6c_dpi=100,
+    p6c_save_fig=True,
+    p6c_video=False,
+    
+    # plot14_vsR args
+    p14_output_dir_manual="",
+    p14_output_dir_comment="",
+    p14_x_column="R_SF_nonDim",
+    p14_y_column="d_cell_mean_nonDim",
+    p14_image_list=[],
+    p14_connect_with_lines=True,
+    p14_marker_style='o',
+    p14_marker_size=6,
+    p14_line_style='-',
+    p14_line_width=1.5,
+    p14_line_color='blue',
+    p14_marker_color='blue',
+    p14_x_label=None,
+    p14_y_label=None,
+    p14_legend_loc='upper left',
+    p14_show_plot=0,
+    p14_Plot_log_level=1,
     
     # Control flags for pipeline sections
     run_visit_projector=True,
@@ -208,6 +246,7 @@ def CIPS_pipeline_2(
     run_plotter_3_cst_panel=True,
     run_plotter_10=True,
     run_plotter_13=True,
+    run_plotter_14=True,  # Control flag for plot14_vsR
 ):
     """
     Runs the enhanced CIPS pipeline with unified Analysis_Altantzis2011 module.
@@ -252,6 +291,8 @@ def CIPS_pipeline_2(
         If True, runs the histogram comparison plotting function. Default is True.
     run_plotter_13 : bool, optional
         If True, runs the segmented image plotting function. Default is True.
+    run_plotter_14 : bool, optional
+        If True, runs the x-y plot function with configurable axes. Default is True.
     
     Returns
     -------
@@ -492,13 +533,7 @@ def CIPS_pipeline_2(
                         input_dir=plot_input_dir,
                         output_dir_manual=p3_output_dir_manual,
                         output_dir_comment=p3_output_dir_comment,
-                        video=p3_video,
-                        show_plot=p3_show_plot,
                         Plot_log_level=p3_Plot_log_level,
-                        Panel_1=p3_Panel_1,
-                        Panel_2=p3_Panel_2,
-                        Panel_3=p3_Panel_3,
-                        Panel_4=p3_Panel_4,
                     )
                 else:
                     print("--- Skipping plotter_3_CPvsA11_Panel (missing analysis output) ---")
@@ -513,12 +548,6 @@ def CIPS_pipeline_2(
                         input_dir=plot_input_dir,
                         output_dir_manual=p2_zoom_output_dir_manual,
                         output_dir_comment=p2_zoom_output_dir_comment,
-                        video=p2_zoom_video,
-                        Plot_log_level=p2_zoom_Plot_log_level,
-                        ScaleFactor=p2_zoom_ScaleFactor,
-                        cst_expansion_factor=p2_zoom_cst_expansion_factor,
-                        image_numbers=p2_zoom_image_numbers,
-                        cells_to_color=p2_zoom_cells_to_color,
                     )
                 else:
                     print("--- Skipping plotter_2_CPvsA11_CST_zoom (missing analysis output) ---")
@@ -533,12 +562,6 @@ def CIPS_pipeline_2(
                         input_dir=plot_input_dir,
                         output_dir_manual=p3_cst_panel_output_dir_manual,
                         output_dir_comment=p3_cst_panel_output_dir_comment,
-                        show_plot=p3_cst_panel_show_plot,
-                        Plot_log_level=p3_cst_panel_Plot_log_level,
-                        cst_expansion_factor=p3_cst_panel_cst_expansion_factor,
-                        textbox_font_size=p3_cst_panel_textbox_font_size,
-                        legend_font_size=p3_cst_panel_legend_font_size,
-                        axis_label_font_size=p3_cst_panel_axis_label_font_size,
                     )
                 else:
                     print("--- Skipping plotter_3_CPvsA11_CST_Panel (missing analysis output) ---")
@@ -548,25 +571,26 @@ def CIPS_pipeline_2(
             # Run plot10_histogram_comparison
             if run_plotter_10:
                 if plot_input_dir:
-                    print(f"--- Running plot10_histogram_comparison ---")
-                    p10_out_dir = p10.plot10_distribution_histogram_comparison(
+                    print(f"--- Running plot10_histogram_comparison for diameters ---")
+                    p10_diam_out_dir = p10.plot10_distribution_histogram_comparison(
                         input_dir=plot_input_dir,
                         output_dir_manual=p10_output_dir_manual,
-                        output_dir_comment=p10_output_dir_comment,
-                        dist1_column=p10_dist1_column,
-                        dist2_column=p10_dist2_column,
-                        dist1_label=p10_dist1_label,
-                        dist2_label=p10_dist2_label,
-                        dist1_color=p10_dist1_color,
-                        dist2_color=p10_dist2_color,
-                        x_label=p10_x_label,
-                        save_svg=p10_save_svg,
-                        save_png=p10_save_png,
-                        show_plots=p10_show_plots,
-                        create_video=p10_create_video,
-                        Plot_log_level=p10_Plot_log_level,
-                        image_numbers=p10_image_numbers,  # Pass the image numbers parameter
+                        output_dir_comment=f"{p10_output_dir_comment}_Diameter",
                     )
+                    
+                    print(f"--- Running plot10_histogram_comparison for areas ---")
+                    p10_area_out_dir = p10.plot10_distribution_histogram_comparison(
+                        input_dir=plot_input_dir,
+                        output_dir_manual=p10_output_dir_manual,
+                        output_dir_comment=f"{p10_output_dir_comment}_Area",
+                        dist1_column='A_cell_distribution_nonDim2',
+                        dist2_column='A_cell_SRec_distribution_nonDim2',
+                        x_label=r'Cell Area / $\delta_T^2$',
+                        output_filename_template='Area_2Dvs3D_histogram_{:04d}',
+                    )
+                    
+                    # Store both output directories in a tuple
+                    p10_out_dir = (p10_diam_out_dir, p10_area_out_dir)
                 else:
                     print("--- Skipping plot10_histogram_comparison (missing analysis output) ---")
             else:
@@ -580,20 +604,25 @@ def CIPS_pipeline_2(
                         input_dir=plot_input_dir,
                         output_dir_manual=p13_output_dir_manual,
                         output_dir_comment=p13_output_dir_comment,
-                        image_numbers=p13_image_numbers,  # Already using the parameter correctly
-                        show_masks=p13_show_masks,
-                        show_outlines=p13_show_outlines,
-                        cells_to_color=p13_cells_to_color,
-                        alpha=p13_alpha,
-                        zoom_factor=p13_zoom_factor,
-                        show_radius=p13_show_radius,
-                        show_plot=p13_show_plot,
-                        contour_color=p13_contour_color,
                     )
                 else:
                     print("--- Skipping plot13_segmented_image (missing analysis output) ---")
             else:
                 print("--- Skipping plot13_segmented_image ---")
+            
+            # Run plot14_vsR
+            if run_plotter_14:
+                if plot_input_dir:
+                    print(f"--- Running plot14_vsR ---")
+                    p14_out_dir = p14.plotter_14_vsR(
+                        input_dir=plot_input_dir,
+                        output_dir_manual=p14_output_dir_manual,
+                        output_dir_comment=p14_output_dir_comment,
+                    )
+                else:
+                    print("--- Skipping plot14_vsR (missing analysis output) ---")
+            else:
+                print("--- Skipping plot14_vsR ---")
 
             #########################################        Color Table Plotting
             if run_plotter_6_colortables:
@@ -603,22 +632,6 @@ def CIPS_pipeline_2(
                         input_dir=CPe1_output_dir,
                         output_dir_manual=p6c_output_dir_manual,
                         output_dir_comment=p6c_output_dir_comment,
-                        show_plot=p6c_show_plot,
-                        Plot_log_level=p6c_Plot_log_level,
-                        image_width_ratio=p6c_image_width_ratio,
-                        plot_width_ratio=p6c_plot_width_ratio,
-                        plot_spacing=p6c_plot_spacing,
-                        colorbar_width=p6c_colorbar_width,
-                        colorbar_height=p6c_colorbar_height,
-                        colorbar_x_pos=p6c_colorbar_x_pos,
-                        ScaleFactor=p6c_ScaleFactor,
-                        figsize=p6c_figsize,
-                        FontSizeFactor_Legends=p6c_FontSizeFactor_Legends,
-                        FontSizeFactor_Axis=p6c_FontSizeFactor_Axis,
-                        Legend_y_offset=p6c_Legend_y_offset,
-                        dpi=p6c_dpi,
-                        save_fig=p6c_save_fig,
-                        video=p6c_video
                     )
                 else:
                     print("--- Skipping plotter_6_colortables (missing CP_extract_1 output) ---")
@@ -639,8 +652,10 @@ def CIPS_pipeline_2(
                 "plot_input_dir": plot_input_dir,
                 "p2_zoom_out_dir": p2_zoom_out_dir if run_plotter_2_zoom else None,
                 "p3_cst_out_dir": p3_cst_out_dir if run_plotter_3_cst_panel else None,
-                "p10_out_dir": p10_out_dir if run_plotter_10 else None,
-                "p13_out_dir": p13_out_dir if run_plotter_13 else None
+                "p10_diam_out_dir": p10_out_dir[0] if run_plotter_10 else None,
+                "p10_area_out_dir": p10_out_dir[1] if run_plotter_10 else None,
+                "p13_out_dir": p13_out_dir if run_plotter_13 else None,
+                "p14_out_dir": p14_out_dir if run_plotter_14 else None
             }
             results = list(results_dict.values())
 
@@ -682,15 +697,17 @@ def CIPS_pipeline_2(
 
     return results
 
+
 # Example of how to run the pipeline with the new unified approach
 if __name__ == "__main__":
     print("Running CIPS-Pipeline 2")
     
     CIPS_pipeline_2(
         cips_pipeline_global_log_level=2, 
-        cips_pipeline_output_dir_comment="T3_vmag_2000px_BBWW_cyto3_flowThres0p5",
+        cips_pipeline_output_dir_comment="S79only_T3_vmag_2000px_BBWW_cyto3_flowThres0p5",
         
         # Visit_Projector parameters
+        vp_State_range_manual=[79],
         
         # Cellpose segmentation parameters
         cps_max_images_per_batch=40,
@@ -711,22 +728,43 @@ if __name__ == "__main__":
         a11_plot_CST_detJ=True,
         a11_plot_CST_selection=True,
         
-        # Plotter 10 parameters
-        p10_dist1_column='d_cell_distribution_CST_nonDim',
-        p10_dist2_column='A_cell_distribution_CST_nonDim2',
-        p10_dist1_label='Cell Diameter',
-        p10_dist2_label='Cell Area',
-        p10_x_label=r'Non-Dimensional Value',
-        p10_image_numbers=[79],  # Example: only process image #100
+        # Plotter 10 parameters - updated for both diameter and area
+        p10_diam_dist1_column='d_cell_distribution_nonDim',
+        p10_diam_dist2_column='d_cell_SRec_distribution_nonDim',
+        p10_diam_dist1_label='2D',
+        p10_diam_dist2_label='3D',
+        p10_diam_x_label=r'Cell Diameter / $\delta_T$',
+        
+        p10_area_dist1_column='A_cell_distribution_nonDim2',
+        p10_area_dist2_column='A_cell_SRec_distribution_nonDim2',
+        p10_area_dist1_label='2D',
+        p10_area_dist2_label='3D',
+        p10_area_x_label=r'Cell Area / $\delta_T^2$',
+        
+        p10_image_numbers=[79],  # Example: only process image #79
         
         # Plotter 13 parameters
-        p13_image_numbers=[79],  # Example: only process image #100
-        p13_cells_to_color=[],  # Example: only color cell #95
+        p13_image_numbers=[79],  # Example: only process image #79
+        p13_cells_to_color=[],  # Example: no specific cells to color
+        
+        # Plotter 14 parameters
+        p14_x_column="R_SF_nonDim",
+        p14_y_column="d_cell_mean_nonDim",
+        p14_image_list=[],  # Process all images
+        p14_line_color='blue',
+        p14_marker_color='red',
+        p14_x_label=r'$R_{SF}$ (Non-Dimensional)',
+        p14_y_label=r'Mean Cell Diameter ($\delta_T$)',
+        
+        # Plotter 6 colortables parameters
+        p6c_show_plot=0,
+        p6c_ScaleFactor=1.5,
+        p6c_video=True,
         
         # Run all pipeline steps
         run_visit_projector=True,
         run_cp_segment=True,
-        run_cp_extract=True,
+        run_cp_extract=True,       #cips_CPe1_output_dir_override  = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_Pipe_Default_dir\20250625_1528537\20250625_1528554\20250625_1626096\20250626_1700136",
         run_analysis_a11=True,
         run_plotter_1=True,
         run_plotter_4=True,
@@ -737,6 +775,7 @@ if __name__ == "__main__":
         run_plotter_3_cst_panel=True,
         run_plotter_10=True,
         run_plotter_13=True,
+        run_plotter_14=True,
     )
     
     print("CIPS-Pipeline 2 run finished.")

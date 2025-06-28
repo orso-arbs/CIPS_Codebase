@@ -76,19 +76,19 @@ def dimentionalise_2_from_VisIt_R_Average(
     dimentionalised_df = extracted_df.copy()
     # Add non-dimensional columns to the new DataFrame
     nonDim_columns = [
-        'd_T_per_px', 'image_Nx_nonDim', 'image_Ny_nonDim', 'diameter_training_nonDim', 'diameter_estimate_used_nonDim',
+        'nonDim_per_px', 'image_Nx_nonDim', 'image_Ny_nonDim', 'diameter_training_nonDim', 'diameter_estimate_used_nonDim',
         'diameter_mean_nonDim', 'diameter_median_nonDim', 'diameter_distribution_nonDim',
         'A_image_nonDim2', 'A_empty_nonDim2', 'A_SF_nonDim2', 'D_SF_nonDim', 'R_SF_nonDim', 'A_CP_mask_nonDim',
     ]
     for col in nonDim_columns:
         dimentionalised_df[col] = np.nan  # Initialize them with NaN
 
-    #################### Calculate ratio of nonDimensionalised length per pixel (d_T_per_px)
+    #################### Calculate ratio of nonDimensionalised length per pixel (nonDim_per_px)
 
-    print("NOTE: assuming VisIt data is in nonDImentionalised scaling d_T to calculate ratio of nonDimensionalised length per pixel (d_T_per_px)")
-    # d_T_per_px = (R_mean_nonDim * d_T) / R_SF_px
-    dimentionalised_df['d_T_per_px'] = (dimentionalised_df['R_SF_Average_VisIt'] * d_T) / dimentionalised_df['R_SF_px']
-    print("Calculated d_T_per_px:", dimentionalised_df['d_T_per_px'].to_string()) if CP_dimentionalise_log_level >= 1 else None
+    print("NOTE: assuming VisIt data is in nonDImentionalised scaling d_T to calculate ratio of nonDimensionalised length per pixel (nonDim_per_px)")
+    # nonDim_per_px = (R_mean_nonDim * d_T) / R_SF_px
+    dimentionalised_df['nonDim_per_px'] = (dimentionalised_df['R_SF_Average_VisIt'] * d_T) / dimentionalised_df['R_SF_px']
+    print("Calculated nonDim_per_px:", dimentionalised_df['nonDim_per_px'].to_string()) if CP_dimentionalise_log_level >= 1 else None
 
 
 
@@ -99,15 +99,15 @@ def dimentionalise_2_from_VisIt_R_Average(
     for i in dimentionalised_df.index: # Use index after sorting
         print("Processing row index =", i) if CP_dimentionalise_log_level >= 2 else None
 
-        d_T_per_px_i = dimentionalised_df.loc[i, 'd_T_per_px']
+        nonDim_per_px_i = dimentionalised_df.loc[i, 'nonDim_per_px']
 
-        if pd.isna(d_T_per_px_i):
-            print(f"Warning: Skipping non-dim calculation for index {i} due to missing d_T_per_px.")
+        if pd.isna(nonDim_per_px_i):
+            print(f"Warning: Skipping non-dim calculation for index {i} due to missing nonDim_per_px.")
             continue # Skip calculations if scaling factor is NaN
 
-        # Calculate non-dimensional lengths (multiply px value by d_T_per_px)
-        image_Nx_nonDim = dimentionalised_df.loc[i, "image_Nx_px"] * d_T_per_px_i
-        image_Ny_nonDim = dimentionalised_df.loc[i, "image_Ny_px"] * d_T_per_px_i
+        # Calculate non-dimensional lengths (multiply px value by nonDim_per_px)
+        image_Nx_nonDim = dimentionalised_df.loc[i, "image_Nx_px"] * nonDim_per_px_i
+        image_Ny_nonDim = dimentionalised_df.loc[i, "image_Ny_px"] * nonDim_per_px_i
 
         diameter_training_px_i = dimentionalised_df.loc[i, 'diameter_training_px']
         diameter_estimate_used_px_i = dimentionalised_df.loc[i, 'diameter_estimate_used_px']
@@ -115,10 +115,10 @@ def dimentionalise_2_from_VisIt_R_Average(
         diameter_mean_px_i = dimentionalised_df.loc[i, 'diameter_mean_px']
         diameter_distribution_px_i = dimentionalised_df.loc[i, 'diameter_distribution_px'] # This should be an array
 
-        diameter_training_nonDim = diameter_training_px_i * d_T_per_px_i if pd.notna(diameter_training_px_i) else np.nan
-        diameter_estimate_used_nonDim_i = diameter_estimate_used_px_i * d_T_per_px_i if pd.notna(diameter_estimate_used_px_i) else np.nan
-        diameter_median_nonDim_i = diameter_median_px_i * d_T_per_px_i if pd.notna(diameter_median_px_i) else np.nan
-        diameter_mean_nonDim_i = diameter_mean_px_i * d_T_per_px_i if pd.notna(diameter_mean_px_i) else np.nan
+        diameter_training_nonDim = diameter_training_px_i * nonDim_per_px_i if pd.notna(diameter_training_px_i) else np.nan
+        diameter_estimate_used_nonDim_i = diameter_estimate_used_px_i * nonDim_per_px_i if pd.notna(diameter_estimate_used_px_i) else np.nan
+        diameter_median_nonDim_i = diameter_median_px_i * nonDim_per_px_i if pd.notna(diameter_median_px_i) else np.nan
+        diameter_mean_nonDim_i = diameter_mean_px_i * nonDim_per_px_i if pd.notna(diameter_mean_px_i) else np.nan
 
         # Ensure 'diameter_distribution_nonDim' column exists and has dtype 'object'
         if 'diameter_distribution_nonDim' not in dimentionalised_df.columns:
@@ -129,19 +129,19 @@ def dimentionalise_2_from_VisIt_R_Average(
                 dimentionalised_df['diameter_distribution_nonDim'] = dimentionalised_df['diameter_distribution_nonDim'].astype(object)
         # Handle potential issues with diameter_distribution_px (e.g., if it's NaN or not an array)
         if isinstance(diameter_distribution_px_i, np.ndarray):
-            diameter_distribution_nonDim_i = diameter_distribution_px_i * d_T_per_px_i
+            diameter_distribution_nonDim_i = diameter_distribution_px_i * nonDim_per_px_i
         else:
             diameter_distribution_nonDim_i = np.nan # Or handle as appropriate
 
-        # Calculate non-dimensional areas (multiply px^2 value by d_T_per_px^2)
-        A_image_nonDim = dimentionalised_df.loc[i, "A_image_px2"] * d_T_per_px_i**2
-        A_empty_nonDim = dimentionalised_df.loc[i, "A_empty_px2"] * d_T_per_px_i**2
-        A_SF_nonDim = dimentionalised_df.loc[i, "A_SF_px2"] * d_T_per_px_i**2
-        A_CP_mask_nonDim = dimentionalised_df.loc[i, "A_CP_mask_px"] * d_T_per_px_i**2
+        # Calculate non-dimensional areas (multiply px^2 value by nonDim_per_px^2)
+        A_image_nonDim = dimentionalised_df.loc[i, "A_image_px2"] * nonDim_per_px_i**2
+        A_empty_nonDim = dimentionalised_df.loc[i, "A_empty_px2"] * nonDim_per_px_i**2
+        A_SF_nonDim = dimentionalised_df.loc[i, "A_SF_px2"] * nonDim_per_px_i**2
+        A_CP_mask_nonDim = dimentionalised_df.loc[i, "A_CP_mask_px"] * nonDim_per_px_i**2
 
         # Calculate non-dimensional lengths derived from areas
-        D_SF_nonDim = dimentionalised_df.loc[i, "D_SF_px"] * d_T_per_px_i
-        R_SF_nonDim = dimentionalised_df.loc[i, "R_SF_px"] * d_T_per_px_i
+        D_SF_nonDim = dimentionalised_df.loc[i, "D_SF_px"] * nonDim_per_px_i
+        R_SF_nonDim = dimentionalised_df.loc[i, "R_SF_px"] * nonDim_per_px_i
 
 
         # Assign calculated values back to the DataFrame

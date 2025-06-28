@@ -110,7 +110,7 @@ def dim3_A11(
     #################################################### Add Non-Dimensional Columns
     # Add new columns for dimensionalization
     dim_columns = [
-        'd_T_per_px', 'image_Nx_nonDim', 'image_Ny_nonDim', 
+        'nonDim_per_px', 'image_Nx_nonDim', 'image_Ny_nonDim', 
         'diameter_training_nonDim', 'diameter_estimate_used_nonDim', 
         'd_cell_mean_nonDim', 'd_cell_median_nonDim',
         'A_image_nonDim2', 'A_empty_nonDim2', 'A_SF_nonDim2', 
@@ -137,18 +137,19 @@ def dim3_A11(
             Analysis_A11_df[col] = pd.Series(dtype='object')
     
     #################################################### Calculate Dimensionalization Factor
-    # Calculate d_T_per_px from VisIt data
-    print("\nCalculating dimensionalization factor d_T_per_px...") if dim3_A11_log_level >= 1 else None
+    # Calculate nonDim_per_px from VisIt data
+    print("\nCalculating dimensionalization factor nonDim_per_px...") if dim3_A11_log_level >= 1 else None
     
     # Method: Use R_SF_Average_VisIt (non-dimensional) and R_SF_px (pixels)
-    # d_T_per_px = (R_SF_Average_VisIt * d_T) / R_SF_px
-    Analysis_A11_df['d_T_per_px'] = (Analysis_A11_df['R_SF_Average_VisIt'] * ref_values['d_T']) / Analysis_A11_df['R_SF_px']
+    # nonDim_per_px = (R_SF_Average_VisIt * d_T) / R_SF_px
+    Analysis_A11_df['nonDim_per_px'] = Analysis_A11_df['R_SF_Average_VisIt'] / Analysis_A11_df['R_SF_px']
+    # Analysis_A11_df['d_T_per_px'] = (Analysis_A11_df['R_SF_Average_VisIt'] * ref_values['d_T']) / Analysis_A11_df['R_SF_px'] # this was used erroneously as nonDin_per_px untill 27.06.2025
     
-    # Print the d_T_per_px values for verification
+    # Print the nonDim_per_px values for verification
     if dim3_A11_log_level >= 2:
-        print("\nDimensionalization factors (d_T_per_px):")
+        print("\nDimensionalization factors (nonDim_per_px):")
         # Corrected loop: Iterate with enumerate to get both index and value
-        for i, value in enumerate(Analysis_A11_df['d_T_per_px']):
+        for i, value in enumerate(Analysis_A11_df['nonDim_per_px']):
             print(f"  Image {i + 1}: {value:.6e} d_T/px")
 
     #################################################### Calculate Non-Dimensionalized Values
@@ -158,15 +159,15 @@ def dim3_A11(
     for idx, (i, row) in enumerate(Analysis_A11_df.iterrows()):
         print(f"\rProcessing image {idx+1}/{N_images}", end='', flush=True) if dim3_A11_log_level >= 1 else None
         
-        d_T_per_px_i = row['d_T_per_px']
+        nonDim_per_px_i = row['nonDim_per_px']
         
-        if pd.isna(d_T_per_px_i):
-            print(f"\nWarning: Skipping dimensionalization for index {i} due to missing d_T_per_px.")
+        if pd.isna(nonDim_per_px_i):
+            print(f"\nWarning: Skipping dimensionalization for index {i} due to missing nonDim_per_px.")
             continue
             
         # Image dimensions in non-dimensional units
-        Analysis_A11_df.at[i, 'image_Nx_nonDim'] = row['image_Nx_px'] * d_T_per_px_i
-        Analysis_A11_df.at[i, 'image_Ny_nonDim'] = row['image_Ny_px'] * d_T_per_px_i
+        Analysis_A11_df.at[i, 'image_Nx_nonDim'] = row['image_Nx_px'] * nonDim_per_px_i
+        Analysis_A11_df.at[i, 'image_Ny_nonDim'] = row['image_Ny_px'] * nonDim_per_px_i
         
         # Length values in non-dimensional units (scalar values)
         for dim_field, px_field in [
@@ -177,7 +178,7 @@ def dim3_A11(
         ]:
             if px_field in Analysis_A11_df.columns:
                 px_value = row[px_field]
-                Analysis_A11_df.at[i, dim_field] = px_value * d_T_per_px_i if pd.notna(px_value) else np.nan
+                Analysis_A11_df.at[i, dim_field] = px_value * nonDim_per_px_i if pd.notna(px_value) else np.nan
         
         # Handle array-valued length distributions
         array_fields = [
@@ -192,7 +193,7 @@ def dim3_A11(
                 # Check if array exists and has elements
                 if isinstance(px_array, (np.ndarray, list)) and len(px_array) > 0:
                     # Create new numpy array directly with scaling applied
-                    Analysis_A11_df.at[i, dim_field] = np.array(px_array) * d_T_per_px_i
+                    Analysis_A11_df.at[i, dim_field] = np.array(px_array) * nonDim_per_px_i
                 else:
                     # Consistent empty array format
                     Analysis_A11_df.at[i, dim_field] = np.array([])
@@ -206,7 +207,7 @@ def dim3_A11(
         ]:
             if px_field in Analysis_A11_df.columns:
                 px_value = row[px_field]
-                Analysis_A11_df.at[i, dim_field] = px_value * (d_T_per_px_i**2) if pd.notna(px_value) else np.nan
+                Analysis_A11_df.at[i, dim_field] = px_value * (nonDim_per_px_i**2) if pd.notna(px_value) else np.nan
         
         # Handle array-valued area distributions
         if 'A_cell_distribution_px2' in Analysis_A11_df.columns:
@@ -214,14 +215,14 @@ def dim3_A11(
             # Check if array exists and has elements
             if isinstance(px_array, (np.ndarray, list)) and len(px_array) > 0:
                 # Create new numpy array directly with scaling applied
-                Analysis_A11_df.at[i, 'A_cell_distribution_nonDim2'] = np.array(px_array) * (d_T_per_px_i**2)
+                Analysis_A11_df.at[i, 'A_cell_distribution_nonDim2'] = np.array(px_array) * (nonDim_per_px_i**2)
             else:
                 # Consistent empty array format
                 Analysis_A11_df.at[i, 'A_cell_distribution_nonDim2'] = np.array([])
         
         # Length values derived from areas
-        Analysis_A11_df.at[i, 'D_SF_nonDim'] = row['D_SF_px'] * d_T_per_px_i
-        Analysis_A11_df.at[i, 'R_SF_nonDim'] = row['R_SF_px'] * d_T_per_px_i
+        Analysis_A11_df.at[i, 'D_SF_nonDim'] = row['D_SF_px'] * nonDim_per_px_i
+        Analysis_A11_df.at[i, 'R_SF_nonDim'] = row['R_SF_px'] * nonDim_per_px_i
     
     print("\nDimensionalization complete!") if dim3_A11_log_level >= 1 else None
     

@@ -16,13 +16,13 @@ rc('text', usetex=True)
 def plot_segmented_image(
     input_dir,
     output_dir_manual="",
-    output_dir_comment="",
-    image_numbers=None, 
+    output_dir_comment="segmented_images",
+    image_numbers=[], 
     show_masks=True, 
     show_outlines=True, 
-    cells_to_color=None,  
+    cells_to_color=[], # For the Panel describing the pipeline, the cell is [95]
     alpha=0.5, 
-    zoom_factor=2, 
+    zoom_factor=1.5, # Changed from 2 to 1.5
     # New text customization parameters
     title_text="",            # Title text (empty for no title)
     title_fontsize=16,        # Font size for title
@@ -39,10 +39,10 @@ def plot_segmented_image(
     contour_color='w',    
     contour_linestyle='-', 
     contour_linewidth=0.8, 
-    show_radius=False,    
+    show_radius=True, # Changed from False to True    
     radius_color='r',     
     radius_linestyle='--', 
-    radius_linewidth=1.5, 
+    radius_linewidth=3, # Changed from 1.5 to 3
     show_plot=0):
     """
     Plot segmented images with masks and outlines.

@@ -109,7 +109,7 @@ def Spherical_Reconstruction_2(
         masks = Analysis_A11_df.loc[i, 'masks']
         R_SF_px = Analysis_A11_df.loc[i, 'R_SF_px']
         R_SF_nonDim = Analysis_A11_df.loc[i, 'R_SF_nonDim']
-        d_T_per_px = Analysis_A11_df.loc[i, 'd_T_per_px']
+        nonDim_per_px = Analysis_A11_df.loc[i, 'nonDim_per_px']
         
         # Get unique cell IDs (excluding background = 0)
         cell_ids = np.unique(masks)
@@ -161,8 +161,8 @@ def Spherical_Reconstruction_2(
             )
             
             # Step 2: Scale to non-dimensional units
-            centroid_xSp_nonDim = cell_centroid_xSp_px[0] * d_T_per_px
-            centroid_zSp_nonDim = cell_centroid_zSp_px[0] * d_T_per_px
+            centroid_xSp_nonDim = cell_centroid_xSp_px[0] * nonDim_per_px
+            centroid_zSp_nonDim = cell_centroid_zSp_px[0] * nonDim_per_px
             
             # Step 3: Calculate height (z-coordinate)
             centroid_ySp_nonDim = sphere_height_from_plane(
@@ -172,7 +172,7 @@ def Spherical_Reconstruction_2(
             )
             
             # Z-coordinate in pixel units
-            centroid_ySp_px = centroid_ySp_nonDim / d_T_per_px
+            centroid_ySp_px = centroid_ySp_nonDim / nonDim_per_px
             
             # Find each pixel in centered coordinates (keep in pixel units)
             cell_coords_Im_px = np.vstack((x_coords, y_coords))
@@ -193,7 +193,7 @@ def Spherical_Reconstruction_2(
                 A_cell_SRec_px2 += detJ_val * 1  # Each pixel contributes 1 px^2 of area
             
             # Convert to non-dimensional units
-            A_cell_SRec_nonDim2 = A_cell_SRec_px2 * (d_T_per_px ** 2)
+            A_cell_SRec_nonDim2 = A_cell_SRec_px2 * (nonDim_per_px ** 2)
             
             # Calculate spherically reconstructed diameters
             d_cell_SRec_nonDim = 2 * np.sqrt(A_cell_SRec_nonDim2 / np.pi)
@@ -234,16 +234,16 @@ def Spherical_Reconstruction_2(
         R = Analysis_A11_df.loc[i, 'R_SF_nonDim']
         image_Nx_px = Analysis_A11_df.loc[i, 'image_Ny_px']  # Note: These are swapped in the code
         image_Ny_px = Analysis_A11_df.loc[i, 'image_Nx_px']  # Note: These are swapped in the code
-        d_T_per_px = Analysis_A11_df.loc[i, 'd_T_per_px']
+        nonDim_per_px = Analysis_A11_df.loc[i, 'nonDim_per_px']
         
         # Calculate CST boundary
         CST_Boundary_nonDim, CST_Boundary_combined_nonDim = Cubed_Sphere_Tile_Boundary(R, N_pts=100)
         
         # Convert non-dimensional boundary to pixel coordinates
-        # Step 1: Convert to centered pixel coordinates by dividing by d_T_per_px
+        # Step 1: Convert to centered pixel coordinates by dividing by nonDim_per_px
         centered_px_coords = np.zeros_like(CST_Boundary_combined_nonDim)
-        centered_px_coords[0] = CST_Boundary_combined_nonDim[0] / d_T_per_px
-        centered_px_coords[1] = CST_Boundary_combined_nonDim[1] / d_T_per_px
+        centered_px_coords[0] = CST_Boundary_combined_nonDim[0] / nonDim_per_px
+        centered_px_coords[1] = CST_Boundary_combined_nonDim[1] / nonDim_per_px
         
         # Step 2: Transform to image coordinates
         CST_Boundary_combined_px = Coordinate_Transform_image_to_centered_Spherical(
@@ -276,8 +276,8 @@ def Spherical_Reconstruction_2(
         
         # Add reference circle
         theta = np.linspace(0, 2*np.pi, 200)
-        ax.plot(R*np.cos(theta) / d_T_per_px + image_Nx_px/2, 
-                R*np.sin(theta) / d_T_per_px + image_Ny_px/2, 'r--',
+        ax.plot(R*np.cos(theta) / nonDim_per_px + image_Nx_px/2, 
+                R*np.sin(theta) / nonDim_per_px + image_Ny_px/2, 'r--',
                 label='Reference Circle', linewidth=2)
         
         ax.set_title(f"Image {i+1} with CST Boundary and Reference Circle", fontsize=16)

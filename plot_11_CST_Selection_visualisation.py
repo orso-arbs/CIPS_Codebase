@@ -26,26 +26,26 @@ def plot_CST_Selection_visualisation(
     # input
     input_dir,
     Analysis_A11_df=None,  # DataFrame from previous processing, or None to load from input_dir
-    image_number=0,
+    image_number=79,  # Changed from 0 to 79
     
     # output and logging
     log_level=2,
     output_dir_manual="",
     output_dir_comment="",
-    show_plots=False,
+    show_plots=True,  # Changed from False to True
     save_figure=True,
     figsize=(16, 8),
     dpi=300,
     Convert_to_grayscale_image=True,
     
     # Visualization parameters
-    cst_boundary_linewidth=2.0,  # NEW: Line width for CST boundary
-    ref_circle_linewidth=1.5,    # NEW: Line width for reference circle
-    legend_fontsize=8,  # Added argument for legend font size
-    legend_position='lower center',  # Added argument for legend position
-    legend_bbox_to_anchor=(0.5, 0.05),  # Added argument to fine-tune legend position
-    text_box_pos=(0.05, 0.95),  # Position for the (a)/(b) annotations (x, y) in axes coordinates
-    text_box_fontsize=14  # Font size for the (a)/(b) annotations
+    cst_boundary_linewidth=3.0,  # Changed from 2.0 to 3.0
+    ref_circle_linewidth=2.0,    # Changed from 1.5 to 2.0
+    legend_fontsize=20,  # Changed from 8 to 20
+    legend_position='upper center',  # Changed from 'lower center' to 'upper center'
+    legend_bbox_to_anchor=(0.5, 0.05),
+    text_box_pos=(0.05, 0.9),  # Changed from (0.05, 0.95) to (0.05, 0.9)
+    text_box_fontsize=25  # Changed from 14 to 25
 ):
     """
     Creates a 2x1 plot with CST selection sanity check and inclusion visualization for a specific image.
@@ -142,7 +142,7 @@ def plot_CST_Selection_visualisation(
     outlines = Analysis_A11_df.loc[image_number, 'outlines']
     R_SF_nonDim = Analysis_A11_df.loc[image_number, 'R_SF_nonDim']
     R_SF_px = Analysis_A11_df.loc[image_number, 'R_SF_px']
-    d_T_per_px = Analysis_A11_df.loc[image_number, 'd_T_per_px']
+    nonDim_per_px = Analysis_A11_df.loc[image_number, 'nonDim_per_px']
     image_Nx_px = Analysis_A11_df.loc[image_number, 'image_Ny_px']  # These are swapped in the code
     image_Ny_px = Analysis_A11_df.loc[image_number, 'image_Nx_px']  # These are swapped in the code
     
@@ -174,10 +174,10 @@ def plot_CST_Selection_visualisation(
     CST_Boundary, CST_Boundary_combined = Cubed_Sphere_Tile_Boundary(R_SF_nonDim, N_pts=500)
     
     # Convert non-dimensional boundary to pixel coordinates
-    # Step 1: Convert to centered pixel coordinates by dividing by d_T_per_px
+    # Step 1: Convert to centered pixel coordinates by dividing by nonDim_per_px
     centered_px_coords = np.zeros_like(CST_Boundary_combined)
-    centered_px_coords[0] = CST_Boundary_combined[0] / d_T_per_px
-    centered_px_coords[1] = CST_Boundary_combined[1] / d_T_per_px
+    centered_px_coords[0] = CST_Boundary_combined[0] / nonDim_per_px
+    centered_px_coords[1] = CST_Boundary_combined[1] / nonDim_per_px
     
     # Step 2: Transform to image coordinates
     CST_Boundary_combined_px = Coordinate_Transform_image_to_centered_Spherical(
@@ -318,8 +318,8 @@ def plot_CST_Selection_visualisation(
         
         # Plot reference circle
         theta = np.linspace(0, 2*np.pi, 200)
-        ax.plot(R_SF_nonDim*np.cos(theta) / d_T_per_px + image_Nx_px/2, 
-               R_SF_nonDim*np.sin(theta) / d_T_per_px + image_Ny_px/2, 
+        ax.plot(R_SF_nonDim*np.cos(theta) / nonDim_per_px + image_Nx_px/2, 
+               R_SF_nonDim*np.sin(theta) / nonDim_per_px + image_Ny_px/2, 
                'r--', label='Reference Circle', linewidth=ref_circle_linewidth)
         
         # Add text annotation (a) or (b) without a box

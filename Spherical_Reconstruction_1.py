@@ -57,7 +57,7 @@ def Spherical_Reconstruction_Auxillary_1(
     R = dimentionalised_df.loc[i, 'R_SF_nonDim']
     image_Nx_px = dimentionalised_df.loc[i, 'image_Ny_px']
     image_Ny_px = dimentionalised_df.loc[i, 'image_Nx_px']
-    d_T_per_px = dimentionalised_df.loc[i, 'd_T_per_px']
+    nonDim_per_px = dimentionalised_df.loc[i, 'nonDim_per_px']
     
     CST_Boundary_nonDim, CST_Boundary_combined_nonDim = Cubed_Sphere_Tile_Boundary(R, N_pts=100)
     CST_Boundary_combined_px = Affine_image_px_and_NonDim(
@@ -65,7 +65,7 @@ def Spherical_Reconstruction_Auxillary_1(
         nonDim_to_px=True, 
         image_Nx_px=image_Nx_px,
         image_Ny_px=image_Ny_px,
-        d_T_per_px=d_T_per_px,
+        nonDim_per_px=nonDim_per_px,
         )
 
     # Load image without converting to grayscale
@@ -96,7 +96,7 @@ def Spherical_Reconstruction_Auxillary_1(
 
         # Plot reference circle
         theta = np.linspace(0, 2*np.pi, 200)
-        ax.plot(R*np.cos(theta) / d_T_per_px + image_Nx_px/2, R*np.sin(theta) / d_T_per_px + image_Ny_px/2, 'r--', 
+        ax.plot(R*np.cos(theta) / nonDim_per_px + image_Nx_px/2, R*np.sin(theta) / nonDim_per_px + image_Ny_px/2, 'r--', 
         label='Reference Circle', linewidth=2)
 
         ax.set_title(f"Image {i} Cubic Sphere Tile Boundary and Reference Circle", fontsize=16)
@@ -158,7 +158,7 @@ def detJ(R, x, z):
     return R/np.sqrt(R**2 - x**2 - z**2)
 
 def Affine_image_px_and_NonDim(Coordinates, px_to_nonDim=False, nonDim_to_px=False, 
-                                image_Nx_px=None, image_Ny_px=None, d_T_per_px=None):
+                                image_Nx_px=None, image_Ny_px=None, nonDim_per_px=None):
     """
     Transforms coordinates between pixel and non-dimensional space.
     
@@ -168,7 +168,7 @@ def Affine_image_px_and_NonDim(Coordinates, px_to_nonDim=False, nonDim_to_px=Fal
         nonDim_to_px (bool): Convert from non-dimensional to pixel
         image_Nx_px (int): Image width in pixels
         image_Ny_px (int): Image height in pixels
-        d_T_per_px (float): Conversion factor
+        nonDim_per_px (float): Conversion factor
     
     Returns:
         numpy.ndarray: 2xN array of transformed coordinates
@@ -179,8 +179,8 @@ def Affine_image_px_and_NonDim(Coordinates, px_to_nonDim=False, nonDim_to_px=Fal
     if not px_to_nonDim and not nonDim_to_px:
         raise ValueError("Must set either px_to_nonDim or nonDim_to_px to True")
         
-    if image_Nx_px is None or image_Ny_px is None or d_T_per_px is None:
-        raise ValueError("Must provide image_Nx_px, image_Ny_px, and d_T_per_px")
+    if image_Nx_px is None or image_Ny_px is None or nonDim_per_px is None:
+        raise ValueError("Must provide image_Nx_px, image_Ny_px, and nonDim_per_px")
 
     # Debug: Check input coordinates
     if Coordinates.shape[0] != 2:
@@ -192,14 +192,14 @@ def Affine_image_px_and_NonDim(Coordinates, px_to_nonDim=False, nonDim_to_px=Fal
     if px_to_nonDim:
         x_px = Coordinates[0]
         y_px = Coordinates[1]
-        Transformed_Coordinates[0] = ((x_px + 1/2) - image_Nx_px/2) * d_T_per_px # x coord
-        Transformed_Coordinates[1] = (image_Ny_px/2 - (y_px + 1/2)) * d_T_per_px # z coord
+        Transformed_Coordinates[0] = ((x_px + 1/2) - image_Nx_px/2) * nonDim_per_px # x coord
+        Transformed_Coordinates[1] = (image_Ny_px/2 - (y_px + 1/2)) * nonDim_per_px # z coord
         
     if nonDim_to_px:
         x_nonDim = Coordinates[0]
         z_nonDim = Coordinates[1]
-        Transformed_Coordinates[0] = x_nonDim / d_T_per_px + image_Nx_px/2 - 1/2 # x coord 
-        Transformed_Coordinates[1] = image_Ny_px/2 - z_nonDim / d_T_per_px - 1/2 # y coord
+        Transformed_Coordinates[0] = x_nonDim / nonDim_per_px + image_Nx_px/2 - 1/2 # x coord 
+        Transformed_Coordinates[1] = image_Ny_px/2 - z_nonDim / nonDim_per_px - 1/2 # y coord
     
     # Debug: Check output coordinates
     if Transformed_Coordinates.shape[0] != 2:
@@ -480,7 +480,7 @@ def CST_selection(SRec_df, output_dir, Spherical_Reconstruction_log_level=2, sho
         R_SF_px = SRec_df.loc[i, 'R_SF_px']
         image_Nx_px = SRec_df.loc[i, 'image_Ny_px']  # These are swapped in the code
         image_Ny_px = SRec_df.loc[i, 'image_Nx_px']  # These are swapped in the code
-        d_T_per_px = SRec_df.loc[i, 'd_T_per_px']
+        nonDim_per_px = SRec_df.loc[i, 'nonDim_per_px']
         
         # Get cell IDs
         cell_ids = np.unique(masks)
@@ -493,7 +493,7 @@ def CST_selection(SRec_df, output_dir, Spherical_Reconstruction_log_level=2, sho
             nonDim_to_px=True,
             image_Nx_px=image_Nx_px,
             image_Ny_px=image_Ny_px,
-            d_T_per_px=d_T_per_px,
+            nonDim_per_px=nonDim_per_px,
         )
         
         # Extract cell properties for this image. The diameter Pixel based values are already output by Cellpos. They are recalculated here via the areas to have asserted control of how they are generated.
@@ -577,7 +577,7 @@ def CST_selection(SRec_df, output_dir, Spherical_Reconstruction_log_level=2, sho
                 px_to_nonDim=True,
                 image_Nx_px=masks.shape[1],
                 image_Ny_px=masks.shape[0],
-                d_T_per_px=d_T_per_px
+                nonDim_per_px=nonDim_per_px
             )
 
             # Debug to verify mask_coords_nonDim
@@ -684,7 +684,7 @@ def CST_selection(SRec_df, output_dir, Spherical_Reconstruction_log_level=2, sho
                     outlines=outlines,
                     CST_Boundary_combined_px=CST_Boundary_combined_px,
                     R=R_SF_nonDim,
-                    d_T_per_px=d_T_per_px,
+                    nonDim_per_px=nonDim_per_px,
                     image_Nx_px=image_Nx_px,
                     image_Ny_px=image_Ny_px,
                     cell_classifications=cell_classifications,
@@ -702,7 +702,7 @@ def CST_selection(SRec_df, output_dir, Spherical_Reconstruction_log_level=2, sho
         
     return SRec_df
 
-def plot_CST_selection_sanity_check(image_RGB, masks, outlines, CST_Boundary_combined_px, R, d_T_per_px, 
+def plot_CST_selection_sanity_check(image_RGB, masks, outlines, CST_Boundary_combined_px, R, nonDim_per_px, 
                                    image_Nx_px, image_Ny_px, cell_classifications, cell_centroids_px,
                                    output_path, show_plot=False, title_prefix="Image", 
                                    Convert_to_grayscale_image=True):
@@ -715,7 +715,7 @@ def plot_CST_selection_sanity_check(image_RGB, masks, outlines, CST_Boundary_com
         outlines: The cell outlines
         CST_Boundary_combined_px: The CST boundary coordinates in pixel space
         R: Radius of the sphere
-        d_T_per_px: Conversion factor from pixels to non-dimensional units
+        nonDim_per_px: Conversion factor from pixels to non-dimensional units
         image_Nx_px: Image width in pixels
         image_Ny_px: Image height in pixels
         cell_classifications: Dict mapping cell IDs to classification strings
@@ -777,7 +777,7 @@ def plot_CST_selection_sanity_check(image_RGB, masks, outlines, CST_Boundary_com
     
     # Plot reference circle
     theta = np.linspace(0, 2*np.pi, 200)
-    ax.plot(R*np.cos(theta) / d_T_per_px + image_Nx_px/2, R*np.sin(theta) / d_T_per_px + image_Ny_px/2, 'r--', 
+    ax.plot(R*np.cos(theta) / nonDim_per_px + image_Nx_px/2, R*np.sin(theta) / nonDim_per_px + image_Ny_px/2, 'r--', 
             label='Reference Circle', linewidth=1.5)
     
     # Plot cell centroids
@@ -903,7 +903,7 @@ def Spherical_Reconstruction_1(
         masks = dimentionalised_df.loc[i, 'masks']
         R_SF_px = dimentionalised_df.loc[i, 'R_SF_px']
         R_SF_nonDim = dimentionalised_df.loc[i, 'R_SF_nonDim']
-        d_T_per_px = dimentionalised_df.loc[i, 'd_T_per_px']
+        nonDim_per_px = dimentionalised_df.loc[i, 'nonDim_per_px']
         
         # Get unique cell IDs (excluding background = 0)
         cell_ids = np.unique(masks)
@@ -952,18 +952,18 @@ def Spherical_Reconstruction_1(
                 px_to_nonDim=True,
                 image_Nx_px=masks.shape[1],
                 image_Ny_px=masks.shape[0],
-                d_T_per_px=d_T_per_px
+                nonDim_per_px=nonDim_per_px
             )
 
             # 1. Calculate cell area in pixels and in nonDimensional units
             A_cell_px2 = len(y_coords)
-            A_cell_nonDim = A_cell_px2 * (d_T_per_px ** 2)  # Convert area to non-dimensional units
+            A_cell_nonDim = A_cell_px2 * (nonDim_per_px ** 2)  # Convert area to non-dimensional units
             
             # 2. Calculate cell diameter in pixels using area
             d_cell_px = 2 * np.sqrt(A_cell_px2 / np.pi)
             
             # 3. Calculate cell diameter in non-dimensional units
-            d_cell_nonDim = d_cell_px * d_T_per_px
+            d_cell_nonDim = d_cell_px * nonDim_per_px
             
             # 4. Calculate spherically reconstructed area
 
@@ -974,7 +974,7 @@ def Spherical_Reconstruction_1(
                 px_to_nonDim=True,
                 image_Nx_px=masks.shape[1],
                 image_Ny_px=masks.shape[0],
-                d_T_per_px=1
+                nonDim_per_px=1
             )
 
             # Calculate spherically reconstructed area in pixel units centered in the shpere using the Jacobian determinant for each pixel
@@ -987,7 +987,7 @@ def Spherical_Reconstruction_1(
                 A_cell_SRec_px2 += detJ_val * 1 # Each pixel contributes 1 px^2 of area
 
             # calculate spherically reconstructed area in non-dimensional units
-            A_cell_SRec_nonDim2 = A_cell_SRec_px2 * (d_T_per_px ** 2)
+            A_cell_SRec_nonDim2 = A_cell_SRec_px2 * (nonDim_per_px ** 2)
 
             print(f"Cell {cell_id} - A_cell_SRec_nonDim2/A_cell_nonDim: {A_cell_SRec_nonDim2 / A_cell_nonDim} ") if Spherical_Reconstruction_log_level >= 4 else None
 
@@ -1005,7 +1005,7 @@ def Spherical_Reconstruction_1(
                 px_to_nonDim=True,
                 image_Nx_px=masks.shape[1],
                 image_Ny_px=masks.shape[0],
-                d_T_per_px=d_T_per_px
+                nonDim_per_px=nonDim_per_px
             )
             centroid_x_nonDim = centroid_coords_nonDim[0][0]
             centroid_z_nonDim = centroid_coords_nonDim[1][0]

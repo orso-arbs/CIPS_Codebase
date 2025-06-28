@@ -12,7 +12,7 @@ plt.rcParams['font.family'] = 'serif'
 
 def plotter_14_vsR(
     input_dir,
-    y_column,
+    y_column='N',
     x_column='R_SF_Average_VisIt',  # Added x_column parameter with default value
     output_dir_manual="",
     output_dir_comment="",

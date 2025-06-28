@@ -14,7 +14,7 @@ print("Original test points:\n", test_points)
 # Test parameters
 image_Nx_px = 3000.0
 image_Ny_px = 3000.0
-d_T_per_px = 0.0004
+nonDim_per_px = 0.0004
 
 # Test pixel to non-dimensional transformation
 nonDim_points = Affine_image_px_and_NonDim(
@@ -23,7 +23,7 @@ nonDim_points = Affine_image_px_and_NonDim(
     nonDim_to_px=False,
     image_Nx_px=image_Nx_px,
     image_Ny_px=image_Ny_px,
-    d_T_per_px=d_T_per_px
+    nonDim_per_px=nonDim_per_px
 )
 print("\nTransformed to non-dimensional:")
 print("Shape:", nonDim_points.shape)
@@ -36,7 +36,7 @@ px_points = Affine_image_px_and_NonDim(
     nonDim_to_px=True,
     image_Nx_px=image_Nx_px,
     image_Ny_px=image_Ny_px,
-    d_T_per_px=d_T_per_px
+    nonDim_per_px=nonDim_per_px
 )
 print("\nTransformed back to pixels:")
 print("Shape:", px_points.shape)
