@@ -31,7 +31,7 @@ def plotter_3_CPvsA11_CST_Panel(input_dir, # Format_1 requires input_dir
     show_plot = 0,
     Plot_log_level=2, # Changed from 1 to 2 to match if-main block
     # Title settings
-    show_title=False,  # Whether to display the title
+    show_title=True,  # Whether to display the title
     title_text="Cell Properties Analysis Panel",  # Text for the title
     title_fontsize=25,
     title_y_position=1.0,  # Y position for the title
@@ -41,7 +41,7 @@ def plotter_3_CPvsA11_CST_Panel(input_dir, # Format_1 requires input_dir
     tick_label_fontsize=20,
     legend_fontsize=20,
     textbox_fontsize=14,
-    show_textbox_variables_description=False, # Whether to show the variable description text boxes
+    show_textbox_variables_description=True, # Whether to show the variable description text boxes
     legend_position=(0.065, 0.45), # y position relative to figure (-0.05 means below the figure)
     textbox_position_left=(0.05, 0.25), # (y, x) position for left textbox
     textbox_position_right=(0.05, 0.70), # (y, x) position for right textbox
@@ -53,12 +53,9 @@ def plotter_3_CPvsA11_CST_Panel(input_dir, # Format_1 requires input_dir
     # Text boxes for each subplot
     subplot_textboxes=True, # Whether to show text boxes on subplots
     subplot_textbox_show_box=False, # Whether to show a box around the text
-    subplot_textbox_contents=[  # List of text contents for each subplot (left column then right column)
-        r"(a)", r"(f)",  # Row 0
-        r"(b)", r"(g)",  # Row 1
-        r"(c)", r"(h)",  # Row 2
-        r"(d)", r"(i)",  # Row 3
-        r"(e)", r"(j)"   # Row 4
+    subplot_textbox_contents=[  # List of text contents for each subplot 
+        r"(a)", r"(b)", r"(c)", r"(d)", r"(e)",  # col 0
+        r"(f)", r"(g)", r"(h)", r"(i)", r"(j)"   # col 1
     ],
     subplot_textbox_positions=[  # (x, y) positions relative to axes for each text box
         (0.05, 0.95), (0.05, 0.95),  # Row 0
