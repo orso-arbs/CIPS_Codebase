@@ -37,7 +37,7 @@ def plotter_14_xyyy(
     x_label_fontsize=20,
     y_label_fontsize=20,
     tick_label_fontsize=20,
-    legend_fontsize=12,
+    legend_fontsize=20,
     legend_loc='upper left',
     figsize=(10, 6),
     dpi=100,
@@ -372,7 +372,7 @@ if __name__ == "__main__":
         ],
         output_dir_comment="cell_counts_vs_R_SF_nonDim",
         line_colors=['red', 'red'],
-        line_styles=['-.', '--'],
+        line_styles=[':', '-'],
         marker_styles=['', ''],
         marker_sizes=[6, 7],
         legend_labels=[

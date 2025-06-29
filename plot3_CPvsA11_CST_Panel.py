@@ -31,6 +31,31 @@ def plotter_3_CPvsA11_CST_Panel(input_dir, # Format_1 requires input_dir
     legend_position=(0.08, 0.45), # y position relative to figure (-0.05 means below the figure)
     textbox_position_left=(0.05, 0.25), # (y, x) position for left textbox
     textbox_position_right=(0.05, 0.70), # (y, x) position for right textbox
+    show_grid=True, # Whether to show grid lines
+    grid_alpha=0.3, # Transparency of grid lines
+    grid_linestyle='--', # Style of grid lines
+    grid_color='gray', # Color of grid lines
+    grid_linewidth=0.5, # Width of grid lines
+    # Text boxes for each subplot
+    subplot_textboxes=True, # Whether to show text boxes on subplots
+    subplot_textbox_contents=[  # List of text contents for each subplot (left column then right column)
+        r"(a) $A_{SF}$", r"(f) $K$",  # Row 0
+        r"(b) $iHRR$", r"(g) $a_t$",  # Row 1
+        r"(c) $R_{mean}$", r"(h) $s_a$",  # Row 2
+        r"(d) $\dot{R}_{mean}$", r"(i) $s_d$",  # Row 3
+        r"(e) $N_{cells}$", r"(j) $D$"   # Row 4
+    ],
+    subplot_textbox_positions=[  # (x, y) positions relative to axes for each text box
+        (0.05, 0.05), (0.05, 0.05),  # Row 0
+        (0.05, 0.05), (0.05, 0.05),  # Row 1
+        (0.05, 0.05), (0.05, 0.05),  # Row 2
+        (0.05, 0.05), (0.05, 0.05),  # Row 3
+        (0.05, 0.05), (0.05, 0.05)   # Row 4
+    ],
+    subplot_textbox_fontsize=12,
+    subplot_textbox_alpha=0.8,
+    subplot_textbox_boxstyle="round,pad=0.3",
+    subplot_textbox_facecolor="white"
     ):
 
     """
@@ -80,6 +105,30 @@ def plotter_3_CPvsA11_CST_Panel(input_dir, # Format_1 requires input_dir
         Position (y, x) for the left text box. Defaults to (-0.05, 0.25).
     textbox_position_right : tuple, optional
         Position (y, x) for the right text box. Defaults to (-0.05, 0.75).
+    show_grid : bool, optional
+        Whether to display grid lines aligned with N_cells and time. Defaults to True.
+    grid_alpha : float, optional
+        Transparency of grid lines. Defaults to 0.3.
+    grid_linestyle : str, optional
+        Style of grid lines. Defaults to '--'.
+    grid_color : str, optional
+        Color of grid lines. Defaults to 'gray'.
+    grid_linewidth : float, optional
+        Width of grid lines. Defaults to 0.5.
+    subplot_textboxes : bool, optional
+        Whether to show text boxes on each subplot. Defaults to True.
+    subplot_textbox_contents : list, optional
+        List of text contents for each subplot (left column then right column).
+    subplot_textbox_positions : list, optional
+        List of (x, y) positions relative to axes for each text box.
+    subplot_textbox_fontsize : int, optional
+        Font size for subplot text boxes. Defaults to 12.
+    subplot_textbox_alpha : float, optional
+        Transparency of text box backgrounds. Defaults to 0.8.
+    subplot_textbox_boxstyle : str, optional
+        Style of text boxes. Defaults to "round,pad=0.3".
+    subplot_textbox_facecolor : str, optional
+        Background color of text boxes. Defaults to "white".
 
     Returns
     -------
@@ -184,8 +233,15 @@ def plotter_3_CPvsA11_CST_Panel(input_dir, # Format_1 requires input_dir
     else:
         tick_interval = max(2, int(tick_range / 5))  # Smaller interval for smaller ranges
     
-    # Use the tick_interval directly instead of creating a reusable locator
-    # This avoids the need to copy the locator object
+    # Define time grid ticks
+    time_ticks = np.arange(0, 7.1, 1.0)  # 0 to 7 with step 1.0
+    
+    # Define N_cells grid ticks based on calculated interval
+    n_cells_ticks = np.arange(
+        np.floor(N_cells_min / tick_interval) * tick_interval, 
+        np.ceil(N_cells_max / tick_interval) * tick_interval + tick_interval, 
+        tick_interval
+    )
 
     # Number of rows in the DataFrame
     N_images = len(CP_data_df)
@@ -303,7 +359,7 @@ def plotter_3_CPvsA11_CST_Panel(input_dir, # Format_1 requires input_dir
     for i, ax in enumerate(axes_R):
         # Add Twin Axes
         ax_R2 = ax.twinx()  # Swapped order (was ax_R1)
-        ax_R2.plot(CP_data_df['time'], CP_data_df['d_cell_SRec_mean_CSTx6_nonDim'],
+        ax_R2.plot(CP_data_df['time'], CP_data_df['d_cell_SRec_mean_CSTx6_nonDim],
                     label="CST Cell Mean Diameter $D_{c,mean}$", color='green')
         ax_R2.set_ylabel("$\overline{d}_{c}$", color='green', fontsize=axis_label_fontsize)
         
@@ -323,7 +379,7 @@ def plotter_3_CPvsA11_CST_Panel(input_dir, # Format_1 requires input_dir
         # Add third twin axis for contour length
         ax_R3 = ax.twinx()
         blue_axes.append(ax_R3)
-        ax_R3.plot(CP_data_df['time'], CP_data_df['contour_length_total_CSTx6_nonDim'] * 1e-4 ,
+        ax_R3.plot(CP_data_df['time'], CP_data_df['contour_length_SRec_total_CSTx6_nonDim'] * 1e-4 ,
                   label="CST Total Contour Length", color='blue')
         ax_R3.set_ylabel(r"$L \times 10^{-4}$", color='blue', fontsize=axis_label_fontsize)
         ax_R3.tick_params(axis='y', labelcolor='blue', labelsize=tick_label_fontsize)
@@ -331,8 +387,8 @@ def plotter_3_CPvsA11_CST_Panel(input_dir, # Format_1 requires input_dir
         # Set Limits for both axes
         ax_R2.set_ylim(0, max_diameter * 1.05)
         ax_R1.set_ylim(CP_data_df['N_cells_CSTx6'].min(), CP_data_df['N_cells_CSTx6'].max() * 1.05)
-        if 'contour_length_total_CSTx6_nonDim' in CP_data_df.columns:
-            max_contour = CP_data_df['contour_length_total_CSTx6_nonDim'].max()
+        if 'contour_length_SRec_total_CSTx6_nonDim' in CP_data_df.columns:
+            max_contour = CP_data_df['contour_length_SRec_total_CSTx6_nonDim'].max()
             ax_R3.set_ylim(0, max_contour * 1e-4 *1.05)
         
         # Use the consistent tick locator by creating a new instance
@@ -366,14 +422,14 @@ def plotter_3_CPvsA11_CST_Panel(input_dir, # Format_1 requires input_dir
                     
         # Add third twin axis for contour length
         ax_R3 = ax.twinx()
-        ax_R3.plot(CP_data_df['time'], CP_data_df['contour_length_total_CSTx6_nonDim'],
+        ax_R3.plot(CP_data_df['time'], CP_data_df['contour_length_SRec_total_CSTx6_nonDim'],
                   label="CST Total Contour Length", color='blue')
 
         # Set Limits
         ax_R2.set_ylim(0, max_diameter * 1.05)
         ax_R1.set_ylim(CP_data_df['N_cells_CSTx6'].min(), CP_data_df['N_cells_CSTx6'].max() * 1.05)
-        if 'contour_length_total_CSTx6_nonDim' in CP_data_df.columns:
-            max_contour = CP_data_df['contour_length_total_CSTx6_nonDim'].max()
+        if 'contour_length_SRec_total_CSTx6_nonDim' in CP_data_df.columns:
+            max_contour = CP_data_df['contour_length_SRec_total_CSTx6_nonDim'].max()
             ax_R3.set_ylim(0, max_contour * 1.05)
 
         # Turn off all ticks and tick labels for the twin y-axes
@@ -431,7 +487,7 @@ def plotter_3_CPvsA11_CST_Panel(input_dir, # Format_1 requires input_dir
     ax_3_1.set_ylabel("$s_d$", color='black', fontsize=axis_label_fontsize)
     ax_3_1.tick_params(axis='y', labelcolor='black', labelsize=tick_label_fontsize)
 
-    ax_4_1.set_ylabel("$D$", color='black', fontsize=axis_label_fontsize)
+    ax_4_1.set_ylabel(r"$D \times 10^-3$", color='black', fontsize=axis_label_fontsize)
     ax_4_1.tick_params(axis='y', labelcolor='black', labelsize=tick_label_fontsize)
     
     # Apply subplot adjustments before adding text boxes
@@ -484,8 +540,15 @@ def plotter_3_CPvsA11_CST_Panel(input_dir, # Format_1 requires input_dir
     # Save the plot with adjusted figure size to ensure text boxes are included
     # Increase bottom margin to make room for the text boxes
     plt.subplots_adjust(bottom=0.15)
-    plot_filename = os.path.join(output_dir, f'plot_panel_CST.png')
-    plt.savefig(plot_filename, bbox_inches='tight', pad_inches=0.5)
+    
+    # Save as PNG
+    plot_filename_png = os.path.join(output_dir, f'plot_panel_CST.png')
+    plt.savefig(plot_filename_png, bbox_inches='tight', pad_inches=0.5)
+    
+    # Save as SVG
+    plot_filename_svg = os.path.join(output_dir, f'plot_panel_CST.svg')
+    plt.savefig(plot_filename_svg, bbox_inches='tight', pad_inches=0.5, format='svg')
+    
     if show_plot == 1:
         plt.show()
     plt.close(fig)
@@ -501,11 +564,34 @@ if __name__ == "__main__":
     # Get input directory from user
     input_dir = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_Pipe_Default_dir\20250625_1528537\20250625_1528554\20250625_1626096\20250626_1700136\20250628_2007187"
     
+    # Define text box contents with subplot labels
+    subplot_labels = [
+        r"(a) Flame Area", r"(f) Stretch Rates",
+        r"(b) Heat Release", r"(g) Aerodynamic Strain",
+        r"(c) Mean Radius", r"(h) Propagation Velocity",
+        r"(d) Radius Growth", r"(i) Displacement Speed",
+        r"(e) Cell Count", r"(j) Scaling Factor"
+    ]
+    
+    # Define positions for text boxes (bottom-left corner of each subplot)
+    text_positions = [(0.05, 0.90)] * 10  # Same position for all subplots
+    
     # Run the plotter function
     output_dir = plotter_3_CPvsA11_CST_Panel(
         input_dir=input_dir,
         cst_expansion_factor=6,
         show_plot=0,
         Plot_log_level=2,
-        output_dir_comment=f"CST_Panel_x{6}"
+        output_dir_comment=f"CST_Panel_x{6}",
+        # Grid parameters
+        show_grid=True,
+        grid_alpha=0.2,
+        grid_linestyle=':',
+        grid_color='gray',
+        # Text box parameters
+        subplot_textboxes=True,
+        subplot_textbox_contents=subplot_labels,
+        subplot_textbox_positions=text_positions,
+        subplot_textbox_fontsize=14,
+        subplot_textbox_alpha=0.7
     )
