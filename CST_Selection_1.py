@@ -104,6 +104,12 @@ def CST_Selection_1(
         'A_cell_SRec_mean_CST_px2',
         'd_cell_SRec_mean_CST_nonDim',
         'd_cell_SRec_mean_CST_px',
+        # Add new columns for original distribution means
+        'A_cell_mean_nonDim2',
+        'A_cell_SRec_mean_nonDim2',
+        'A_cell_SRec_mean_px2',
+        'd_cell_SRec_mean_nonDim',
+        'd_cell_SRec_mean_px',
         # Add new columns for contour lengths (distributions)
         'contour_length_distribution_px',
         'contour_length_distribution_nonDim',
@@ -118,6 +124,20 @@ def CST_Selection_1(
         'contour_length_total_CST_nonDim',
         'contour_length_total_CSTx6_px',
         'contour_length_total_CSTx6_nonDim',
+        # Add new columns for 3D spherically reconstructed contour lengths (distributions)
+        'contour_length_SRec_distribution_px',
+        'contour_length_SRec_distribution_nonDim',
+        'contour_length_SRec_distribution_CST_px',
+        'contour_length_SRec_distribution_CST_nonDim',
+        'contour_length_SRec_distribution_CSTx6_px',
+        'contour_length_SRec_distribution_CSTx6_nonDim',
+        # Add new columns for 3D spherically reconstructed contour length totals
+        'contour_length_SRec_total_px',
+        'contour_length_SRec_total_nonDim',
+        'contour_length_SRec_total_CST_px',
+        'contour_length_SRec_total_CST_nonDim',
+        'contour_length_SRec_total_CSTx6_px',
+        'contour_length_SRec_total_CSTx6_nonDim',
     ]
     
     # Initialize columns to hold lists/arrays
@@ -239,6 +259,12 @@ def CST_Selection_1(
         contour_length_distribution_CST_px = []
         contour_length_distribution_CST_nonDim = []
         
+        # Lists for 3D spherically reconstructed contour lengths
+        contour_length_SRec_distribution_px = []
+        contour_length_SRec_distribution_nonDim = []
+        contour_length_SRec_distribution_CST_px = []
+        contour_length_SRec_distribution_CST_nonDim = []
+        
         # Dictionary for cell classifications and centroids for plotting
         cell_classifications = {}
         cell_centroids_px = {}
@@ -268,22 +294,64 @@ def CST_Selection_1(
             # Find contours for this cell
             contours = measure.find_contours(binary_mask, 0.5)
             
-            # Calculate length of this cell's contour
+            # Calculate length of this cell's contour (2D)
             cell_length_px = 0
             
+            # Calculate length of this cell's contour in 3D spherically reconstructed space
+            cell_length_SRec_px = 0
+            
             for contour in contours:
+                # Transform contour coordinates to centered coordinates for spherical reconstruction
+                contour_coords_Im_px = np.vstack((contour[:, 1], contour[:, 0]))  # Note: contour points are (y, x)
+                
+                # Transform to centered coordinates
+                contour_coords_Sp_px = Coordinate_Transform_image_to_centered_Spherical(
+                    Coordinates=contour_coords_Im_px,
+                    image_to_centered=True,
+                    image_Nx_px=masks.shape[1],
+                    image_Ny_px=masks.shape[0]
+                )
+                
+                # Convert to non-dimensional units for height calculation
+                contour_coords_Sp_nonDim = np.zeros_like(contour_coords_Sp_px)
+                contour_coords_Sp_nonDim[0] = contour_coords_Sp_px[0] * nonDim_per_px  # x in non-dim units
+                contour_coords_Sp_nonDim[1] = contour_coords_Sp_px[1] * nonDim_per_px  # z in non-dim units
+                
+                # Calculate height (y-coordinate in spherical space) for each point
+                contour_heights_nonDim = sphere_height_from_plane(
+                    R=R_SF_nonDim,
+                    x1=contour_coords_Sp_nonDim[0],
+                    x2=contour_coords_Sp_nonDim[1]
+                )
+                
+                # Convert height back to pixel units
+                contour_heights_px = contour_heights_nonDim / nonDim_per_px
+                
+                # Calculate 2D and 3D contour lengths
                 for j in range(len(contour)-1):
+                    # 2D distance calculation (unchanged)
                     dy = contour[j+1, 0] - contour[j, 0]
                     dx = contour[j+1, 1] - contour[j, 1]
-                    segment_length = np.sqrt(dx**2 + dy**2)
-                    cell_length_px += segment_length
+                    segment_length_2d = np.sqrt(dx**2 + dy**2)
+                    cell_length_px += segment_length_2d
+                    
+                    # 3D distance calculation using spherically reconstructed coordinates
+                    dx_Sp = contour_coords_Sp_px[0][j+1] - contour_coords_Sp_px[0][j]
+                    dz_Sp = contour_coords_Sp_px[1][j+1] - contour_coords_Sp_px[1][j]
+                    dy_Sp = contour_heights_px[j+1] - contour_heights_px[j]
+                    
+                    segment_length_3d = np.sqrt(dx_Sp**2 + dy_Sp**2 + dz_Sp**2)
+                    cell_length_SRec_px += segment_length_3d
             
             # Convert to non-dimensional units
             cell_length_nonDim = cell_length_px * nonDim_per_px
+            cell_length_SRec_nonDim = cell_length_SRec_px * nonDim_per_px
             
             # Add to distribution lists
             contour_length_distribution_px.append(cell_length_px)
             contour_length_distribution_nonDim.append(cell_length_nonDim)
+            contour_length_SRec_distribution_px.append(cell_length_SRec_px)
+            contour_length_SRec_distribution_nonDim.append(cell_length_SRec_nonDim)
             
             # Check if centroid is inside CST boundary
             centroid_in_CST = point_in_CST_check(
@@ -376,10 +444,14 @@ def CST_Selection_1(
                 # Add contour length to CST distribution
                 contour_length_distribution_CST_px.append(cell_length_px)
                 contour_length_distribution_CST_nonDim.append(cell_length_nonDim)
+                contour_length_SRec_distribution_CST_px.append(cell_length_SRec_px)
+                contour_length_SRec_distribution_CST_nonDim.append(cell_length_SRec_nonDim)
         
         # Calculate the contour length for CSTx6 distribution
         contour_length_distribution_CSTx6_px = np.repeat(contour_length_distribution_CST_px, 6).tolist() if contour_length_distribution_CST_px else []
         contour_length_distribution_CSTx6_nonDim = np.repeat(contour_length_distribution_CST_nonDim, 6).tolist() if contour_length_distribution_CST_nonDim else []
+        contour_length_SRec_distribution_CSTx6_px = np.repeat(contour_length_SRec_distribution_CST_px, 6).tolist() if contour_length_SRec_distribution_CST_px else []
+        contour_length_SRec_distribution_CSTx6_nonDim = np.repeat(contour_length_SRec_distribution_CST_nonDim, 6).tolist() if contour_length_SRec_distribution_CST_nonDim else []
         
         # Calculate total contour lengths
         contour_length_total_px = sum(contour_length_distribution_px)
@@ -388,6 +460,14 @@ def CST_Selection_1(
         contour_length_total_CST_nonDim = sum(contour_length_distribution_CST_nonDim)
         contour_length_total_CSTx6_px = contour_length_total_CST_px * 6
         contour_length_total_CSTx6_nonDim = contour_length_total_CST_nonDim * 6
+        
+        # Calculate total 3D spherically reconstructed contour lengths
+        contour_length_SRec_total_px = sum(contour_length_SRec_distribution_px)
+        contour_length_SRec_total_nonDim = sum(contour_length_SRec_distribution_nonDim)
+        contour_length_SRec_total_CST_px = sum(contour_length_SRec_distribution_CST_px)
+        contour_length_SRec_total_CST_nonDim = sum(contour_length_SRec_distribution_CST_nonDim)
+        contour_length_SRec_total_CSTx6_px = contour_length_SRec_total_CST_px * 6
+        contour_length_SRec_total_CSTx6_nonDim = contour_length_SRec_total_CST_nonDim * 6
         
         # Store the filtered lists in the DataFrame
         Analysis_A11_df.at[i, 'CST_classification'] = np.array(CST_classification)
@@ -413,6 +493,14 @@ def CST_Selection_1(
         Analysis_A11_df.at[i, 'contour_length_distribution_CSTx6_px'] = np.array(contour_length_distribution_CSTx6_px)
         Analysis_A11_df.at[i, 'contour_length_distribution_CSTx6_nonDim'] = np.array(contour_length_distribution_CSTx6_nonDim)
         
+        # Store 3D spherically reconstructed contour length distributions
+        Analysis_A11_df.at[i, 'contour_length_SRec_distribution_px'] = np.array(contour_length_SRec_distribution_px)
+        Analysis_A11_df.at[i, 'contour_length_SRec_distribution_nonDim'] = np.array(contour_length_SRec_distribution_nonDim)
+        Analysis_A11_df.at[i, 'contour_length_SRec_distribution_CST_px'] = np.array(contour_length_SRec_distribution_CST_px)
+        Analysis_A11_df.at[i, 'contour_length_SRec_distribution_CST_nonDim'] = np.array(contour_length_SRec_distribution_CST_nonDim)
+        Analysis_A11_df.at[i, 'contour_length_SRec_distribution_CSTx6_px'] = np.array(contour_length_SRec_distribution_CSTx6_px)
+        Analysis_A11_df.at[i, 'contour_length_SRec_distribution_CSTx6_nonDim'] = np.array(contour_length_SRec_distribution_CSTx6_nonDim)
+        
         # Store contour length totals
         Analysis_A11_df.at[i, 'contour_length_total_px'] = contour_length_total_px
         Analysis_A11_df.at[i, 'contour_length_total_nonDim'] = contour_length_total_nonDim
@@ -421,6 +509,21 @@ def CST_Selection_1(
         Analysis_A11_df.at[i, 'contour_length_total_CSTx6_px'] = contour_length_total_CSTx6_px
         Analysis_A11_df.at[i, 'contour_length_total_CSTx6_nonDim'] = contour_length_total_CSTx6_nonDim
         
+        # Store 3D spherically reconstructed contour length totals
+        Analysis_A11_df.at[i, 'contour_length_SRec_total_px'] = contour_length_SRec_total_px
+        Analysis_A11_df.at[i, 'contour_length_SRec_total_nonDim'] = contour_length_SRec_total_nonDim
+        Analysis_A11_df.at[i, 'contour_length_SRec_total_CST_px'] = contour_length_SRec_total_CST_px
+        Analysis_A11_df.at[i, 'contour_length_SRec_total_CST_nonDim'] = contour_length_SRec_total_CST_nonDim
+        Analysis_A11_df.at[i, 'contour_length_SRec_total_CSTx6_px'] = contour_length_SRec_total_CSTx6_px
+        Analysis_A11_df.at[i, 'contour_length_SRec_total_CSTx6_nonDim'] = contour_length_SRec_total_CSTx6_nonDim
+        
+        # Calculate and store mean values for original distributions - note nan values from cells being outside of sphere in SRec are ignored for the mean
+        Analysis_A11_df.at[i, 'A_cell_mean_nonDim2'] = np.nanmean(A_cell_distribution_nonDim2) if len(A_cell_distribution_nonDim2) > 0 else np.nan
+        Analysis_A11_df.at[i, 'A_cell_SRec_mean_nonDim2'] = np.nanmean(A_cell_SRec_distribution_nonDim2) if len(A_cell_SRec_distribution_nonDim2) > 0 else np.nan
+        Analysis_A11_df.at[i, 'A_cell_SRec_mean_px2'] = np.nanmean(A_cell_SRec_distribution_px2) if len(A_cell_SRec_distribution_px2) > 0 else np.nan
+        Analysis_A11_df.at[i, 'd_cell_SRec_mean_nonDim'] = np.nanmean(d_cell_SRec_distribution_nonDim) if len(d_cell_SRec_distribution_nonDim) > 0 else np.nan
+        Analysis_A11_df.at[i, 'd_cell_SRec_mean_px'] = np.nanmean(d_cell_SRec_distribution_px) if len(d_cell_SRec_distribution_px) > 0 else np.nan
+
         # Calculate and store mean values for CST distributions
         Analysis_A11_df.at[i, 'A_cell_mean_CST_px2'] = np.mean(A_cell_distribution_CST_px2) if len(A_cell_distribution_CST_px2) > 0 else np.nan
         Analysis_A11_df.at[i, 'A_cell_mean_CST_nonDim2'] = np.mean(A_cell_distribution_CST_nonDim2) if len(A_cell_distribution_CST_nonDim2) > 0 else np.nan
@@ -435,7 +538,16 @@ def CST_Selection_1(
         N_cells_CST = len(A_cell_distribution_CST_px2)
         Analysis_A11_df.at[i, 'N_cells_CST'] = N_cells_CST
         Analysis_A11_df.at[i, 'N_cells_CSTx6'] = N_cells_CST * 6
-        
+        print()
+        print(f"contour_length_total_px: {contour_length_total_px}")
+        print(f"contour_length_total_CST_px: {contour_length_total_CST_px}")
+        print(f"contour_length_total_CSTx6_px: {contour_length_total_CSTx6_px}")
+        print()
+        print(f"contour_length_SRec_total_px: {contour_length_SRec_total_px}")
+        print(f"contour_length_SRec_total_CST_px: {contour_length_SRec_total_CST_px}")
+        print(f"contour_length_SRec_total_CSTx6_px: {contour_length_SRec_total_CSTx6_px}")
+        print()
+
         # Create expanded distributions with each element repeated 6 times
         if N_cells_CST > 0:
             # For each distribution, create a new array with each element repeated 6 times
@@ -526,6 +638,7 @@ def CST_Selection_1(
             except Exception as e:
                 print(f"\nError generating plot for image {i}: {e}")
     
+
     # Print newline after progress updates
     if CST_log_level >= 1:
         print()
