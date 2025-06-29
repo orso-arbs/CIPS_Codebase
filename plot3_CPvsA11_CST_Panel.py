@@ -6,7 +6,7 @@ import pandas as pd
 import matplotlib.gridspec as gridspec
 import matplotlib.ticker as mticker
 import matplotlib.lines as mlines
-plt.rcParams['text.usetex'] = False  # Keep False unless you have a full LaTeX installation
+plt.rcParams['text.usetex'] = True  # Changed to True to use LaTeX font
 
 import sys
 import os
@@ -20,8 +20,17 @@ def plotter_3_CPvsA11_CST_Panel(input_dir, # Format_1 requires input_dir
     CP_data_df = None, # if None a .pkl file has to be in the input_dir. otherwise no CP_data data is provided.
     output_dir_manual = "", output_dir_comment = f"CST_Panel_x6",
     cst_expansion_factor = 6, # Factor to multiply CST values by (e.g. 6 for extrapolating from 1/6 of the sphere)
+    omit_images = [106], # List of image indices to omit from the plot. If empty, all images are shown.
     show_plot = 0,
     Plot_log_level=2, # Changed from 1 to 2 to match if-main block
+    title_fontsize=25,
+    axis_label_fontsize=15,
+    tick_label_fontsize=15,
+    legend_fontsize=15,
+    textbox_fontsize=15,
+    legend_position=(0.08, 0.45), # y position relative to figure (-0.05 means below the figure)
+    textbox_position_left=(0.05, 0.25), # (y, x) position for left textbox
+    textbox_position_right=(0.05, 0.70), # (y, x) position for right textbox
     ):
 
     """
@@ -55,6 +64,22 @@ def plotter_3_CPvsA11_CST_Panel(input_dir, # Format_1 requires input_dir
     Plot_log_level : int, optional
         Controls the verbosity of logging for this plotting function.
         Currently not implemented beyond accepting the parameter. Defaults to 1.
+    title_fontsize : int, optional
+        Font size for the plot title. Defaults to 20.
+    axis_label_fontsize : int, optional
+        Font size for axis labels. Defaults to 12.
+    tick_label_fontsize : int, optional
+        Font size for tick labels. Defaults to 10.
+    legend_fontsize : int, optional
+        Font size for the legend. Defaults to 12.
+    textbox_fontsize : int, optional
+        Font size for the definition text boxes. Defaults to 10.
+    legend_position : tuple, optional
+        Position (y, x) for the main legend. Defaults to (-0.05, 0.5).
+    textbox_position_left : tuple, optional
+        Position (y, x) for the left text box. Defaults to (-0.05, 0.25).
+    textbox_position_right : tuple, optional
+        Position (y, x) for the right text box. Defaults to (-0.05, 0.75).
 
     Returns
     -------
@@ -97,7 +122,7 @@ def plotter_3_CPvsA11_CST_Panel(input_dir, # Format_1 requires input_dir
         raise ValueError("Loading CP_data data disambiguation failed. Check CP_data_df and CP_data_df_pkl")
 
     # Check if CST columns exist in the dataframe
-    if 'd_cell_distribution_CST_nonDim' not in CP_data_df.columns:
+    if 'd_cell_SRec_distribution_CSTx6_nonDim' not in CP_data_df.columns:
         raise ValueError("DataFrame is missing required CST columns. Run CST_Selection_1 first.")
 
     if 'Time_VisIt' in CP_data_df.columns and CP_data_df['Time_VisIt'] is not None:
@@ -107,6 +132,14 @@ def plotter_3_CPvsA11_CST_Panel(input_dir, # Format_1 requires input_dir
         print("No Time_VisIt column found in CP_data_df. Using index as time.")
         CP_data_df['time'] = CP_data_df.index
 
+
+    # Filter the DataFrame if omit_images is provided and not empty
+    if omit_images and len(omit_images) > 0:
+        print(f"Omitting images: {omit_images}")
+        CP_data_df = CP_data_df[~CP_data_df['image_number'].isin(omit_images)].copy()
+        print(f"DataFrame now has {len(CP_data_df)} rows after filtering")
+    else:
+        print("No images omitted from the plot")
 
     # Load A11 data
     A11_SF_K_mean = pd.read_csv(r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\Data\A11_manual_extraction\A11_SF_K_mean_as_mean_stretch_rate_vs_time_manual_extraction.txt")
@@ -123,21 +156,36 @@ def plotter_3_CPvsA11_CST_Panel(input_dir, # Format_1 requires input_dir
 
     #################################################### Compute CST Statistics
 
-    # Calculate mean and cell count for CST data
-    CP_data_df['d_cell_CST_mean_nonDim'] = CP_data_df['d_cell_distribution_CST_nonDim'].apply(
-        lambda x: np.mean(x) if (hasattr(x, 'size') and x.size > 0) else np.nan)
+    # # Calculate mean and cell count for CST data - these are commented out in the current version
+    # CP_data_df['d_cell_SRec_mean_CSTx6_nonDim'] = CP_data_df['d_cell_SRec_distribution_CSTx6_nonDim'].apply(
+    #     lambda x: np.mean(x) if (hasattr(x, 'size') and x.size > 0) else np.nan)
     
-    # Apply the expansion factor to the CST cell count
-    CP_data_df['N_cells_CST'] = CP_data_df['d_cell_distribution_CST_nonDim'].apply(
-        lambda x: len(x) if hasattr(x, '__len__') else 0) * cst_expansion_factor
+    # # Apply the expansion factor to the CST cell count
+    # CP_data_df['N_cells_CSTx6'] = CP_data_df['d_cell_SRec_distribution_CSTx6_nonDim'].apply(
+    #     lambda x: len(x) if hasattr(x, '__len__') else 0) * cst_expansion_factor
     
-    CP_data_df['A_cell_CST_sum_nonDim2'] = CP_data_df['A_cell_distribution_CST_nonDim2'].apply(
-        lambda x: np.sum(x) if (hasattr(x, 'size') and x.size > 0) else 0) * cst_expansion_factor
+    # CP_data_df['A_cell_CST_sum_nonDim2'] = CP_data_df['A_cell_distribution_CST_nonDim2'].apply(
+    #     lambda x: np.sum(x) if (hasattr(x, 'size') and x.size > 0) else 0) * cst_expansion_factor
     
-    # Find the maximum frequency for all CST histograms
-    max_diameter_row = CP_data_df['d_cell_distribution_CST_nonDim'].apply(
+    # Find the maximum diameter for all CST histograms
+    max_diameter_row = CP_data_df['d_cell_SRec_distribution_CSTx6_nonDim'].apply(
         lambda x: np.max(x) if (hasattr(x, 'size') and x.size > 0) else None)
     max_diameter = max_diameter_row.max() if not pd.isna(max_diameter_row.max()) else 0
+    
+    # Get the min and max values for N_cells for consistent scaling
+    N_cells_min = CP_data_df['N_cells_CSTx6'].min()
+    N_cells_max = CP_data_df['N_cells_CSTx6'].max()
+    
+    # Create a fixed locator for consistent ticks across N_cells plots
+    # Calculate tick interval based on range
+    tick_range = N_cells_max - N_cells_min
+    if tick_range > 40:
+        tick_interval = max(3, int(tick_range / 5))  # At least 5, but adjust for range
+    else:
+        tick_interval = max(2, int(tick_range / 5))  # Smaller interval for smaller ranges
+    
+    # Use the tick_interval directly instead of creating a reusable locator
+    # This avoids the need to copy the locator object
 
     # Number of rows in the DataFrame
     N_images = len(CP_data_df)
@@ -151,12 +199,16 @@ def plotter_3_CPvsA11_CST_Panel(input_dir, # Format_1 requires input_dir
     gs = gridspec.GridSpec(5, 2, figure=fig, height_ratios=[1, 1, 1, 1, 1])
     gs.update(hspace=0)  # Remove gaps
 
-    solid_line = mlines.Line2D([], [], color='black', linestyle='-', label="Cellpose (CST)")
-    dashed_line = mlines.Line2D([], [], color='black', linestyle='--', label="Altantzis 2011")
+    solid_line = mlines.Line2D([], [], color='black', linestyle='-', label="from Cell Segmentation")
+    dashed_line = mlines.Line2D([], [], color='black', linestyle='--', label="from Altantzis 2011")
 
-    title = f"CST Analysis Panel (Expansion Factor: {cst_expansion_factor})"
-    fig.suptitle(title, fontsize=20, fontweight='bold', y=1.02)  # Adjust y for spacing
-    fig.legend(handles=[dashed_line, solid_line], loc='upper center', fontsize=12, frameon=False, ncol=2)
+    title = f"Cell Properties Analysis Panel"
+    fig.suptitle(title, fontsize=title_fontsize, fontweight='bold', y=1.02)  # Adjust y for spacing
+    
+    # Legend moved to the bottom with configurable positioning and font size
+    fig.legend(handles=[dashed_line, solid_line], loc='lower center', 
+               bbox_to_anchor=(legend_position[1], legend_position[0]), 
+               fontsize=legend_fontsize, frameon=False, ncol=2)
 
     # Create left column subplots with shared x-axis
     ax_0_0 = fig.add_subplot(gs[0, 0])
@@ -171,45 +223,48 @@ def plotter_3_CPvsA11_CST_Panel(input_dir, # Format_1 requires input_dir
     ax_3_1 = fig.add_subplot(gs[3, 1], sharex=ax_0_1)
     ax_4_1 = fig.add_subplot(gs[4, 1], sharex=ax_0_1)
 
-    # A11 first plot column
-    ax_0_0.plot(A11_SF_A['time'], A11_SF_A['A'] ,
+    # A11 first plot column - apply manual scaling factors
+    # Apply 10^-4 factor to A11_SF_A
+    ax_0_0.plot(A11_SF_A['time'], A11_SF_A['A'] * 1e-4,
                 label="A11 Spherical Flame Area $A_{SF}$", color='black', linestyle='dashed')
-    ax_0_0.set_ylim(0, A11_SF_A['A'].max()*1.05)
-    ax_0_0.tick_params(axis='y', labelcolor='black')
+    ax_0_0.set_ylim(0, A11_SF_A['A'].max() * 1e-4 * 1.05)
+    ax_0_0.tick_params(axis='y', labelcolor='black', labelsize=tick_label_fontsize)
     ax_0_0.spines["left"].set_color('black')
-    ax_0_0.yaxis.set_major_formatter(mticker.ScalarFormatter(useMathText=True))
-    ax_0_0.ticklabel_format(style='sci', axis='y', scilimits=(0, 0))
-    offset_text = ax_0_0.yaxis.get_offset_text()
-    offset_text.set_position((0, 1))  # Move to the right and above the axis
-    ax_0_0.set_ylabel("A11 Spherical Flame Area $A_{SF}$", color='black')
+    
+    # No need for scientific notation handling - use simple axis label with scaling noted
+    ax_0_0.set_ylabel(r"$A_{SF} \times 10^{-4}$", color='black', fontsize=axis_label_fontsize)
 
-    ax_1_0.plot(A11_SF_iHRR['time'], A11_SF_iHRR['iHRR'],
+    # Apply 10^-5 factor to A11_SF_iHRR
+    ax_1_0.plot(A11_SF_iHRR['time'], A11_SF_iHRR['iHRR'] * 1e-5,
                 label="A11 Integral heat release rate $iHRR$", color='black', linestyle='dashed')
-    ax_1_0.set_ylim(0, A11_SF_iHRR['iHRR'].max()*1.05)
-    ax_1_0.tick_params(axis='y', labelcolor='black')
+    ax_1_0.set_ylim(0, A11_SF_iHRR['iHRR'].max() * 1e-5 * 1.05)
+    ax_1_0.tick_params(axis='y', labelcolor='black', labelsize=tick_label_fontsize)
     ax_1_0.spines["left"].set_color('black')
-    ax_1_0.yaxis.set_major_formatter(mticker.ScalarFormatter(useMathText=True))
-    ax_1_0.ticklabel_format(style='sci', axis='y', scilimits=(0, 0))
-    offset_text = ax_1_0.yaxis.get_offset_text()
-    offset_text.set_position((-0.5, -0.5))  # Move offset text to the left side (x=-0.1)
-    ax_1_0.set_ylabel("A11 Integral Heat Release Rate $iHRR$", color='black')
+    
+    # No need for scientific notation handling - use simple axis label with scaling noted
+    ax_1_0.set_ylabel(r"$iHRR \times 10^{-5}$", color='black', fontsize=axis_label_fontsize)
 
     ax_2_0.plot(A11_SF_R_mean['time'], A11_SF_R_mean['R_mean'] ,
                 label="A11 Spherical Flame Radius $R_{mean}$", color='black', linestyle='dashed')
-    ax_2_0.set_ylabel("A11 Spherical Flame Radius $R_{mean}$", color='black')
-    ax_2_0.tick_params(axis='y', labelcolor='black')
+    ax_2_0.set_ylabel("$R_{mean}/\delta_T$", color='black', fontsize=axis_label_fontsize)
+    ax_2_0.tick_params(axis='y', labelcolor='black', labelsize=tick_label_fontsize)
 
     ax_3_0.plot(A11_SF_R_mean_dot['time'], A11_SF_R_mean_dot['R_mean_dot'] ,
                 label="A11 Spherical Flame Radius first \ntime derivative $\dot{R}_{\text{mean}}$", color='black', linestyle='dashed')
-    ax_3_0.set_ylabel("A11 Spherical Flame Radius first \ntime derivative $\dot{R}_{\text{mean}}$", color='black')
-    ax_3_0.tick_params(axis='y', labelcolor='black')
+    ax_3_0.set_ylabel("$\\dot{R}_{mean}*\tau/\delta_T$", color='black', fontsize=axis_label_fontsize)
+    ax_3_0.tick_params(axis='y', labelcolor='black', labelsize=tick_label_fontsize)
 
     ax_4_0.plot(A11_SF_N_c['time'], A11_SF_N_c['N_c'] ,
                 label="A11 Number of cells $N_c$", color='black', linestyle='dashed')
-    ax_4_0.set_ylabel("A11 Number of cells $N_c$", color='black')
-    ax_4_0.tick_params(axis='y', labelcolor='black')
+    ax_4_0.set_ylabel("$N_{cells,A11}$", color='black', fontsize=axis_label_fontsize)
+    ax_4_0.tick_params(axis='y', labelcolor='black', labelsize=tick_label_fontsize)
+    
+    # Set bottom left plot to have the same scale as the N_cells twin axes
+    ax_4_0.set_ylim(N_cells_min, N_cells_max * 1.05)
+    # Apply the tick locator by creating a new instance
+    ax_4_0.yaxis.set_major_locator(mticker.MultipleLocator(tick_interval))
 
-    # A11 second plot column
+    # A11 second plot column - simplified labels
     ax_0_1.plot(A11_SF_K_geom['time'], A11_SF_K_geom['K_geom'] ,
                 label="A11 geometric stretch rate $K_{geom}$", color='black', linestyle='dashed')
     ax_0_1.plot(A11_SF_K_mean['time'], A11_SF_K_mean['K_mean'] ,
@@ -224,8 +279,10 @@ def plotter_3_CPvsA11_CST_Panel(input_dir, # Format_1 requires input_dir
     ax_3_1.plot(A11_SF_s_d['time'], A11_SF_s_d['s_d'] ,
                 label="A11 average density weighed displacement speed $s_d$", color='black', linestyle='dashed')
 
-    ax_4_1.plot(CP_data_df['time'], CP_data_df['nonDim_per_px'] ,
+    ax_4_1.plot(CP_data_df['time'], CP_data_df['nonDim_per_px'] * 1e-3,
                 label="Dimentionalisation $d_T/px$", color='black', linestyle='dotted')
+    ax_4_1.set_ylabel(r"$D \times 10^{-3}$", color='black', fontsize=axis_label_fontsize)
+    ax_4_1.tick_params(axis='y', labelcolor='black', labelsize=tick_label_fontsize)
 
     axes = [
         ax_0_0, ax_1_0, ax_2_0, ax_3_0, ax_4_0,
@@ -240,59 +297,84 @@ def plotter_3_CPvsA11_CST_Panel(input_dir, # Format_1 requires input_dir
 
     # Create a list to store references to the green twin axes
     green_axes = []
+    blue_axes = []
     
     # Loop through each subplot and apply the plots
     for i, ax in enumerate(axes_R):
         # Add Twin Axes
-        ax_R1 = ax.twinx()
-        # Store reference to green axis
-        green_axes.append(ax_R1)
-        
-        ax_R1.plot(CP_data_df['time'], CP_data_df['d_cell_CST_mean_nonDim'],
+        ax_R2 = ax.twinx()  # Swapped order (was ax_R1)
+        ax_R2.plot(CP_data_df['time'], CP_data_df['d_cell_SRec_mean_CSTx6_nonDim'],
                     label="CST Cell Mean Diameter $D_{c,mean}$", color='green')
-        ax_R1.set_ylabel("CST Cell Mean Diameter $ D_{c,mean}$", color='green')
+        ax_R2.set_ylabel("$\overline{d}_{c}$", color='green', fontsize=axis_label_fontsize)
         
-        # Format tick labels consistently with 3 decimal places
-        ax_R1.yaxis.set_major_formatter(mticker.FormatStrFormatter('%.3f'))
+        # Format tick labels with no decimal places and apply font size
+        ax_R2.yaxis.set_major_formatter(mticker.FormatStrFormatter('%.0f'))
+        ax_R2.tick_params(axis='y', labelcolor='green', labelsize=tick_label_fontsize)
         
-        ax_R2 = ax.twinx()
-        ax_R2.plot(CP_data_df['time'], CP_data_df['N_cells_CST'],
+        ax_R1 = ax.twinx()  # Swapped order (was ax_R2)
+        ax_R1.plot(CP_data_df['time'], CP_data_df['N_cells_CSTx6'],
                     label=f"CST Cell Count × {cst_expansion_factor}" if cst_expansion_factor > 1 else "CST Cell Count",
                     color='red')
-        ax_R2.set_ylabel(f"CST Cell Count × {cst_expansion_factor}" if cst_expansion_factor > 1 else "CST Cell Count", color='red')
+        ax_R1.set_ylabel(f"$N_{{cells}}$" if cst_expansion_factor > 1 else "$N_{cells}$", 
+                         color='red', fontsize=axis_label_fontsize)
+        # Apply font size to red axis ticks
+        ax_R1.tick_params(axis='y', labelcolor='red', labelsize=tick_label_fontsize)
+        
+        # Add third twin axis for contour length
+        ax_R3 = ax.twinx()
+        blue_axes.append(ax_R3)
+        ax_R3.plot(CP_data_df['time'], CP_data_df['contour_length_total_CSTx6_nonDim'] * 1e-4 ,
+                  label="CST Total Contour Length", color='blue')
+        ax_R3.set_ylabel(r"$L \times 10^{-4}$", color='blue', fontsize=axis_label_fontsize)
+        ax_R3.tick_params(axis='y', labelcolor='blue', labelsize=tick_label_fontsize)
 
-
-        # Set Limits
-        ax_R1.set_ylim(0, max_diameter * 1.05)
-        ax_R2.set_ylim(CP_data_df['N_cells_CST'].min(), CP_data_df['N_cells_CST'].max() * 1.05)
+        # Set Limits for both axes
+        ax_R2.set_ylim(0, max_diameter * 1.05)
+        ax_R1.set_ylim(CP_data_df['N_cells_CSTx6'].min(), CP_data_df['N_cells_CSTx6'].max() * 1.05)
+        if 'contour_length_total_CSTx6_nonDim' in CP_data_df.columns:
+            max_contour = CP_data_df['contour_length_total_CSTx6_nonDim'].max()
+            ax_R3.set_ylim(0, max_contour * 1e-4 *1.05)
+        
+        # Use the consistent tick locator by creating a new instance
+        ax_R1.yaxis.set_major_locator(mticker.MultipleLocator(tick_interval))
 
         # Adjust Twin Axes Positions with increased spacing
-        ax_R1.spines["right"].set_position(("outward", 0))
-        ax_R2.spines["right"].set_position(("outward", 60))  # Increased from 40 to 60
+        ax_R2.spines["right"].set_position(("outward", 0))
+        ax_R1.spines["right"].set_position(("outward", 60))  # Increased from 40 to 60
+        ax_R3.spines["right"].set_position(("outward", 120))  # Position the third axis even further out
 
-        ax_R1.spines["right"].set_color('green')
-        ax_R2.spines["right"].set_color('red')
+        ax_R2.spines["right"].set_color('green')
+        ax_R1.spines["right"].set_color('red')
+        ax_R3.spines["right"].set_color('blue')
 
-        ax_R1.tick_params(axis='y', labelcolor='green')
-        ax_R2.tick_params(axis='y', labelcolor='red')
+        ax_R2.tick_params(axis='y', labelcolor='green')
+        ax_R1.tick_params(axis='y', labelcolor='red')
+        ax_R3.tick_params(axis='y', labelcolor='blue')
 
         ax.set_xlim(0, 7)
 
     for ax in axes_L:
         # Add Twin Axes
-        ax_R1 = ax.twinx()
-        ax_R1.plot(CP_data_df['time'], CP_data_df['d_cell_CST_mean_nonDim'],
+        ax_R2 = ax.twinx()  # Swapped order (was ax_R1)
+        ax_R2.plot(CP_data_df['time'], CP_data_df['d_cell_SRec_mean_CSTx6_nonDim'],
                     label="CST Cell Mean Diameter $D_{c,mean}$", color='green')
 
-        ax_R2 = ax.twinx()
-        ax_R2.plot(CP_data_df['time'], CP_data_df['N_cells_CST'],
+        ax_R1 = ax.twinx()  # Swapped order (was ax_R2)
+        ax_R1.plot(CP_data_df['time'], CP_data_df['N_cells_CSTx6'],
                     label=f"CST Cell Count × {cst_expansion_factor}" if cst_expansion_factor > 1 else "CST Cell Count", 
                     color='red')
-
+                    
+        # Add third twin axis for contour length
+        ax_R3 = ax.twinx()
+        ax_R3.plot(CP_data_df['time'], CP_data_df['contour_length_total_CSTx6_nonDim'],
+                  label="CST Total Contour Length", color='blue')
 
         # Set Limits
-        ax_R1.set_ylim(0, max_diameter * 1.05)
-        ax_R2.set_ylim(CP_data_df['N_cells_CST'].min(), CP_data_df['N_cells_CST'].max() * 1.05)
+        ax_R2.set_ylim(0, max_diameter * 1.05)
+        ax_R1.set_ylim(CP_data_df['N_cells_CSTx6'].min(), CP_data_df['N_cells_CSTx6'].max() * 1.05)
+        if 'contour_length_total_CSTx6_nonDim' in CP_data_df.columns:
+            max_contour = CP_data_df['contour_length_total_CSTx6_nonDim'].max()
+            ax_R3.set_ylim(0, max_contour * 1.05)
 
         # Turn off all ticks and tick labels for the twin y-axes
         ax_R1.tick_params(axis='both', which='both', length=0)  # Hide ticks
@@ -302,7 +384,10 @@ def plotter_3_CPvsA11_CST_Panel(input_dir, # Format_1 requires input_dir
         ax_R2.tick_params(axis='both', which='both', length=0)  # Hide ticks
         ax_R2.tick_params(axis='y', labelleft=False, labelright=False)  # Hide y-axis labels
         ax_R2.set_ylabel('')  # Hide y-axis label
-
+        
+        ax_R3.tick_params(axis='both', which='both', length=0)  # Hide ticks
+        ax_R3.tick_params(axis='y', labelleft=False, labelright=False)  # Hide y-axis labels
+        ax_R3.set_ylabel('')  # Hide y-axis label
 
         ax.set_xlim(0, 7)
 
@@ -320,63 +405,87 @@ def plotter_3_CPvsA11_CST_Panel(input_dir, # Format_1 requires input_dir
 
 
     # Explicitly set x-axis labels for the first and last row
-    ax_0_0.set_xlabel("Time")  # Top-left subplot
-    ax_0_1.set_xlabel("Time")  # Top-right subplot
-    ax_4_0.set_xlabel("Time")  # Bottom-left subplot
-    ax_4_1.set_xlabel("Time")  # Bottom-right subplot
+    ax_0_0.set_xlabel(r"$\tau$", fontsize=axis_label_fontsize)  # Top-left subplot
+    ax_0_1.set_xlabel(r"$\tau$", fontsize=axis_label_fontsize)  # Top-right subplot
+    ax_4_0.set_xlabel(r"$\tau$", fontsize=axis_label_fontsize)  # Bottom-left subplot
+    ax_4_1.set_xlabel(r"$\tau$", fontsize=axis_label_fontsize)  # Bottom-right subplot
 
     # Move top x-axis labels to the top row
     ax_0_0.xaxis.set_label_position("top")
     ax_0_1.xaxis.set_label_position("top")
 
 
-    # Set y-axis labels for the right column
-    ax_0_1.set_ylabel(r"A11 stretch rate $K$", color='black')
-    ax_0_1.tick_params(axis='y', labelcolor='black')
+    # Set y-axis labels for the right column with simplified labels
+    ax_0_1.set_ylabel("$K$", color='black', fontsize=axis_label_fontsize)
+    ax_0_1.tick_params(axis='y', labelcolor='black', labelsize=tick_label_fontsize)
     black_label = mlines.Line2D([], [], color='black', label=r"$K_{geom}$", linestyle='dashed')
     blue_label = mlines.Line2D([], [], color='blue', label=r"$K_{mean}$", linestyle='dashed')
-    ax_0_1.legend(handles=[black_label, blue_label], loc='upper left', fontsize=10, frameon=False)
+    ax_0_1.legend(handles=[black_label, blue_label], loc='upper left', fontsize=legend_fontsize, frameon=False)
 
-    ax_1_1.set_ylabel("A11 average total\nareodynamic strain $a_t$", color='black')
-    ax_1_1.tick_params(axis='y', labelcolor='black')
+    ax_1_1.set_ylabel("$a_t$", color='black', fontsize=axis_label_fontsize)
+    ax_1_1.tick_params(axis='y', labelcolor='black', labelsize=tick_label_fontsize)
 
-    ax_2_1.set_ylabel("A11 average normal absolute\npropagation velocity $s_a$", color='black')
-    ax_2_1.tick_params(axis='y', labelcolor='black')
+    ax_2_1.set_ylabel("$s_a$", color='black', fontsize=axis_label_fontsize)
+    ax_2_1.tick_params(axis='y', labelcolor='black', labelsize=tick_label_fontsize)
 
-    ax_3_1.set_ylabel("A11 average density weighed\ndisplacement speed $s_d$", color='black')
-    ax_3_1.tick_params(axis='y', labelcolor='black')
+    ax_3_1.set_ylabel("$s_d$", color='black', fontsize=axis_label_fontsize)
+    ax_3_1.tick_params(axis='y', labelcolor='black', labelsize=tick_label_fontsize)
 
-    ax_4_1.set_ylabel("Dimentionalisation $d_T/px$", color='black')
-    ax_4_1.tick_params(axis='y', labelcolor='black')
-
-
-    # Move scientific notation from A and iHRR 
-    offset_text = ax_0_0.yaxis.get_offset_text()
-    offset_text.set_position((-0.08, 0))  # Move offset text to the left side (x=-0.1)
-
-    offset_text = ax_1_0.yaxis.get_offset_text()
-    offset_text.set_position((-0.08, 0))  # Move offset text to the left side (x=-0.1)
+    ax_4_1.set_ylabel("$D$", color='black', fontsize=axis_label_fontsize)
+    ax_4_1.tick_params(axis='y', labelcolor='black', labelsize=tick_label_fontsize)
     
-    # Apply subplot adjustments before modifying tick labels
+    # Apply subplot adjustments before adding text boxes
     plt.subplots_adjust(hspace=0)  # This removes the vertical spacing
-    plt.tight_layout(rect=[0, 0, 0.95, 1])  # Adjusted rect to provide more space on the right margin
+    plt.tight_layout(rect=[0, 0, 0.95, 0.95])  # Adjusted rect to provide space for text boxes
     
-    # Hide the minimum tick label for CST cell diameter as the absolute last step
-    # Use the directly stored green_axes references
-    for i in range(len(green_axes) - 1):  # All but the last one
-        axis = green_axes[i]
-        # Force drawing the figure to ensure tick labels are created
-        plt.draw()
-        # Get current tick positions and labels
-        ticks = axis.get_yticks()
-        # Create new labels with empty first label and consistent formatting
-        new_labels = [''] + [f"{tick:.3f}" for tick in ticks[1:]]
-        # Apply new labels
-        axis.set_yticklabels(new_labels)
+    # Add text boxes with definitions at the bottom of the figure - fixed LaTeX formatting
+    left_col_text = (
+        r"$\\$ "
+        r"$\tau$: Time *$\delta_T/S_L$ $\\$ "
+        r"$A_{SF}$: Spherical flame area /$\delta_T^2$ $\\$ "
+        r"$iHRR$: Integral heat release rate (non dimentional) $\\$ "
+        r"$R_{mean}$: Average radius of the wrinkled flame front /$\delta_T$ $\\$ "
+        r"$\dot{R}_{mean}$: First time derivative of the average radius (non dimentional)$\\$ "
+        r"$N_{cells,A11}$: Number of cells as counted in Altantzis 2011 $\\$ "
+        r"$K_{geom}$: Geometric stretch rate (non dimentional) $\\$ "
+        r"$K_{mean}$: Mean stretch rate (non dimentional) $\\$ "
+    )
+    
+    right_col_text = (
+        r"$\\$ "
+        r"$a_t$: Average total aerodynamic strain $\\$ "
+        r"$s_a$: Average normal component of the absolute propagation velocity (non dimentional) $\\$ "
+        r"$s_d$: Average density weighted displacement speed (non dimentional) $\\$ "
+        r"$D$: Dimensionalization factor $R/\delta_T/px$ $\\$ "
+        r"$\\$"
+        r"$N_{cells}$: Total amount of cells on the spherical flame $\\$ "
+        r"$\overline{d}_c$: Cell mean diameter $/\delta_T$ $\\$ "
+        r"$L$: Total cell contour length $/\delta_T$ $\\$ "
 
-    # Save the plot
+    )
+    
+    # Add text boxes with configurable positioning and no box around them
+    fig.text(textbox_position_right[1], textbox_position_right[0], right_col_text, 
+             ha='center', va='top', fontsize=textbox_fontsize)
+    
+    fig.text(textbox_position_left[1], textbox_position_left[0], left_col_text, 
+             ha='center', va='top', fontsize=textbox_fontsize)
+    
+    # Also update font sizes for x-axis labels
+    ax_0_0.set_xlabel(r"$\tau$", fontsize=axis_label_fontsize)
+    ax_0_1.set_xlabel(r"$\tau$", fontsize=axis_label_fontsize)
+    ax_4_0.set_xlabel(r"$\tau$", fontsize=axis_label_fontsize)
+    ax_4_1.set_xlabel(r"$\tau$", fontsize=axis_label_fontsize)
+    
+    # Set tick label font size for all axes
+    for ax in axes:
+        ax.tick_params(axis='both', labelsize=tick_label_fontsize)
+    
+    # Save the plot with adjusted figure size to ensure text boxes are included
+    # Increase bottom margin to make room for the text boxes
+    plt.subplots_adjust(bottom=0.15)
     plot_filename = os.path.join(output_dir, f'plot_panel_CST.png')
-    plt.savefig(plot_filename)
+    plt.savefig(plot_filename, bbox_inches='tight', pad_inches=0.5)
     if show_plot == 1:
         plt.show()
     plt.close(fig)
@@ -390,7 +499,7 @@ if __name__ == "__main__":
     print("Running plotter_3_CPvsA11_CST_Panel as standalone module...")
     
     # Get input directory from user
-    input_dir = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_Pipe_Default_dir\20250625_1528537\20250625_1528554\20250625_1626096\20250626_1700136\20250626_1706361"
+    input_dir = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_Pipe_Default_dir\20250625_1528537\20250625_1528554\20250625_1626096\20250626_1700136\20250628_2007187"
     
     # Run the plotter function
     output_dir = plotter_3_CPvsA11_CST_Panel(
@@ -400,5 +509,3 @@ if __name__ == "__main__":
         Plot_log_level=2,
         output_dir_comment=f"CST_Panel_x{6}"
     )
-
-    print(f"\nAnalysis complete! Results saved to: {output_dir}")

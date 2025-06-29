@@ -445,8 +445,8 @@ def CST_Selection_1(
             d_cell_distribution_CSTx6_nonDim = np.repeat(d_cell_distribution_CST_nonDim, 6)
             A_cell_SRec_distribution_CSTx6_nonDim2 = np.repeat(A_cell_SRec_distribution_CST_nonDim2, 6)
             A_cell_SRec_distribution_CSTx6_px2 = np.repeat(A_cell_SRec_distribution_CST_px2, 6)
-            d_cell_SRec_distribution_CSTx6_nonDim = np.repeat(d_cell_SRec_distribution_nonDim, 6)
-            d_cell_SRec_distribution_CSTx6_px = np.repeat(d_cell_SRec_distribution_px, 6)
+            d_cell_SRec_distribution_CSTx6_nonDim = np.repeat(d_cell_SRec_distribution_CST_nonDim, 6)
+            d_cell_SRec_distribution_CSTx6_px = np.repeat(d_cell_SRec_distribution_CST_px, 6)
             
             # Store the expanded distributions in the DataFrame
             Analysis_A11_df.at[i, 'A_cell_distribution_CSTx6_px2'] = A_cell_distribution_CSTx6_px2
@@ -809,10 +809,10 @@ if __name__ == "__main__":
     print("Running CST_Selection_1 as standalone module...")
     
     # When used in pipeline, input_dir is the Analysis_A11 output dir
-    a11_output_dir = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_variations\BW vars\20250610_0004544\20250610_0004569\20250612_2023463\20250615_1957072\20250615_2002477"
+    a11_output_dir = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_Pipe_Default_dir\20250625_1528537\20250625_1528554\20250625_1626096\20250626_1700136\20250628_2007187"
     
-    # This path would be to the Spherical_Reconstruction_2 output subdirectory in the pipeline
-    sr2_output_dir = os.path.join(a11_output_dir, "20250615_2002532") 
+    # This path would be to the Spherical_Reconstruction_2 output directory in the pipeline
+    sr2_output_dir = os.path.join(a11_output_dir, "20250628_2007225") 
     
     # Load the spherically reconstructed DataFrame
     try:
@@ -830,7 +830,7 @@ if __name__ == "__main__":
         Analysis_A11_df=analysis_df,  # DataFrame from previous step
         CST_log_level=2,
         show_plots=False,
-        plot_CST_selection=True,
+        plot_CST_selection=False,
         Convert_to_grayscale_image=True,
         output_dir_comment="test_standalone"
     )

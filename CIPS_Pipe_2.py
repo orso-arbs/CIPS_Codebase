@@ -19,7 +19,7 @@ import plot4_dimentions as p4
 import plot6_colortables as p6c
 import plot10_histogram_comparison as p10
 import plot13_segmented_image as p13
-import plot14_vsR as p14  # Add import for plot14_vsR
+import plot14_xy as p14  # Updated import for plot14_xy
 
 @F_1.ParameterLog(max_size = 1024 * 10)
 def CIPS_pipeline_2(
@@ -213,7 +213,7 @@ def CIPS_pipeline_2(
     p6c_save_fig=True,
     p6c_video=False,
     
-    # plot14_vsR args
+    # plot14_xy args
     p14_output_dir_manual="",
     p14_output_dir_comment="",
     p14_x_column="R_SF_nonDim",
@@ -246,7 +246,7 @@ def CIPS_pipeline_2(
     run_plotter_3_cst_panel=True,
     run_plotter_10=True,
     run_plotter_13=True,
-    run_plotter_14=True,  # Control flag for plot14_vsR
+    run_plotter_14=True,  # Control flag for plot14_xy
 ):
     """
     Runs the enhanced CIPS pipeline with unified Analysis_Altantzis2011 module.
@@ -636,19 +636,34 @@ def CIPS_pipeline_2(
             else:
                 print("--- Skipping plot13_segmented_image ---")
             
-            # Run plot14_vsR
+            # Run plot14_xy
             if run_plotter_14:
                 if plot_input_dir:
-                    print(f"--- Running plot14_vsR ---")
-                    p14_out_dir = p14.plotter_14_vsR(
+                    print(f"--- Running plot14_xy ---")
+                    p14_out_dir = p14.plotter_14_xy(
                         input_dir=plot_input_dir,
                         output_dir_manual=p14_output_dir_manual,
                         output_dir_comment=p14_output_dir_comment,
+                        x_column=p14_x_column,
+                        y_column=p14_y_column,
+                        image_list=p14_image_list,
+                        connect_with_lines=p14_connect_with_lines,
+                        marker_style=p14_marker_style,
+                        marker_size=p14_marker_size,
+                        line_style=p14_line_style,
+                        line_width=p14_line_width,
+                        line_color=p14_line_color,
+                        marker_color=p14_marker_color,
+                        x_label=p14_x_label,
+                        y_label=p14_y_label,
+                        legend_loc=p14_legend_loc,
+                        show_plot=p14_show_plot,
+                        Plot_log_level=p14_Plot_log_level,
                     )
                 else:
-                    print("--- Skipping plot14_vsR (missing analysis output) ---")
+                    print("--- Skipping plot14_xy (missing analysis output) ---")
             else:
-                print("--- Skipping plot14_vsR ---")
+                print("--- Skipping plot14_xy ---")
 
             #########################################        Color Table Plotting
             if run_plotter_6_colortables:
