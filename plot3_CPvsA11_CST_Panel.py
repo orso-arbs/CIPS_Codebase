@@ -6,7 +6,14 @@ import pandas as pd
 import matplotlib.gridspec as gridspec
 import matplotlib.ticker as mticker
 import matplotlib.lines as mlines
-plt.rcParams['text.usetex'] = True  # Changed to True to use LaTeX font
+
+# Enhanced LaTeX configuration
+plt.rcParams['text.usetex'] = True  # Using LaTeX for text rendering
+plt.rcParams['font.family'] = 'serif'
+plt.rcParams['font.serif'] = ['Computer Modern Roman']
+plt.rcParams['text.latex.preamble'] = r'\usepackage{amsmath,amssymb,amsfonts}'
+plt.rcParams['axes.labelsize'] = 10
+plt.rcParams['mathtext.fontset'] = 'cm'  # Computer Modern font for math
 
 import sys
 import os
@@ -23,12 +30,19 @@ def plotter_3_CPvsA11_CST_Panel(input_dir, # Format_1 requires input_dir
     omit_images = [106], # List of image indices to omit from the plot. If empty, all images are shown.
     show_plot = 0,
     Plot_log_level=2, # Changed from 1 to 2 to match if-main block
+    # Title settings
+    show_title=False,  # Whether to display the title
+    title_text="Cell Properties Analysis Panel",  # Text for the title
     title_fontsize=25,
-    axis_label_fontsize=15,
-    tick_label_fontsize=15,
-    legend_fontsize=15,
-    textbox_fontsize=15,
-    legend_position=(0.08, 0.45), # y position relative to figure (-0.05 means below the figure)
+    title_y_position=1.0,  # Y position for the title
+    title_weight='bold',  # Weight for the title: 'normal', 'bold', etc.
+    # Other formatting parameters
+    axis_label_fontsize=20,
+    tick_label_fontsize=20,
+    legend_fontsize=20,
+    textbox_fontsize=14,
+    show_textbox_variables_description=False, # Whether to show the variable description text boxes
+    legend_position=(0.065, 0.45), # y position relative to figure (-0.05 means below the figure)
     textbox_position_left=(0.05, 0.25), # (y, x) position for left textbox
     textbox_position_right=(0.05, 0.70), # (y, x) position for right textbox
     show_grid=True, # Whether to show grid lines
@@ -38,23 +52,24 @@ def plotter_3_CPvsA11_CST_Panel(input_dir, # Format_1 requires input_dir
     grid_linewidth=0.5, # Width of grid lines
     # Text boxes for each subplot
     subplot_textboxes=True, # Whether to show text boxes on subplots
+    subplot_textbox_show_box=False, # Whether to show a box around the text
     subplot_textbox_contents=[  # List of text contents for each subplot (left column then right column)
-        r"(a) $A_{SF}$", r"(f) $K$",  # Row 0
-        r"(b) $iHRR$", r"(g) $a_t$",  # Row 1
-        r"(c) $R_{mean}$", r"(h) $s_a$",  # Row 2
-        r"(d) $\dot{R}_{mean}$", r"(i) $s_d$",  # Row 3
-        r"(e) $N_{cells}$", r"(j) $D$"   # Row 4
+        r"(a)", r"(f)",  # Row 0
+        r"(b)", r"(g)",  # Row 1
+        r"(c)", r"(h)",  # Row 2
+        r"(d)", r"(i)",  # Row 3
+        r"(e)", r"(j)"   # Row 4
     ],
     subplot_textbox_positions=[  # (x, y) positions relative to axes for each text box
-        (0.05, 0.05), (0.05, 0.05),  # Row 0
-        (0.05, 0.05), (0.05, 0.05),  # Row 1
-        (0.05, 0.05), (0.05, 0.05),  # Row 2
-        (0.05, 0.05), (0.05, 0.05),  # Row 3
-        (0.05, 0.05), (0.05, 0.05)   # Row 4
+        (0.05, 0.95), (0.05, 0.95),  # Row 0
+        (0.05, 0.95), (0.05, 0.95),  # Row 1
+        (0.05, 0.95), (0.05, 0.95),  # Row 2
+        (0.05, 0.95), (0.05, 0.95),  # Row 3
+        (0.05, 0.95), (0.05, 0.95)   # Row 4
     ],
-    subplot_textbox_fontsize=12,
-    subplot_textbox_alpha=0.8,
-    subplot_textbox_boxstyle="round,pad=0.3",
+    subplot_textbox_fontsize=20,
+    subplot_textbox_alpha=0.0,
+    subplot_textbox_boxstyle=None,
     subplot_textbox_facecolor="white"
     ):
 
@@ -89,8 +104,16 @@ def plotter_3_CPvsA11_CST_Panel(input_dir, # Format_1 requires input_dir
     Plot_log_level : int, optional
         Controls the verbosity of logging for this plotting function.
         Currently not implemented beyond accepting the parameter. Defaults to 1.
+    show_title : bool, optional
+        Whether to display the title. Defaults to True.
+    title_text : str, optional
+        Text for the plot title. Defaults to "Cell Properties Analysis Panel".
     title_fontsize : int, optional
-        Font size for the plot title. Defaults to 20.
+        Font size for the plot title. Defaults to 25.
+    title_y_position : float, optional
+        Y position for the title relative to the top of the figure. Defaults to 1.02.
+    title_weight : str, optional
+        Font weight for the title. Defaults to 'bold'.
     axis_label_fontsize : int, optional
         Font size for axis labels. Defaults to 12.
     tick_label_fontsize : int, optional
@@ -117,6 +140,8 @@ def plotter_3_CPvsA11_CST_Panel(input_dir, # Format_1 requires input_dir
         Width of grid lines. Defaults to 0.5.
     subplot_textboxes : bool, optional
         Whether to show text boxes on each subplot. Defaults to True.
+    subplot_textbox_show_box : bool, optional
+        Whether to show a box around the subplot text labels. Defaults to False.
     subplot_textbox_contents : list, optional
         List of text contents for each subplot (left column then right column).
     subplot_textbox_positions : list, optional
@@ -248,18 +273,35 @@ def plotter_3_CPvsA11_CST_Panel(input_dir, # Format_1 requires input_dir
     
     print(f"\nPlotting CST Panel with expansion factor {cst_expansion_factor}...")
 
+    # Set the time tick format for all plots
+    time_tick_formatter = mticker.FixedLocator(time_ticks)
+    
     #################################################### Plotting Panel 4 (CST Version)
 
     # Create the figure with a custom GridSpec layout
     fig = plt.figure(figsize=(15, 15))
     gs = gridspec.GridSpec(5, 2, figure=fig, height_ratios=[1, 1, 1, 1, 1])
     gs.update(hspace=0)  # Remove gaps
+    
+    # Add grid for all plots if requested
+    if show_grid:
+        # Define grid properties
+        grid_kwargs = {
+            'color': grid_color,
+            'linestyle': grid_linestyle,
+            'alpha': grid_alpha,
+            'linewidth': grid_linewidth
+        }
+        
+        # Set the default grid for all subplots
+        plt.rc('grid', **grid_kwargs)
 
     solid_line = mlines.Line2D([], [], color='black', linestyle='-', label="from Cell Segmentation")
     dashed_line = mlines.Line2D([], [], color='black', linestyle='--', label="from Altantzis 2011")
 
-    title = f"Cell Properties Analysis Panel"
-    fig.suptitle(title, fontsize=title_fontsize, fontweight='bold', y=1.02)  # Adjust y for spacing
+    # Add title only if requested
+    if show_title:
+        fig.suptitle(title_text, fontsize=title_fontsize, fontweight=title_weight, y=title_y_position)
     
     # Legend moved to the bottom with configurable positioning and font size
     fig.legend(handles=[dashed_line, solid_line], loc='lower center', 
@@ -359,7 +401,7 @@ def plotter_3_CPvsA11_CST_Panel(input_dir, # Format_1 requires input_dir
     for i, ax in enumerate(axes_R):
         # Add Twin Axes
         ax_R2 = ax.twinx()  # Swapped order (was ax_R1)
-        ax_R2.plot(CP_data_df['time'], CP_data_df['d_cell_SRec_mean_CSTx6_nonDim],
+        ax_R2.plot(CP_data_df['time'], CP_data_df['d_cell_SRec_mean_CSTx6_nonDim'],
                     label="CST Cell Mean Diameter $D_{c,mean}$", color='green')
         ax_R2.set_ylabel("$\overline{d}_{c}$", color='green', fontsize=axis_label_fontsize)
         
@@ -397,7 +439,7 @@ def plotter_3_CPvsA11_CST_Panel(input_dir, # Format_1 requires input_dir
         # Adjust Twin Axes Positions with increased spacing
         ax_R2.spines["right"].set_position(("outward", 0))
         ax_R1.spines["right"].set_position(("outward", 60))  # Increased from 40 to 60
-        ax_R3.spines["right"].set_position(("outward", 120))  # Position the third axis even further out
+        ax_R3.spines["right"].set_position(("outward", 140))  # Position the third axis even further o5t
 
         ax_R2.spines["right"].set_color('green')
         ax_R1.spines["right"].set_color('red')
@@ -448,6 +490,9 @@ def plotter_3_CPvsA11_CST_Panel(input_dir, # Format_1 requires input_dir
         ax.set_xlim(0, 7)
 
     for ax in axes:
+        # Set x ticks explicitly using time_ticks
+        ax.set_xticks(time_ticks)
+        
         # Set x tick labels for the top two and bottom two plots
         if ax in [ax_0_0, ax_0_1]:  # Top two plots
             ax.tick_params(axis='x', labeltop=True, labelbottom=False)  # Show x-tick labels at the top, hide at the bottom
@@ -457,6 +502,9 @@ def plotter_3_CPvsA11_CST_Panel(input_dir, # Format_1 requires input_dir
             ax.tick_params(axis='x', labeltop=False, labelbottom=False)  # No x-tick labels (optional)
         # Set x tick lines inside for all plots
         ax.tick_params(axis='x', direction='in', which='both', top=True, bottom=True)  # Make tick lines face inside
+
+        # Set the x limit to match the time range with a bit of padding
+        ax.set_xlim(time_ticks[0], time_ticks[-1])
 
 
 
@@ -476,7 +524,7 @@ def plotter_3_CPvsA11_CST_Panel(input_dir, # Format_1 requires input_dir
     ax_0_1.tick_params(axis='y', labelcolor='black', labelsize=tick_label_fontsize)
     black_label = mlines.Line2D([], [], color='black', label=r"$K_{geom}$", linestyle='dashed')
     blue_label = mlines.Line2D([], [], color='blue', label=r"$K_{mean}$", linestyle='dashed')
-    ax_0_1.legend(handles=[black_label, blue_label], loc='upper left', fontsize=legend_fontsize, frameon=False)
+    ax_0_1.legend(handles=[black_label, blue_label], loc='upper center', fontsize=legend_fontsize, frameon=False)
 
     ax_1_1.set_ylabel("$a_t$", color='black', fontsize=axis_label_fontsize)
     ax_1_1.tick_params(axis='y', labelcolor='black', labelsize=tick_label_fontsize)
@@ -490,6 +538,62 @@ def plotter_3_CPvsA11_CST_Panel(input_dir, # Format_1 requires input_dir
     ax_4_1.set_ylabel(r"$D \times 10^-3$", color='black', fontsize=axis_label_fontsize)
     ax_4_1.tick_params(axis='y', labelcolor='black', labelsize=tick_label_fontsize)
     
+    # Add subplot text boxes if enabled
+    if subplot_textboxes:
+        # Left column subplots
+        for i, ax in enumerate(axes_L):
+            if i < len(subplot_textbox_contents) // 2:
+                pos = subplot_textbox_positions[i]
+                text_kwargs = {
+                    'transform': ax.transAxes,  # Use axes coordinates
+                    'fontsize': subplot_textbox_fontsize,
+                    'ha': 'left',
+                    'va': 'top'
+                }
+                
+                # Add bbox only if box should be shown
+                if subplot_textbox_show_box:
+                    text_kwargs['bbox'] = dict(
+                        facecolor=subplot_textbox_facecolor,
+                        alpha=subplot_textbox_alpha,
+                        edgecolor='gray',
+                        boxstyle=subplot_textbox_boxstyle if subplot_textbox_boxstyle else 'round,pad=0.3',
+                        pad=0.3
+                    )
+                
+                ax.text(
+                    pos[0], pos[1], 
+                    subplot_textbox_contents[i],
+                    **text_kwargs
+                )
+        
+        # Right column subplots
+        for i, ax in enumerate(axes_R):
+            if i + 5 < len(subplot_textbox_contents):
+                pos = subplot_textbox_positions[i + 5]
+                text_kwargs = {
+                    'transform': ax.transAxes,  # Use axes coordinates
+                    'fontsize': subplot_textbox_fontsize,
+                    'ha': 'left',
+                    'va': 'top'
+                }
+                
+                # Add bbox only if box should be shown
+                if subplot_textbox_show_box:
+                    text_kwargs['bbox'] = dict(
+                        facecolor=subplot_textbox_facecolor,
+                        alpha=subplot_textbox_alpha,
+                        edgecolor='gray',
+                        boxstyle=subplot_textbox_boxstyle if subplot_textbox_boxstyle else 'round,pad=0.3',
+                        pad=0.3
+                    )
+                
+                ax.text(
+                    pos[0], pos[1], 
+                    subplot_textbox_contents[i + 5],
+                    **text_kwargs
+                )
+
     # Apply subplot adjustments before adding text boxes
     plt.subplots_adjust(hspace=0)  # This removes the vertical spacing
     plt.tight_layout(rect=[0, 0, 0.95, 0.95])  # Adjusted rect to provide space for text boxes
@@ -521,11 +625,12 @@ def plotter_3_CPvsA11_CST_Panel(input_dir, # Format_1 requires input_dir
     )
     
     # Add text boxes with configurable positioning and no box around them
-    fig.text(textbox_position_right[1], textbox_position_right[0], right_col_text, 
-             ha='center', va='top', fontsize=textbox_fontsize)
-    
-    fig.text(textbox_position_left[1], textbox_position_left[0], left_col_text, 
-             ha='center', va='top', fontsize=textbox_fontsize)
+    if show_textbox_variables_description:
+        fig.text(textbox_position_right[1], textbox_position_right[0], right_col_text, 
+                ha='center', va='top', fontsize=textbox_fontsize)
+        
+        fig.text(textbox_position_left[1], textbox_position_left[0], left_col_text, 
+                ha='center', va='top', fontsize=textbox_fontsize)
     
     # Also update font sizes for x-axis labels
     ax_0_0.set_xlabel(r"$\tau$", fontsize=axis_label_fontsize)
@@ -563,35 +668,8 @@ if __name__ == "__main__":
     
     # Get input directory from user
     input_dir = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_Pipe_Default_dir\20250625_1528537\20250625_1528554\20250625_1626096\20250626_1700136\20250628_2007187"
-    
-    # Define text box contents with subplot labels
-    subplot_labels = [
-        r"(a) Flame Area", r"(f) Stretch Rates",
-        r"(b) Heat Release", r"(g) Aerodynamic Strain",
-        r"(c) Mean Radius", r"(h) Propagation Velocity",
-        r"(d) Radius Growth", r"(i) Displacement Speed",
-        r"(e) Cell Count", r"(j) Scaling Factor"
-    ]
-    
-    # Define positions for text boxes (bottom-left corner of each subplot)
-    text_positions = [(0.05, 0.90)] * 10  # Same position for all subplots
-    
+        
     # Run the plotter function
     output_dir = plotter_3_CPvsA11_CST_Panel(
         input_dir=input_dir,
-        cst_expansion_factor=6,
-        show_plot=0,
-        Plot_log_level=2,
-        output_dir_comment=f"CST_Panel_x{6}",
-        # Grid parameters
-        show_grid=True,
-        grid_alpha=0.2,
-        grid_linestyle=':',
-        grid_color='gray',
-        # Text box parameters
-        subplot_textboxes=True,
-        subplot_textbox_contents=subplot_labels,
-        subplot_textbox_positions=text_positions,
-        subplot_textbox_fontsize=14,
-        subplot_textbox_alpha=0.7
     )
