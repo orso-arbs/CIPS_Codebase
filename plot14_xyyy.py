@@ -10,6 +10,31 @@ import Format_1 as F_1
 plt.rcParams['text.usetex'] = True
 plt.rcParams['font.family'] = 'serif'
 
+def load_A11_data():
+    """
+    Load A11 data files from fixed paths.
+    
+    Returns
+    -------
+    dict
+        Dictionary containing all loaded A11 dataframes
+    """
+    A11_data = {}
+    
+    # Load A11 data with descriptive keys
+    A11_data['K_mean'] = pd.read_csv(r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\Data\A11_manual_extraction\A11_SF_K_mean_as_mean_stretch_rate_vs_time_manual_extraction.txt")
+    A11_data['N_c'] = pd.read_csv(r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\Data\A11_manual_extraction\A11_SF_N_c_as_number_of_cells_vs_time_manual_extraction.txt")
+    A11_data['R_mean'] = pd.read_csv(r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\Data\A11_manual_extraction\A11_SF_R_mean_as_average_radius_of_the_wrinkled_flame_fron_vs_time_manual_extraction.txt")
+    A11_data['R_mean_dot'] = pd.read_csv(r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\Data\A11_manual_extraction\A11_SF_R_mean_dot_as_first_time_derivative_of_the_average_radius_of_the_wrinkled_flame_front_vs_time_manual_extraction.txt")
+    A11_data['s_a'] = pd.read_csv(r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\Data\A11_manual_extraction\A11_SF_s_a_as_average_normal_component_of_the_absolute_propagation_velocity_vs_time_manual_extraction.txt")
+    A11_data['s_d'] = pd.read_csv(r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\Data\A11_manual_extraction\A11_SF_s_d_as_average_density_weighted_displacement_speed_vs_time_manual_extraction.txt")
+    A11_data['A'] = pd.read_csv(r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\Data\A11_manual_extraction\A11_SF_A_as_flame_surface_area_of_the_wrinkled_spherical_front_vs_time_manual_extraction.txt")
+    A11_data['a_t'] = pd.read_csv(r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\Data\A11_manual_extraction\A11_SF_a_t_as_average_total_aerodynamic_strain_vs_time_manual_extraction.txt")
+    A11_data['iHRR'] = pd.read_csv(r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\Data\A11_manual_extraction\A11_SF_iHRR_as_integral_heat_release_rate_vs_time_manual_extraction.txt")
+    A11_data['K_geom'] = pd.read_csv(r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\Data\A11_manual_extraction\A11_SF_K_geom_as_geometric_stretch_rate_vs_time_manual_extraction.txt")
+    
+    return A11_data
+
 def plotter_14_xyyy(
     input_dir,
     y_columns=['N_cells_CSTx6'],  # Changed to list of y-columns
@@ -42,7 +67,20 @@ def plotter_14_xyyy(
     figsize=(10, 6),
     dpi=100,
     show_plot=0,
-    Plot_log_level=1
+    Plot_log_level=1,
+    # A11 data parameters
+    include_A11_data=False,
+    A11_data=None,
+    A11_x_column='time',
+    A11_use_same_x=False,  # Whether to use the same x-axis as main data
+    A11_y_column='N_c',
+    A11_y_scale_factor=1.0,  # New parameter: scale factor for A11 y-axis values
+    A11_line_style='--',
+    A11_line_width=1.5,
+    A11_line_color='red',
+    A11_marker_style='',
+    A11_marker_size=6,
+    A11_label='A11 Data'
 ):
     """
     Creates an x-y plot with multiple curves, each with configurable parameters.
@@ -102,7 +140,7 @@ def plotter_14_xyyy(
     tick_label_fontsize : int, optional
         Font size for tick labels, by default 20
     legend_fontsize : int, optional
-        Font size for legend, by default 12
+        Font size for legend, by default 20
     legend_loc : str, optional
         Location of legend, by default 'upper left'
     figsize : tuple, optional
@@ -113,6 +151,30 @@ def plotter_14_xyyy(
         Whether to display the plot (1) or not (0), by default 0
     Plot_log_level : int, optional
         Logging level, by default 1
+    include_A11_data : bool, optional
+        Whether to include A11 simulation data in the plot, by default False
+    A11_data : dict, optional
+        Dictionary containing A11 simulation data, by default None (will load if include_A11_data=True)
+    A11_x_column : str, optional
+        Column name for A11 x-axis data, by default 'time'
+    A11_use_same_x : bool, optional
+        Whether to plot A11 data using the same x values as the main data, by default False
+    A11_y_column : str, optional
+        Column name for A11 y-axis data, by default 'N_c'
+    A11_y_scale_factor : float, optional
+        Scale factor to multiply A11 y-axis values by, by default 1.0 (no scaling)
+    A11_line_style : str, optional
+        Line style for A11 data, by default '--'
+    A11_line_width : float, optional
+        Line width for A11 data, by default 1.5
+    A11_line_color : str, optional
+        Line color for A11 data, by default 'red'
+    A11_marker_style : str, optional
+        Marker style for A11 data, by default ''
+    A11_marker_size : int, optional
+        Marker size for A11 data, by default 6
+    A11_label : str, optional
+        Label for A11 data in legend, by default 'A11 Data'
     
     Returns
     -------
@@ -227,6 +289,77 @@ def plotter_14_xyyy(
                       color=marker_color, edgecolors='black', 
                       label=legend_label)
     
+    # Add A11 data if requested
+    if include_A11_data:
+        if A11_data is None:
+            # Load A11 data if not provided
+            try:
+                A11_data = load_A11_data()
+                if Plot_log_level >= 1:
+                    print("Loaded A11 data successfully")
+            except Exception as e:
+                print(f"Failed to load A11 data: {e}")
+                include_A11_data = False
+        
+        if include_A11_data and A11_y_column in A11_data:
+            a11_df = A11_data[A11_y_column]
+            
+            # Decide which x column to use for A11 data
+            a11_x_col = x_column if A11_use_same_x else A11_x_column
+            
+            # Apply scaling factor to A11 y values
+            if A11_y_scale_factor != 1.0 and Plot_log_level >= 1:
+                print(f"Applying scale factor of {A11_y_scale_factor} to A11 {A11_y_column} values")
+            
+            if A11_use_same_x:
+                # If using same x as main data, create x values matching the main data
+                if Plot_log_level >= 1:
+                    print(f"Using main data x-axis values for A11 data ({x_column})")
+                
+                # Get x values from main dataframe
+                x_values = df[x_column].values
+                
+                # If A11 data has a different length than main data, interpolate
+                if len(a11_df) != len(x_values):
+                    if Plot_log_level >= 1:
+                        print(f"A11 data length ({len(a11_df)}) differs from main data ({len(x_values)}), interpolating...")
+                    
+                    # Get original A11 x and y values
+                    a11_x_original = np.arange(len(a11_df))
+                    a11_y_original = a11_df[A11_y_column].values * A11_y_scale_factor  # Apply scale factor
+                    
+                    # Create interpolation function
+                    from scipy.interpolate import interp1d
+                    f = interp1d(a11_x_original, a11_y_original, bounds_error=False, fill_value="extrapolate")
+                    
+                    # Interpolate to match main data x range
+                    x_interp = np.linspace(0, len(a11_df)-1, len(x_values))
+                    y_interp = f(x_interp)
+                    
+                    # Plot with interpolated values
+                    plt.plot(x_values, y_interp,
+                            marker=A11_marker_style, markersize=A11_marker_size,
+                            linestyle=A11_line_style, linewidth=A11_line_width,
+                            color=A11_line_color, label=A11_label)
+                else:
+                    # If lengths match, use main data x values directly
+                    plt.plot(x_values, a11_df[A11_y_column].values * A11_y_scale_factor,  # Apply scale factor
+                            marker=A11_marker_style, markersize=A11_marker_size,
+                            linestyle=A11_line_style, linewidth=A11_line_width,
+                            color=A11_line_color, label=A11_label)
+            elif a11_x_col in a11_df.columns and A11_y_column in a11_df.columns:
+                # Standard case - use A11's own x column
+                plt.plot(a11_df[a11_x_col], a11_df[A11_y_column] * A11_y_scale_factor,  # Apply scale factor
+                        marker=A11_marker_style, markersize=A11_marker_size,
+                        linestyle=A11_line_style, linewidth=A11_line_width,
+                        color=A11_line_color, label=A11_label)
+                if Plot_log_level >= 1:
+                    print(f"Added A11 data to plot: {A11_y_column} vs {a11_x_col}")
+            else:
+                print(f"A11 data missing required columns: {a11_x_col} or {A11_y_column}")
+        else:
+            print(f"A11 data for {A11_y_column} not found")
+            
     # Set labels
     plt.xlabel(x_label if x_label else x_column, fontsize=x_label_fontsize)
     
@@ -325,9 +458,9 @@ if __name__ == "__main__":
         marker_sizes=[6, 6, 6],
         legend_labels=[
             r'2D',
-            r'2D in CST',
+            r'2D in Tile',
             r'3D',
-            r'3D in CST'
+            r'3D in Tile'
         ],
         legend_title="",
         legend_loc='upper left',
@@ -335,7 +468,7 @@ if __name__ == "__main__":
         y_label=r'$\overline{d}_c/\delta_T$',
     )
     
-    #      Example usage with multiple curves for area metrics
+    # Example usage with multiple curves for area metrics
     plotter_14_xyyy(
         input_dir=r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_Pipe_Default_dir\20250625_1528537\20250625_1528554\20250625_1626096\20250626_1700136\20250628_2007187",
         x_column="R_SF_nonDim",
@@ -352,9 +485,9 @@ if __name__ == "__main__":
         marker_sizes=[6, 6, 6],
         legend_labels=[
             r'2D',
-            r'2D in CST',
+            r'2D in Tile',
             r'3D',
-            r'3D in CST'
+            r'3D in Tile'
         ],
         legend_title="",
         legend_loc='upper left',
@@ -362,7 +495,11 @@ if __name__ == "__main__":
         y_label=r'$\overline{A}_c/\delta_T^2$',
     )
     
-    # Example usage with multiple curves for cell count metrics
+    # Example usage with multiple curves for cell count metrics (with A11 data)
+    # Load A11 data first
+    A11_data = load_A11_data()
+        
+    # Example with A11 data using same x-axis as main data
     plotter_14_xyyy(
         input_dir=r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_Pipe_Default_dir\20250625_1528537\20250625_1528554\20250625_1626096\20250626_1700136\20250628_2007187",
         x_column="R_SF_nonDim",
@@ -370,19 +507,28 @@ if __name__ == "__main__":
             "N_cells",
             "N_cells_CST",
         ],
-        output_dir_comment="cell_counts_vs_R_SF_nonDim",
+        output_dir_comment="cell_counts_vs_R_SF_with_A11_same_x",
         line_colors=['red', 'red'],
         line_styles=[':', '-'],
         marker_styles=['', ''],
         marker_sizes=[6, 7],
         legend_labels=[
-            r'Image wide',
-            r'In CST',
+            r'Cellpose ',
+            r'Cellpose in Tile',
         ],
         legend_title="",
         legend_loc='upper left',
         x_label=r'$R_{SF}/\delta_T$',
         y_label=r'$N_{cells}$',
+
+        include_A11_data=True,
+        A11_data=A11_data,
+        A11_y_column='N_c',
+        A11_y_scale_factor=1/6.0,  # Scale the A11 data by a factor of 6
+        A11_use_same_x=True,  # Use same x-axis as main data
+        A11_line_style='--',
+        A11_line_color='black',
+        A11_label=r'Manual Count in Tile'
     )
     
     # Example usage with multiple curves for contour length metrics
@@ -402,9 +548,9 @@ if __name__ == "__main__":
         marker_sizes=[6, 6, 6],
         legend_labels=[
             r'2D',
-            r'2D in CST',
+            r'2D in Tile',
             r'3D',
-            r'3D in CST'
+            r'3D in Tile'
         ],
         legend_title="",
         legend_loc='upper left',

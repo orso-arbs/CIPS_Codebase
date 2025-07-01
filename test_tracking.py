@@ -8,7 +8,7 @@ import trackastra as ta
 
 def main():
     # Hardcoded input path for testing
-    input_dir = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\SF_CP_analysis_pipeline_data\Visit_Projector_1_2025-05-10_14-46-34_A11_T-3_VM-hot\CP_segment_1_2025-05-10_15-40-15_cyto3\CP_extract_1_2025-05-10_15-46-46"
+    input_dir = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_Pipe_Default_dir\20250625_1528537\20250625_1528554\20250625_1626096\20250626_1700136"
     
     # Load the DataFrame with segmentation masks
     pkl_files = [f for f in os.listdir(input_dir) if f.endswith('.pkl')]

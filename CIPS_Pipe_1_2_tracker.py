@@ -7,10 +7,10 @@ import plot7_lineage_tree as p7
 @F_1.ParameterLog(max_size = 1024 * 10)
 def CIPS_pipeline_2(
     # General control
-    input_dir=r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\SF_CP_analysis_pipeline_data\Visit_Projector_1_2025-05-10_14-46-34_A11_T-3_VM-hot\CP_segment_1_2025-05-10_15-40-15_cyto3\CP_extract_1_2025-05-10_15-46-46",
-    output_dir_manual=r"C:\Users\obs\Desktop\track test",
+    input_dir=r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_Pipe_Default_dir\20250625_1528537\20250625_1528554\20250625_1626096\20250626_1700136",
+    output_dir_manual="",
     output_dir_comment="Tracking_Analysis", 
-    global_log_level=1,
+    global_log_level=3,
     
     # Trackastra_tracking_1 args
     tr_output_dir_manual="",

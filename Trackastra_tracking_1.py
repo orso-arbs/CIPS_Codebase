@@ -5,6 +5,7 @@ import numpy as np
 import glob
 import pickle
 import torch
+import traceback  # Add traceback import
 from trackastra.model import Trackastra
 from trackastra.tracking import graph_to_ctc, graph_to_napari_tracks
 import Format_1 as F_1
@@ -174,6 +175,13 @@ def Trackastra_tracking_1(
             outdir=os.path.join(output_dir, "ctc_tracks")
         )
         
+        # Print information about ctc_tracks to understand its structure
+        if Trackastra_tracking_log_level >= 1:
+            print(f"CTC tracks shape: {np.array(ctc_tracks).shape}")
+            print(f"CTC tracks type: {type(ctc_tracks)}")
+            if isinstance(ctc_tracks, np.ndarray) and len(ctc_tracks) > 0:
+                print(f"First track example: {ctc_tracks[0]}")
+        
         # Save tracking results
         np.save(os.path.join(output_dir, "masks_tracked.npy"), masks_tracked)
         
@@ -191,12 +199,17 @@ def Trackastra_tracking_1(
         
         # Create a tracked DataFrame with the original data and tracking results
         tracked_df = CIPS_DataFrame.copy()
-        tracked_df['tracks'] = pd.Series(ctc_tracks)
-        tracked_df['masks_tracked'] = pd.Series([m for m in masks_tracked])
+        
+        # Fix: Store the ctc_tracks as an object in the DataFrame instead of trying to convert to Series
+        tracked_df['tracks'] = None  # Initialize the column
+        tracked_df.loc[0, 'tracks'] = ctc_tracks  # Store the entire array in the first row
         
         # Save the tracked DataFrame
         tracked_df_path = os.path.join(output_dir, "tracked_data.pkl")
         tracked_df.to_pickle(tracked_df_path)
+        
+        # Also save the ctc_tracks separately for easier access
+        np.save(os.path.join(output_dir, "ctc_tracks.npy"), ctc_tracks)
         
         if Trackastra_tracking_log_level >= 1:
             print(f"Saved tracked DataFrame to {tracked_df_path}")
@@ -211,6 +224,6 @@ def Trackastra_tracking_1(
 if __name__ == "__main__":
     
     Trackastra_tracking_1(
-        input_dir = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_variations\20250607_2240236\20250608_0303173\20250608_0303173\20250608_0409296\20250608_0643128",
+        input_dir = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_Pipe_Default_dir\20250625_1528537\20250625_1528554\20250625_1626096\20250626_1700136",
         Trackastra_tracking_log_level = 2
     )
