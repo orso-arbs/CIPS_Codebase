@@ -441,119 +441,147 @@ def plotter_14_xyyy(
 
 
 if __name__ == "__main__":
-    # Example usage with multiple curves for diameter metrics
-    plotter_14_xyyy(
-        input_dir=r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_Pipe_Default_dir\20250625_1528537\20250625_1528554\20250625_1626096\20250626_1700136\20250628_2007187",
-        x_column="R_SF_nonDim",
-        y_columns=[
-            "d_cell_mean_nonDim",
-            "d_cell_mean_CST_nonDim",
-            "d_cell_SRec_mean_nonDim",
-            "d_cell_SRec_mean_CST_nonDim"  # Added the 3D contour length for comparison
-        ],
-        output_dir_comment="multiple_metrics_vs_R_SF_nonDim",
-        line_colors=['green', 'green', 'green'],
-        line_styles=[':', '-.', '--', '-'],
-        marker_styles=['', '', '', ''],
-        marker_sizes=[6, 6, 6],
-        legend_labels=[
-            r'2D',
-            r'2D in Tile',
-            r'3D',
-            r'3D in Tile'
-        ],
-        legend_title="",
-        legend_loc='upper left',
-        x_label=r'$R_{SF}/\delta_T$',
-        y_label=r'$\overline{d}_c/\delta_T$',
-    )
+    # # Example usage with multiple curves for diameter metrics
+    # plotter_14_xyyy(
+    #     input_dir=r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_Pipe_Default_dir\20250625_1528537\20250625_1528554\20250625_1626096\20250626_1700136\20250628_2007187",
+    #     x_column="R_SF_nonDim",
+    #     y_columns=[
+    #         "d_cell_mean_nonDim",
+    #         "d_cell_mean_CST_nonDim",
+    #         "d_cell_SRec_mean_nonDim",
+    #         "d_cell_SRec_mean_CST_nonDim"  # Added the 3D contour length for comparison
+    #     ],
+    #     output_dir_comment="multiple_metrics_vs_R_SF_nonDim",
+    #     line_colors=['green', 'green', 'green'],
+    #     line_styles=[':', '-.', '--', '-'],
+    #     marker_styles=['', '', '', ''],
+    #     marker_sizes=[6, 6, 6],
+    #     legend_labels=[
+    #         r'2D',
+    #         r'2D in Tile',
+    #         r'3D',
+    #         r'3D in Tile'
+    #     ],
+    #     legend_title="",
+    #     legend_loc='upper left',
+    #     x_label=r'$R_{SF}/\delta_T$',
+    #     y_label=r'$\overline{d}_c/\delta_T$',
+    # )
     
-    # Example usage with multiple curves for area metrics
-    plotter_14_xyyy(
-        input_dir=r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_Pipe_Default_dir\20250625_1528537\20250625_1528554\20250625_1626096\20250626_1700136\20250628_2007187",
-        x_column="R_SF_nonDim",
-        y_columns=[
-            "A_cell_mean_nonDim2",
-            "A_cell_mean_CST_nonDim2",
-            "A_cell_SRec_mean_nonDim2",
-            "A_cell_SRec_mean_CST_nonDim2"
-        ],
-        output_dir_comment="area_metrics_vs_R_SF_nonDim",
-        line_colors=['darkgreen', 'darkgreen', 'darkgreen'],
-        line_styles=[':', '-.', '--', '-'],
-        marker_styles=['', '', '', ''],
-        marker_sizes=[6, 6, 6],
-        legend_labels=[
-            r'2D',
-            r'2D in Tile',
-            r'3D',
-            r'3D in Tile'
-        ],
-        legend_title="",
-        legend_loc='upper left',
-        x_label=r'$R_{SF}/\delta_T$',
-        y_label=r'$\overline{A}_c/\delta_T^2$',
-    )
+    # # Example usage with multiple curves for area metrics
+    # plotter_14_xyyy(
+    #     input_dir=r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_Pipe_Default_dir\20250625_1528537\20250625_1528554\20250625_1626096\20250626_1700136\20250628_2007187",
+    #     x_column="R_SF_nonDim",
+    #     y_columns=[
+    #         "A_cell_mean_nonDim2",
+    #         "A_cell_mean_CST_nonDim2",
+    #         "A_cell_SRec_mean_nonDim2",
+    #         "A_cell_SRec_mean_CST_nonDim2"
+    #     ],
+    #     output_dir_comment="area_metrics_vs_R_SF_nonDim",
+    #     line_colors=['darkgreen', 'darkgreen', 'darkgreen'],
+    #     line_styles=[':', '-.', '--', '-'],
+    #     marker_styles=['', '', '', ''],
+    #     marker_sizes=[6, 6, 6],
+    #     legend_labels=[
+    #         r'2D',
+    #         r'2D in Tile',
+    #         r'3D',
+    #         r'3D in Tile'
+    #     ],
+    #     legend_title="",
+    #     legend_loc='upper left',
+    #     x_label=r'$R_{SF}/\delta_T$',
+    #     y_label=r'$\overline{A}_c/\delta_T^2$',
+    # )
     
-    # Example usage with multiple curves for cell count metrics (with A11 data)
-    # Load A11 data first
-    A11_data = load_A11_data()
+    # # Example usage with multiple curves for cell count metrics (with A11 data)
+    # # Load A11 data first
+    # A11_data = load_A11_data()
         
-    # Example with A11 data using same x-axis as main data
-    plotter_14_xyyy(
-        input_dir=r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_Pipe_Default_dir\20250625_1528537\20250625_1528554\20250625_1626096\20250626_1700136\20250628_2007187",
-        x_column="R_SF_nonDim",
-        y_columns=[
-            "N_cells",
-            "N_cells_CST",
-        ],
-        output_dir_comment="cell_counts_vs_R_SF_with_A11_same_x",
-        line_colors=['red', 'red'],
-        line_styles=[':', '-'],
-        marker_styles=['', ''],
-        marker_sizes=[6, 7],
-        legend_labels=[
-            r'Cellpose ',
-            r'Cellpose in Tile',
-        ],
-        legend_title="",
-        legend_loc='upper left',
-        x_label=r'$R_{SF}/\delta_T$',
-        y_label=r'$N_{cells}$',
+    # # Example with A11 data using same x-axis as main data
+    # plotter_14_xyyy(
+    #     input_dir=r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_Pipe_Default_dir\20250625_1528537\20250625_1528554\20250625_1626096\20250626_1700136\20250628_2007187",
+    #     x_column="R_SF_nonDim",
+    #     y_columns=[
+    #         "N_cells",
+    #         "N_cells_CST",
+    #     ],
+    #     output_dir_comment="cell_counts_vs_R_SF_with_A11_same_x",
+    #     line_colors=['red', 'red'],
+    #     line_styles=[':', '-'],
+    #     marker_styles=['', ''],
+    #     marker_sizes=[6, 7],
+    #     legend_labels=[
+    #         r'Cellpose ',
+    #         r'Cellpose in Tile',
+    #     ],
+    #     legend_title="",
+    #     legend_loc='upper left',
+    #     x_label=r'$R_{SF}/\delta_T$',
+    #     y_label=r'$N_{cells}$',
 
-        include_A11_data=True,
-        A11_data=A11_data,
-        A11_y_column='N_c',
-        A11_y_scale_factor=1/6.0,  # Scale the A11 data by a factor of 6
-        A11_use_same_x=True,  # Use same x-axis as main data
-        A11_line_style='--',
-        A11_line_color='black',
-        A11_label=r'Manual Count in Tile'
-    )
+    #     include_A11_data=True,
+    #     A11_data=A11_data,
+    #     A11_y_column='N_c',
+    #     A11_y_scale_factor=1/6.0,  # Scale the A11 data by a factor of 6
+    #     A11_use_same_x=True,  # Use same x-axis as main data
+    #     A11_line_style='--',
+    #     A11_line_color='black',
+    #     A11_label=r'Manual Count in Tile'
+    # )
     
-    # Example usage with multiple curves for contour length metrics
+    # # Example usage with multiple curves for contour length metrics
+    # plotter_14_xyyy(
+    #     input_dir=r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_Pipe_Default_dir\20250625_1528537\20250625_1528554\20250625_1626096\20250626_1700136\20250628_2007187",
+    #     x_column="R_SF_nonDim",
+    #     y_columns=[
+    #         "contour_length_total_nonDim",
+    #         "contour_length_total_CST_nonDim",
+    #         "contour_length_SRec_total_nonDim",
+    #         "contour_length_SRec_total_CST_nonDim"
+    #     ],
+    #     output_dir_comment="contour_length_metrics_vs_R_SF_nonDim",
+    #     line_colors=['blue', 'blue', 'blue'],
+    #     line_styles=[':', '-.', '--', '-'],
+    #     marker_styles=['', '', '', ''],
+    #     marker_sizes=[6, 6, 6],
+    #     legend_labels=[
+    #         r'2D',
+    #         r'2D in Tile',
+    #         r'3D',
+    #         r'3D in Tile'
+    #     ],
+    #     legend_title="",
+    #     legend_loc='upper left',
+    #     x_label=r'$R_{SF}/\delta_T$',
+    #     y_label=r'$L$/$\delta_T$',
+    # )
+    
+    # Example usage with CSTx6 metrics
     plotter_14_xyyy(
         input_dir=r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_Pipe_Default_dir\20250625_1528537\20250625_1528554\20250625_1626096\20250626_1700136\20250628_2007187",
         x_column="R_SF_nonDim",
         y_columns=[
-            "contour_length_total_nonDim",
-            "contour_length_total_CST_nonDim",
-            "contour_length_SRec_total_nonDim",
-            "contour_length_SRec_total_CST_nonDim"
+            "Roundness_mean_SRec_CSTx6_nonDim",
+            #"N_cells_CSTx6",
+            #"d_cell_SRec_mean_CSTx6_nonDim",
+            #"contour_length_SRec_total_CSTx6_nonDim"
         ],
-        output_dir_comment="contour_length_metrics_vs_R_SF_nonDim",
-        line_colors=['blue', 'blue', 'blue'],
-        line_styles=[':', '-.', '--', '-'],
+        output_dir_comment="CSTx6_metrics_vs_R_SF_nonDim",
+        line_colors=['blue', 'red', 'green', 'purple'],
+        line_styles=['-', '-', '-', '-'],
         marker_styles=['', '', '', ''],
-        marker_sizes=[6, 6, 6],
+        marker_sizes=[6, 6, 6, 6],
         legend_labels=[
-            r'2D',
-            r'2D in Tile',
-            r'3D',
-            r'3D in Tile'
+            r'Roundness',
+            r'Cell Count',
+            r'Mean Cell Diameter',
+            r'Total Contour Length'
         ],
-        legend_title="",
-        legend_loc='upper left',
+        legend_title="CSTx6 Metrics",
+        legend_loc='best',
         x_label=r'$R_{SF}/\delta_T$',
-        y_label=r'$L$/$\delta_T$',
+        y_label=r'Various Metrics',
+        show_plot=1
     )
