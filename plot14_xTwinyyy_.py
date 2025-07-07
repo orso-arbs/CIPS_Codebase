@@ -436,32 +436,85 @@ def plotter_14_xTwinyyy(
     return output_dir
 
 
+# if __name__ == "__main__":
+#     # Example usage with twin axes for different metrics
+#     input_dir = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_Pipe_Default_dir\20250625_1528537\20250625_1528554\20250625_1626096\20250626_1700136\20250628_2007187"
+    
+#     # Define column groups for each twin axis
+#     y_columns_list = [
+#         ['N_cells_CSTx6'],                      # First axis (red)
+#         ['d_cell_SRec_mean_CSTx6_nonDim'],      # Second axis (green)
+#         ['contour_length_SRec_total_CSTx6_nonDim'],  # Third axis (blue)
+#         ['Roundness_mean_SRec_CSTx6_nonDim'],   # Fourth axis (violet)
+#     ]
+    
+#     # Define colors for each group
+#     y_colors_list = [
+#         ['red'],    # Colors for first axis
+#         ['green'],  # Colors for second axis
+#         ['blue'],   # Colors for third axis
+#         ['violet'], # Colors for fourth axis
+#     ]
+    
+#     # Define labels for each axis
+#     y_labels_list = [
+#         '$N_{cells}$',                # Label for first axis
+#         '$\\overline{d}_c/\\delta_T$',  # Label for second axis
+#         '$L/\\delta_T$',               # Label for third axis
+#         '$\overline{Q}$'                           # Label for fourth axis
+#     ]
+    
+#     # Define scale factors for each column
+#     y_scale_factors_list = [
+#         [1.0],    # No scaling for N_cells
+#         [1.0],    # No scaling for mean diameter
+#         [1.0],    # No scaling for contour length
+#         [1.0],    # No scaling for roundness
+#     ]
+    
+#     # Custom spacings for each twin axis (in points)
+#     axis_spacings = [0, 60, 150]  # Spacings for the 2nd, 3rd, and 4th axes
+    
+#     output_dir = plotter_14_xTwinyyy(
+#         input_dir=input_dir,
+#         x_column="R_SF_nonDim",
+#         y_columns_list=y_columns_list,
+#         y_colors_list=y_colors_list,
+#         y_labels_list=y_labels_list,
+#         y_scale_factors_list=y_scale_factors_list,
+#         output_dir_comment="twin_axes_metrics_vs_R_SF_nonDim",
+#         x_label=r'$R_{SF}/\delta_T$',
+#         legend_loc='upper left',
+#         show_legend=False,  # Set to False to hide the legend
+#         axis_spacings=axis_spacings,  # Custom spacings for each twin axis
+#         show_plot=0       # Set to 1 to display the plot
+#     )
+
+
 if __name__ == "__main__":
     # Example usage with twin axes for different metrics
     input_dir = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_Pipe_Default_dir\20250625_1528537\20250625_1528554\20250625_1626096\20250626_1700136\20250628_2007187"
     
     # Define column groups for each twin axis
-    y_columns_list = [
-        ['N_cells_CSTx6'],                      # First axis (red)
-        ['d_cell_SRec_mean_CSTx6_nonDim'],      # Second axis (green)
-        ['contour_length_SRec_total_CSTx6_nonDim'],  # Third axis (blue)
-        ['Roundness_mean_SRec_CSTx6_nonDim'],   # Fourth axis (violet)
-    ]
+    y_columns_list =[
+        "nonDim_per_px",
+        "R_SF_nonDim",
+        "R_SF_px",
+    ],
+
     
     # Define colors for each group
     y_colors_list = [
-        ['red'],    # Colors for first axis
-        ['green'],  # Colors for second axis
-        ['blue'],   # Colors for third axis
-        ['violet'], # Colors for fourth axis
+        ['black'],    # Colors for first axis
+        ['orange'],  # Colors for second axis
+        ['coral'],   # Colors for third axis
     ]
     
     # Define labels for each axis
     y_labels_list = [
-        '$N_{cells}$',                # Label for first axis
-        '$\\overline{d}_c/\\delta_T$',  # Label for second axis
-        '$L/\\delta_T$',               # Label for third axis
-        '$\overline{Q}$'                           # Label for fourth axis
+        r'$D$',
+        r'$R_{SF}/\delta_T$',
+        r'$R_{SF}[px]$',
     ]
     
     # Define scale factors for each column
@@ -469,21 +522,20 @@ if __name__ == "__main__":
         [1.0],    # No scaling for N_cells
         [1.0],    # No scaling for mean diameter
         [1.0],    # No scaling for contour length
-        [1.0],    # No scaling for roundness
     ]
     
     # Custom spacings for each twin axis (in points)
-    axis_spacings = [0, 60, 150]  # Spacings for the 2nd, 3rd, and 4th axes
+    axis_spacings = [0, 60]  # Spacings for the 2nd, 3rd, and 4th axes
     
     output_dir = plotter_14_xTwinyyy(
         input_dir=input_dir,
-        x_column="R_SF_nonDim",
+        x_column="Time_VisIt",
         y_columns_list=y_columns_list,
         y_colors_list=y_colors_list,
         y_labels_list=y_labels_list,
         y_scale_factors_list=y_scale_factors_list,
-        output_dir_comment="twin_axes_metrics_vs_R_SF_nonDim",
-        x_label=r'$R_{SF}/\delta_T$',
+        output_dir_comment="twin_dimentionalisation",
+        x_label=r"$\tau$",
         legend_loc='upper left',
         show_legend=False,  # Set to False to hide the legend
         axis_spacings=axis_spacings,  # Custom spacings for each twin axis

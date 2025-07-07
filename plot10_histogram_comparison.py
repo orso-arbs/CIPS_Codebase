@@ -47,11 +47,11 @@ def plot10_distribution_histogram_comparison(
     figure_width=12,            # Width of the figure in inches
     figure_height=8,            # Height of the figure in inches
     show_image_inset=True,      # Show flame image inset
-    image_inset_size=0.4,        # Size of image inset as fraction of plot
-    image_horizontal_position=0.76,  # Horizontal position of inset (0-1)
-    image_vertical_position=0.68,    # Vertical position of inset (0-1)
+    image_inset_size=0.5,        # Size of image inset as fraction of plot
+    image_horizontal_position=0.7,  # Horizontal position of inset (0-1)
+    image_vertical_position=0.6,    # Vertical position of inset (0-1)
     zoom_scale=1.3,              # Scale factor for zooming in on the spherical flame
-    mask_alpha=0.4,               # Transparency of masks in the inset
+    mask_alpha=0.8,               # Transparency of masks in the inset
     show_centroids=True,          # Show cell centroids in the inset
     centroid_size=7,            # Size of centroid markers
     centroid_alpha=0.6,          # Alpha value for centroid markers
@@ -66,18 +66,20 @@ def plot10_distribution_histogram_comparison(
     Frequency_percent_of_max=True,  # If True, normalize frequency as percentage of max
     output_filename_template='Histogram_comparison_{:04d}',  # Template for output filenames
     
-    # NEW: List of image numbers to process (empty list = all images)
-    image_numbers=[],      
+    # Image selection parameters
+    image_numbers=[],      # List of image numbers to process (empty list = all images)
+    omit_image_list=[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,106],    # List of image numbers to exclude
+    CST_cells_only_in_image=False,  # If True, only show cells that are in the CST in the image inset
     
     # New text and legend customization parameters
-    x_label_fontsize=16,       # Font size for x-axis label
-    y_label_fontsize=16,       # Font size for y-axis label 
+    x_label_fontsize=20,       # Font size for x-axis label
+    y_label_fontsize=20,       # Font size for y-axis label 
     title_fontsize=18,         # Font size for plot title
-    legend_fontsize=14,        # Font size for legend text
+    legend_fontsize=20,        # Font size for legend text
     legend_framealpha=1,     # Legend box transparency (0-1)
     legend_position="upper left", # Position of the legend
     legend_bbox_to_anchor=(0, 1), # Fine-tuning of legend position
-    tick_label_fontsize=12,    # Font size for axis tick labels
+    tick_label_fontsize=20,    # Font size for axis tick labels
     info_box_fontsize=10,      # Font size for info box text
     mean_line_label_template='Mean {}: {:.3f}', # Template for mean value labels
     
@@ -151,10 +153,14 @@ def plot10_distribution_histogram_comparison(
     y_axis_extension : float, optional
         Factor to extend the y-axis range beyond the max frequency value.
         Defaults to 1.1 (10% extension).
-    x_axis_limit : tuple of float, optional
-        Manual limits for the x-axis as (min, max). Overrides x_axis_extension if provided.
-    y_axis_limit : tuple of float, optional
-        Manual limits for the y-axis as (min, max). Overrides y_axis_extension if provided.
+    x_axis_limit : tuple or float, optional
+        Manual x-axis limit. If a tuple (min, max), sets both limits.
+        If a single float, sets only the maximum value. 
+        Overrides x_axis_extension if provided.
+    y_axis_limit : tuple or float, optional
+        Manual y-axis limit. If a tuple (min, max), sets both limits.
+        If a single float, sets only the maximum value.
+        Overrides y_axis_extension if provided.
     Frequency_percent_of_max : bool, optional
         If True, normalizes frequency as percentage of maximum frequency across all images.
         Default is False.
@@ -164,6 +170,12 @@ def plot10_distribution_histogram_comparison(
     image_numbers : list, optional
         List of specific image numbers to process. If empty, all images are processed.
         Defaults to [] (process all images).
+    omit_image_list : list, optional
+        List of image numbers to exclude from processing. Applied after image_numbers filter.
+        Defaults to [] (exclude no images).
+    CST_cells_only_in_image : bool, optional
+        If True, only cells that are included in the CST will be shown in the image inset.
+        Requires CST_inclusion column from CST_Selection_1.py. Defaults to False.
     x_label_fontsize : int, optional
         Font size for x-axis label. Defaults to 16.
     y_label_fontsize : int, optional
@@ -275,12 +287,18 @@ def plot10_distribution_histogram_comparison(
             print(f"Filtered to {len(SRec_df)} images based on specified image numbers") if Plot_log_level >= 1 else None
         else:
             print(f"Warning: image_number column not found in DataFrame, cannot filter by image numbers") if Plot_log_level >= 0 else None
+    
+    # Exclude images in omit_image_list if provided
+    if omit_image_list and 'image_number' in SRec_df.columns:
+        SRec_df = SRec_df[~SRec_df['image_number'].isin(omit_image_list)].reset_index(drop=True)
+        if Plot_log_level >= 1:
+            print(f"Excluded {len(omit_image_list)} images: {omit_image_list}")
 
     # Verify we have data after filtering
     if len(SRec_df) == 0:
         print("Error: No images to process after filtering") if Plot_log_level >= 0 else None
         return output_dir
-
+        
     #################################################### Calculate global statistics
     # Number of rows in the DataFrame
     N_images = len(SRec_df)
@@ -339,26 +357,39 @@ def plot10_distribution_histogram_comparison(
             weights_2 = np.ones_like(dist2_data) * (100.0 / total_count_2)
             
             y_label = r'Frequency (\% of total)'
-            # Set y-axis limit based on user input or extension
-            y_max = y_axis_limit if y_axis_limit is not None else max_frequency_global * y_axis_extension
             
             # Plot histograms with normalized values and black edges
-            ax.hist(dist1_data, bins=bins, alpha=0.6, color=dist1_color, 
+            hist1 = ax.hist(dist1_data, bins=bins, alpha=0.6, color=dist1_color, 
                    label=dist1_label, weights=weights_1, edgecolor='black', linewidth=0.5)
-            ax.hist(dist2_data, bins=bins, alpha=0.6, color=dist2_color, 
+            hist2 = ax.hist(dist2_data, bins=bins, alpha=0.6, color=dist2_color, 
                    label=dist2_label, weights=weights_2, edgecolor='black', linewidth=0.5)
+                   
+            # Calculate actual max frequency for this plot
+            this_max_freq = max(np.max(hist1[0]), np.max(hist2[0]))
         else:
             # Use raw counts
             y_label = r'Frequency (count)'
-            # Set y-axis limit based on user input or global max with extension
-            y_max = y_axis_limit if y_axis_limit is not None else max_frequency_global * y_axis_extension
             
             # Plot histograms with raw counts and black edges
-            ax.hist(dist1_data, bins=bins, alpha=0.6, color=dist1_color, 
+            hist1 = ax.hist(dist1_data, bins=bins, alpha=0.6, color=dist1_color, 
                    label=dist1_label, edgecolor='black', linewidth=0.5)
-            ax.hist(dist2_data, bins=bins, alpha=0.6, color=dist2_color, 
+            hist2 = ax.hist(dist2_data, bins=bins, alpha=0.6, color=dist2_color, 
                    label=dist2_label, edgecolor='black', linewidth=0.5)
+                   
+            # Calculate actual max frequency for this plot
+            this_max_freq = max(np.max(hist1[0]), np.max(hist2[0]))
         
+        # Set y-axis limit based on user input or actual histogram heights
+        if y_axis_limit is not None:
+            if isinstance(y_axis_limit, (tuple, list)) and len(y_axis_limit) == 2:
+                y_min, y_max = y_axis_limit  # Use both min and max from tuple
+            else:
+                y_min = 0
+                y_max = float(y_axis_limit)  # Use single value as maximum
+        else:
+            y_min = 0
+            y_max = this_max_freq * y_axis_extension
+            
         # Add mean area lines with customized labels
         mean_1 = np.mean(dist1_data)
         mean_2 = np.mean(dist2_data)
@@ -368,10 +399,19 @@ def plot10_distribution_histogram_comparison(
                   label=mean_line_label_template.format(dist2_label, mean_2))
         
         # Set axis limits and labels with customized font sizes
-        x_min = min_val * 0.95
-        x_max = x_axis_limit if x_axis_limit is not None else max_val * x_axis_extension
+        # Handle x-axis limits similarly to y-axis limits
+        if x_axis_limit is not None:
+            if isinstance(x_axis_limit, (tuple, list)) and len(x_axis_limit) == 2:
+                x_min, x_max = x_axis_limit
+            else:
+                x_min = min_val * 0.95
+                x_max = float(x_axis_limit)
+        else:
+            x_min = min_val * 0.95
+            x_max = max_val * x_axis_extension
+        
         ax.set_xlim(x_min, x_max)
-        ax.set_ylim(0, y_max)
+        ax.set_ylim(y_min, y_max)
         
         ax.set_xlabel(x_label, fontsize=x_label_fontsize)
         ax.set_ylabel(y_label, fontsize=y_label_fontsize)
@@ -420,6 +460,36 @@ def plot10_distribution_histogram_comparison(
 
                 masks = SRec_df.iloc[i]['masks']
                 
+                # Filter masks for CST cells only if requested
+                if CST_cells_only_in_image and 'CST_inclusion' in SRec_df.columns:
+                    # Get the CST inclusion information for this image
+                    cst_inclusion = SRec_df.iloc[i]['CST_inclusion']
+                    
+                    # If it's empty or None, fall back to showing all cells
+                    if cst_inclusion is None or len(cst_inclusion) == 0:
+                        if Plot_log_level >= 1:
+                            print(f"\nWarning: CST_inclusion data not available for image {i+1}, showing all cells")
+                    else:
+                        # Get cell IDs from the masks
+                        cell_ids = np.unique(masks)
+                        cell_ids = cell_ids[cell_ids > 0]  # Exclude background
+                        
+                        # Create a copy of masks with only CST cells
+                        cst_masks = np.zeros_like(masks)
+                        
+                        # Check if we have enough inclusion data for all cells
+                        if len(cst_inclusion) >= len(cell_ids):
+                            for idx, cell_id in enumerate(cell_ids):
+                                if idx < len(cst_inclusion) and cst_inclusion[idx]:
+                                    cst_masks[masks == cell_id] = cell_id
+                        else:
+                            if Plot_log_level >= 1:
+                                print(f"\nWarning: CST_inclusion data incomplete for image {i+1}")
+                            # Use all masks if inclusion data is incomplete
+                            cst_masks = masks
+                        
+                        # Replace original masks with filtered masks
+                        masks = cst_masks
                 # Calculate zoom region to focus on the spherical flame
                 img_height, img_width = image.shape[:2]
                 center_x, center_y = img_width // 2, img_height // 2
@@ -448,6 +518,16 @@ def plot10_distribution_histogram_comparison(
                 if show_centroids and 'centroid_xIm_distribution_px' in SRec_df.columns:
                     centroids_x = SRec_df.iloc[i]['centroid_xIm_distribution_px']
                     centroids_y = SRec_df.iloc[i]['centroid_yIm_distribution_px']
+                    
+                    # Filter centroids for CST cells only if requested
+                    if CST_cells_only_in_image and 'CST_inclusion' in SRec_df.columns:
+                        cst_inclusion = SRec_df.iloc[i]['CST_inclusion']
+                        
+                        # If we have valid inclusion data, filter centroids
+                        if cst_inclusion is not None and len(cst_inclusion) > 0 and len(cst_inclusion) == len(centroids_x):
+                            centroids_x = [x for idx, x in enumerate(centroids_x) if cst_inclusion[idx]]
+                            centroids_y = [y for idx, y in enumerate(centroids_y) if cst_inclusion[idx]]
+                    
                     if len(centroids_x) > 0 and len(centroids_y) > 0:
                         # Adjust centroid coordinates for zoomed view
                         valid_centroids = [(x, y) for x, y in zip(centroids_x, centroids_y)
@@ -468,6 +548,7 @@ def plot10_distribution_histogram_comparison(
                     spine.set_visible(True)
                     spine.set_color('black')
                     spine.set_linewidth(0.5)
+                
                 
             except Exception as e:
                 print(f"\nWarning: Could not display image inset for image {i+1}: {str(e)}") if Plot_log_level >= 1 else None
@@ -532,35 +613,39 @@ if __name__ == "__main__":
     # Example for diameter distributions
     plot10_distribution_histogram_comparison(
         input_dir=r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_Pipe_Default_dir\20250625_1528537\20250625_1528554\20250625_1626096\20250626_1700136\20250628_2007187",
-        output_dir_comment="Diameter Distribution Comparison",
-        image_numbers=[],
+        output_dir_comment="S49a103a129 Diameter Distribution Comparison",
+        image_numbers=[49,103,129],
+        y_axis_limit=25,  # Now explicitly sets maximum y value to 20
         dist1_column='d_cell_distribution_nonDim',
         dist2_column='d_cell_SRec_distribution_nonDim',
-        dist1_label='2D',
-        dist2_label='3D',
+        dist1_label='2D in Tile',
+        dist2_label='3D in Tile',
         x_label=r'Cell Diameter / $\delta_T$',
-        plot_title_template='Image {}: {} vs {}\nDiameter Distribution Comparison',
-        output_filename_template='Diameter_2Dvs3D_histogram_{:04d}',  # Use :04d format for integers
+        plot_title_template='',
+        output_filename_template='Diameter_2Dvs3D_histogram_{:04d}',
         save_svg=True,
         save_png=True,
         show_plots=False,
         create_video=True,
         show_image_inset=True,
+        CST_cells_only_in_image=True,
         Plot_log_level=1
     )
-
-    # Example for area distributions
+    
+    # Example with tuple axis limits
     # plot10_distribution_histogram_comparison(
     #     input_dir=r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_Pipe_Default_dir\20250625_1528537\20250625_1528554\20250625_1626096\20250626_1700136\20250628_2007187",
-    #     output_dir_comment="Area Distribution Comparison",
-    #     image_numbers=[],
+    #     output_dir_comment="Area Distribution with Custom Axes",
+    #     image_numbers=[103,129],
+    #     x_axis_limit=(0.5, 5.0),  # Set x-axis from 0.5 to 5.0
+    #     y_axis_limit=(0, 30),     # Set y-axis from 0 to 30
     #     dist1_column='A_cell_distribution_nonDim2',
     #     dist2_column='A_cell_SRec_distribution_nonDim2',
     #     dist1_label='2D',
     #     dist2_label='3D',
     #     x_label=r'Cell Area / $\delta_T^2$',
     #     plot_title_template='Image {}: {} vs {}\nArea Distribution Comparison',
-    #     output_filename_template='Area_2Dvs3D_histogram_{:04d}',  # Use :04d format for integers
+    #     output_filename_template='Area_2Dvs3D_histogram_{:04d}',
     #     save_svg=True,
     #     save_png=True,
     #     show_plots=False,

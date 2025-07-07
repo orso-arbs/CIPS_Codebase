@@ -80,10 +80,22 @@ def plotter_14_xyyy(
     A11_line_color='red',
     A11_marker_style='',
     A11_marker_size=6,
-    A11_label='A11 Data'
+    A11_label='A11 Data',
+    # Linear fit parameters
+    fit_enable=False,
+    y_fit_list=[],
+    x_fit_list=[],
+    x_range_fit_list=[],
+    fit_line_colors=['red'],
+    fit_line_widths=[2.0],
+    fit_line_styles=['--'],
+    fit_labels=[],
+    show_fit_equation=True,
+    fit_equation_position='legend'  # or 'plot' to put equations on the plot
 ):
     """
     Creates an x-y plot with multiple curves, each with configurable parameters.
+    Linear fits can be added for specified y vs x data within given x ranges.
     
     Parameters
     ----------
@@ -175,6 +187,26 @@ def plotter_14_xyyy(
         Marker size for A11 data, by default 6
     A11_label : str, optional
         Label for A11 data in legend, by default 'A11 Data'
+    fit_enable : bool, optional
+        Whether to calculate and display linear fits, by default False
+    y_fit_list : list, optional
+        List of y column names to use for fitting, by default []
+    x_fit_list : list, optional
+        List of x column names to use for fitting (must match y_fit_list in length), by default []
+    x_range_fit_list : list, optional
+        List of [min_x, max_x] pairs defining the x range for each fit, by default []
+    fit_line_colors : list, optional
+        List of colors for fit lines, by default ['red']
+    fit_line_widths : list, optional
+        List of widths for fit lines, by default [2.0]
+    fit_line_styles : list, optional
+        List of styles for fit lines, by default ['--']
+    fit_labels : list, optional
+        List of custom labels for fits, by default [] (will generate automatic labels)
+    show_fit_equation : bool, optional
+        Whether to display fit equations, by default True
+    fit_equation_position : str, optional
+        Where to display fit equations ('legend' or 'plot'), by default 'legend'
     
     Returns
     -------
@@ -360,6 +392,105 @@ def plotter_14_xyyy(
         else:
             print(f"A11 data for {A11_y_column} not found")
             
+    # Add linear fits if requested
+    if fit_enable and y_fit_list and x_fit_list and x_range_fit_list:
+        # Check if the lists have compatible lengths
+        if len(y_fit_list) != len(x_fit_list) or len(y_fit_list) != len(x_range_fit_list):
+            print("Error: y_fit_list, x_fit_list, and x_range_fit_list must have the same length")
+        else:
+            # Extend fit style lists if needed
+            num_fits = len(y_fit_list)
+            fit_line_colors = fit_line_colors * (num_fits // len(fit_line_colors) + 1)
+            fit_line_widths = fit_line_widths * (num_fits // len(fit_line_widths) + 1)
+            fit_line_styles = fit_line_styles * (num_fits // len(fit_line_styles) + 1)
+            
+            # Use empty fit_labels as default if not provided
+            if not fit_labels:
+                fit_labels = [""] * num_fits
+            else:
+                fit_labels = fit_labels * (num_fits // len(fit_labels) + 1)
+            
+            # Perform linear fits for each y vs x pair
+            for i, (y_fit, x_fit, x_range) in enumerate(zip(y_fit_list, x_fit_list, x_range_fit_list)):
+                # Check if columns exist in DataFrame
+                if y_fit not in df.columns:
+                    print(f"Fit column '{y_fit}' not found in DataFrame. Skipping fit.")
+                    continue
+                if x_fit not in df.columns:
+                    print(f"Fit column '{x_fit}' not found in DataFrame. Skipping fit.")
+                    continue
+                
+                # Filter data for fitting within the specified x range
+                x_min, x_max = x_range
+                fit_df = df[(df[x_fit] >= x_min) & (df[x_fit] <= x_max)]
+                
+                if len(fit_df) < 2:
+                    print(f"Not enough points in range [{x_min}, {x_max}] for fitting. Skipping fit.")
+                    continue
+                
+                # Get x and y data for fitting
+                x_data = fit_df[x_fit].values
+                y_data = fit_df[y_fit].values
+                
+                # Handle non-numeric data
+                try:
+                    # Convert to numeric and handle NaN values
+                    x_data = pd.to_numeric(x_data, errors='coerce')
+                    y_data = pd.to_numeric(y_data, errors='coerce')
+                    
+                    # Create a mask for valid (non-NaN) values in both arrays
+                    valid_mask = ~(np.isnan(x_data) | np.isnan(y_data))
+                    
+                    # Filter data to keep only valid values
+                    x_valid = x_data[valid_mask]
+                    y_valid = y_data[valid_mask]
+                    
+                    if len(x_valid) < 2:
+                        print(f"Not enough valid numeric points for fitting after filtering NaN values. Skipping fit.")
+                        continue
+                    
+                    # Perform linear fit with valid data
+                    slope, intercept = np.polyfit(x_valid, y_valid, 1)
+                    
+                    # Generate fit line data
+                    x_fit_line = np.array([x_min, x_max])
+                    y_fit_line = slope * x_fit_line + intercept
+                    
+                    # Get styling for this fit
+                    fit_line_color = fit_line_colors[i % len(fit_line_colors)]
+                    fit_line_width = fit_line_widths[i % len(fit_line_widths)]
+                    fit_line_style = fit_line_styles[i % len(fit_line_styles)]
+                    
+                    # Create label for the fit
+                    if show_fit_equation:
+                        if slope >= 0:
+                            equation = f"${y_fit} = {slope:.4f} {x_fit} + {intercept:.4f}$"
+                        else:
+                            equation = f"${y_fit} = {slope:.4f} {x_fit} {intercept:.4f}$"
+                        
+                        fit_label = f"{fit_labels[i]} {equation}" if fit_labels[i] else equation
+                    else:
+                        fit_label = f"{fit_labels[i]}" if fit_labels[i] else f"Fit: {y_fit} vs {x_fit}"
+                    
+                    # Plot the fit line
+                    plt.plot(x_fit_line, y_fit_line, 
+                             color=fit_line_color, 
+                             linewidth=fit_line_width,
+                             linestyle=fit_line_style,
+                             label=fit_label if fit_equation_position == 'legend' else "")
+                    
+                    # Add fit equation as text annotation if requested
+                    if show_fit_equation and fit_equation_position == 'plot':
+                        # Place equation at 10% from the left and 90% from the bottom of the plot
+                        plt.annotate(equation, 
+                                    xy=(0.1, 0.9 - 0.05 * i), 
+                                    xycoords='axes fraction',
+                                    fontsize=legend_fontsize-2,
+                                    color=fit_line_color)
+                
+                except Exception as e:
+                    print(f"Error during fitting {y_fit} vs {x_fit}: {str(e)}")
+    
     # Set labels
     plt.xlabel(x_label if x_label else x_column, fontsize=x_label_fontsize)
     
@@ -405,6 +536,10 @@ def plotter_14_xyyy(
     if len(y_columns) > 3:
         y_columns_str += "_etc"
     
+    # Add fit info to filename if applicable
+    if fit_enable and y_fit_list:
+        y_columns_str += "_with_fits"
+    
     base_filename = f"{x_column.replace(' ', '_')}_vs_{y_columns_str}"
     png_path = os.path.join(png_dir, f"{base_filename}.png")
     svg_path = os.path.join(svg_dir, f"{base_filename}.svg")
@@ -420,22 +555,6 @@ def plotter_14_xyyy(
         plt.show()
     else:
         plt.close()
-    
-
-    # # print length of individual y_columns
-    # print(f"Number of y_columns: {len(y_columns)}")
-    # for i, y_col in enumerate(y_columns):
-    #     print(f"  {i+1}. {y_col} (length: {len(df[y_col])})")
-
-    # # print every tenth value of the y_collumns
-    # for i, y_col in enumerate(y_columns):
-    #     print(f"  {i+1}. {y_col} (every 10th value):")
-    #     for j in range(0, len(df[y_col]), 10):
-    #         print(f"    {j}: {df[y_col].iloc[j]}")
-
-
-    # print(f"column contents of d_cell_SRec_distribution_nonDim: "
-    #       f"{df['d_cell_SRec_distribution_nonDim'].tolist() if 'd_cell_SRec_distribution_nonDim' in df.columns else 'Column not found'}")
 
     return output_dir
 
@@ -559,29 +678,83 @@ if __name__ == "__main__":
     # )
     
     # Example usage with CSTx6 metrics
+    # plotter_14_xyyy(
+    #     input_dir=r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_Pipe_Default_dir\20250625_1528537\20250625_1528554\20250625_1626096\20250626_1700136\20250628_2007187",
+    #     x_column="R_SF_nonDim",
+    #     y_columns=[
+    #         "Roundness_mean_SRec_CSTx6_nonDim",
+    #         #"N_cells_CSTx6",
+    #         #"d_cell_SRec_mean_CSTx6_nonDim",
+    #         #"contour_length_SRec_total_CSTx6_nonDim"
+    #     ],
+    #     output_dir_comment="CSTx6_metrics_vs_R_SF_nonDim",
+    #     line_colors=['blue', 'red', 'green', 'purple'],
+    #     line_styles=['-', '-', '-', '-'],
+    #     marker_styles=['', '', '', ''],
+    #     marker_sizes=[6, 6, 6, 6],
+    #     legend_labels=[
+    #         r'Roundness',
+    #         r'Cell Count',
+    #         r'Mean Cell Diameter',
+    #         r'Total Contour Length'
+    #     ],
+    #     legend_title="CSTx6 Metrics",
+    #     legend_loc='best',
+    #     x_label=r'$R_{SF}/\delta_T$',
+    #     y_label=r'Various Metrics',
+    #     show_plot=1
+    # )
+    
+    # Example with linear fit for cell diameter vs radius
+    # plotter_14_xyyy(
+    #     input_dir=r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_Pipe_Default_dir\20250625_1528537\20250625_1528554\20250625_1626096\20250626_1700136\20250628_2007187",
+    #     x_column="R_SF_nonDim",
+    #     y_columns=["d_cell_SRec_mean_CST_nonDim"],
+    #     output_dir_comment="diameter_with_linear_fit",
+    #     line_colors=['green'],
+    #     line_styles=['-'],
+    #     marker_styles=[''],
+    #     marker_sizes=[6],
+    #     legend_labels=[r'Mean Cell Diameter (3D in Tile)'],
+    #     legend_loc='upper left',
+    #     x_label=r'$R_{SF}/\delta_T$',
+    #     y_label=r'$\overline{d}_c/\delta_T$',
+    #     # Linear fit parameters
+    #     fit_enable=True,
+    #     y_fit_list=["d_cell_SRec_mean_CST_nonDim"],
+    #     x_fit_list=["R_SF_nonDim"],
+    #     x_range_fit_list=[[16, 25]],
+    #     fit_line_colors=['black'],
+    #     fit_line_widths=[2.0],
+    #     fit_line_styles=['--'],
+    #     show_fit_equation=True,
+    #     fit_equation_position='legend',
+    #     show_plot=1
+        
+    # )
+
+    # Dimentionalisation factor
     plotter_14_xyyy(
         input_dir=r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_Pipe_Default_dir\20250625_1528537\20250625_1528554\20250625_1626096\20250626_1700136\20250628_2007187",
-        x_column="R_SF_nonDim",
+        x_column="Time_VisIt",
         y_columns=[
-            "Roundness_mean_SRec_CSTx6_nonDim",
-            #"N_cells_CSTx6",
-            #"d_cell_SRec_mean_CSTx6_nonDim",
-            #"contour_length_SRec_total_CSTx6_nonDim"
+            "nonDim_per_px",
+            "R_SF_nonDim",
+            "R_SF_px",
         ],
         output_dir_comment="CSTx6_metrics_vs_R_SF_nonDim",
-        line_colors=['blue', 'red', 'green', 'purple'],
-        line_styles=['-', '-', '-', '-'],
-        marker_styles=['', '', '', ''],
-        marker_sizes=[6, 6, 6, 6],
+        line_colors=['black', 'orange', 'coral'],
+        line_styles=['-', '-', '--'],
+        marker_styles=['', '', ''],
+        marker_sizes=[6, 6, 6],
         legend_labels=[
-            r'Roundness',
-            r'Cell Count',
-            r'Mean Cell Diameter',
-            r'Total Contour Length'
+            r'$D$',
+            r'$R_{SF}/\delta_T$',
+            r'$R_{SF}[px]$',
         ],
         legend_title="CSTx6 Metrics",
         legend_loc='best',
-        x_label=r'$R_{SF}/\delta_T$',
+        x_label=r'$\tau$',
         y_label=r'Various Metrics',
         show_plot=1
     )
