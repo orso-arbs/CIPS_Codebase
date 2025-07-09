@@ -474,7 +474,7 @@ if __name__ == "__main__":
         y1_label=r'$D$',
         # First twin y-axis parameters
         y2_columns=["R_SF_nonDim"],
-        y2_colors=["orange"],
+        y2_colors=["blue"],
         y2_line_widths=[2],
         y2_label=r'$R_{SF}/\delta_T$',
         # Second twin y-axis parameters
@@ -488,6 +488,6 @@ if __name__ == "__main__":
         legend_loc='upper left',
         show_legend=False,
         line_style=['-', '-', '--'],  # Control line styles globally: solid for main, dashed for twin1, dash-dot for twin2
-        twin_axis_spacing=[60, 120],
+        twin_axis_spacing=[0, 60],
         show_plot=0
     )

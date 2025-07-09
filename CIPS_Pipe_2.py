@@ -745,10 +745,10 @@ if __name__ == "__main__":
     
     CIPS_pipeline_2(
         cips_pipeline_global_log_level=2, 
-        cips_pipeline_output_dir_comment="S79a100_T3_vmag_2000px_BBWW_cyto3_flowThres0p5 - contour lengths",
+        cips_pipeline_output_dir_comment="test-----S79a100_T3_vmag_2000px_BBWW_cyto3_flowThres0p5 - contour lengths",
         
         # Visit_Projector parameters
-        vp_State_range_manual=[79,100],
+        vp_State_range_manual=[79],
         
         # Cellpose segmentation parameters
         cps_max_images_per_batch=40,
@@ -803,9 +803,9 @@ if __name__ == "__main__":
         p6c_video=True,
         
         # Run all pipeline steps
-        run_visit_projector=False,
-        run_cp_segment=False,
-        run_cp_extract=False,       cips_CPe1_output_dir_override  = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_Pipe_Default_dir\20250625_1528537\20250625_1528554\20250625_1626096\20250626_1700136",
+        run_visit_projector=True,
+        run_cp_segment=True,
+        run_cp_extract=True,       #cips_CPe1_output_dir_override  = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_Pipe_Default_dir\20250625_1528537\20250625_1528554\20250625_1626096\20250626_1700136",
         run_analysis_a11=True,
 
         run_plotter_1=True,
