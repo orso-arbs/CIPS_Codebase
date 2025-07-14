@@ -860,13 +860,138 @@ def plotter_14_xTwinyyyy_image(
 
 
 
+# if __name__ == "__main__":
+#     # Example usage with twin axes for different metrics
+#     input_dir = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_Pipe_Default_dir\20250625_1528537\20250625_1528554\20250625_1626096\20250626_1700136\20250628_2007187"
+    
+#     # Define column groups for each twin axis (three axes now)
+#     y_columns_list = [
+#         ['R_SF_nonDim'],  # Third axis
+#         ['N_cells_CSTx6'],                      # First axis
+#         ['d_cell_SRec_mean_CSTx6_nonDim'],      # Second axis
+#     ]
+    
+#     # Define better colors using a professional color palette
+#     y_colors_list = [
+#         ['teal'],     # Green for third axis
+#         ['red'],    # Blue for first axis
+#         ['green'],    # Vermillion for second axis
+#     ]
+    
+#     # Define labels for each axis with consistent formatting
+#     y_labels_list = [
+#         r'$\dot{R}_{SF}/S_L$', #r'$R_{SF}/\delta_T$',                     # Label for third axis
+#         r'$N_{\mathrm{cells}}$',                  # Label for first axis
+#         r'$\overline{d}_c/\delta_T$',             # Label for second axis
+#     ]
+    
+#     # Line styles for differentiation
+#     y_line_styles_list = [
+#         ['-'],    # Solid line for N_cells
+#         ['-'],    # Solid line for mean diameter
+#         ['-'],     # Solid line for contour length
+#     ]
+    
+#     # Line widths for better visibility
+#     y_line_widths_list = [
+#         [2.0],    # Thicker line for N_cells
+#         [2.0],    # Thicker line for mean diameter
+#         [2.0],     # Thicker line for contour length
+#     ]
+    
+#     # Add markers for data points
+#     y_markers_list = [
+#         [''],    # Circle markers for N_cells
+#         [''],    # Square markers for mean diameter
+#         [''],     # Triangle markers for contour length
+#     ]
+    
+#     # Define scale factors for each column
+#     y_scale_factors_list = [
+#         [1.0],    # No scaling for N_cells
+#         [1.0],    # No scaling for mean diameter
+#         [1.0],     # No scaling for contour length
+#     ]
+    
+#     # Better spacings for each twin axis (in points)
+#     axis_spacings = [0, 70]  # Increased spacings for clearer separation
+    
+#     # Define LLS fit parameters
+#     fit_y_variables = []  # Variables to fit
+#     fit_x_start_values = [16.0,
+#                             30.0, 
+#                             38.0, 
+#                         ]      # Starting x value for each fit
+#     fit_x_stop_values = [30.0, 
+#                         38.0,
+#                         57.0,
+#                         ]       # Ending x value for each fit
+#     fit_colors = ['darkgreen',
+#                     'darkgreen',
+#                     'darkgreen',
+#                     ]      # Colors for each fit line
+#     fit_line_styles = ['--',
+#                        '--',
+#                        '--',
+#                         ]         # Line styles for each fit line
+#     fit_line_widths = [2.5,
+#                        2.5,
+#                        2.5,
+#                         ]          # Line widths for each fit line
+    
+#     output_dir = plotter_14_xTwinyyyy_image(
+#         input_dir=input_dir,
+#         image_list=[],
+#         omit_image_list=[106],
+#         x_column="Time_VisIt",
+#         y_columns_list=y_columns_list,
+#         y_colors_list=y_colors_list,
+#         y_labels_list=y_labels_list,
+#         y_line_styles_list=y_line_styles_list,
+#         y_line_widths_list=y_line_widths_list,
+#         y_markers_list=y_markers_list,
+#         y_marker_sizes_list=[[6], [6], [6]],
+#         y_scale_factors_list=y_scale_factors_list,
+#         # LLS fit parameters
+#         fit_y_variables=fit_y_variables,
+#         fit_x_start_values=fit_x_start_values,
+#         fit_x_stop_values=fit_x_stop_values,
+#         fit_colors=fit_colors,
+#         fit_line_styles=fit_line_styles,
+#         fit_line_widths=fit_line_widths,
+#         output_dir_comment="with_fits",
+#         x_label=r'$\tau$',
+#         x_label_fontsize=20,
+#         tick_label_fontsize=20,
+#         legend_fontsize=20,
+#         legend_loc='upper right',
+#         legend_title=r'\textbf{Legend}',
+#         show_legend=False,  # Show legend to display fit lines
+#         axis_spacings=axis_spacings,
+#         ScaleFactor=1.2,
+#         color_only_CST_cells=True,
+#         show_segmentation=True,
+#         show_segmentation_on_both_halves=True,
+#         create_video=True,
+#         video_fps=10,
+#         figsize=(18, 6),
+#         dpi=300,
+#         show_grid=True,
+#         grid_style='--',
+#         grid_width=0.7,
+#         grid_color='#CCCCCC',
+#         grid_alpha=0.5,
+#         show_plot=0
+#     )
+
+
 if __name__ == "__main__":
     # Example usage with twin axes for different metrics
     input_dir = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_Pipe_Default_dir\20250625_1528537\20250625_1528554\20250625_1626096\20250626_1700136\20250628_2007187"
     
     # Define column groups for each twin axis (three axes now)
     y_columns_list = [
-        ['R_SF_nonDim'],  # Third axis
+        ['R_SF_nonDim'],                        # Third axis
         ['N_cells_CSTx6'],                      # First axis
         ['d_cell_SRec_mean_CSTx6_nonDim'],      # Second axis
     ]
