@@ -85,21 +85,39 @@ def create_video_from_images(plot_image_folder, video_output_dir=None, fps=5, ou
         
     return None
 
-# Example usage when script is run directly
+# # Example usage when script is run directly
+# if __name__ == "__main__":
+#     # Example directories containing PNG sequences
+#     image_dirs = [
+#         r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_variations\BW vars\20250607_2240236\20250607_2240246\20250612_1429370\20250614_1949188\20250614_2132115",
+#         r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_variations\BW vars\20250608_0303173\20250608_0303173\20250612_1638247\20250614_2137355\20250614_2250588",
+#         r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_variations\BW vars\20250609_0028398\20250609_0028408\20250612_1843092\20250614_2257342\20250615_0044212",
+#         r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_variations\BW vars\20250610_0004544\20250610_0004569\20250612_2023463\20250612_2228583\20250612_2318262",
+#         r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_variations\BW vars\20250610_0529590\20250610_0529590\20250615_1239319\20250615_1440242\20250615_1602122",
+#         r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_variations\BW vars\20250610_0646347\20250610_0646347\20250615_1609401\20250615_1727535\20250616_1233427",
+#         r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_variations\BW vars\20250610_0803025\20250610_0803025\20250615_1734526\20250615_1952036\20250615_2108331",
+#         r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_variations\BW vars\20250610_0916439\20250610_0916439\20250615_2115060\20250615_2243023\20250616_0012372",
+#     ]
+    
+#     comments = ["BW", "BBWW", "WBW", "WWBBWW", "BWB", "BBWWBB", "WB", "WWBB"]
+    
+#     # Example 1: Test with just 3 images
+#     create_video_from_images(
+#         plot_image_folder=image_dirs,
+#         video_output_dir=image_dirs,
+#         fps=5,
+#         output_dir_comment=comments,
+#         n_images=None  # Only use first n_images images for testing. None for all images
+#     )
+
+
 if __name__ == "__main__":
     # Example directories containing PNG sequences
     image_dirs = [
-        r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_variations\BW vars\20250607_2240236\20250607_2240246\20250612_1429370\20250614_1949188\20250614_2132115",
-        r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_variations\BW vars\20250608_0303173\20250608_0303173\20250612_1638247\20250614_2137355\20250614_2250588",
-        r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_variations\BW vars\20250609_0028398\20250609_0028408\20250612_1843092\20250614_2257342\20250615_0044212",
-        r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_variations\BW vars\20250610_0004544\20250610_0004569\20250612_2023463\20250612_2228583\20250612_2318262",
-        r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_variations\BW vars\20250610_0529590\20250610_0529590\20250615_1239319\20250615_1440242\20250615_1602122",
-        r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_variations\BW vars\20250610_0646347\20250610_0646347\20250615_1609401\20250615_1727535\20250616_1233427",
-        r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_variations\BW vars\20250610_0803025\20250610_0803025\20250615_1734526\20250615_1952036\20250615_2108331",
-        r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_variations\BW vars\20250610_0916439\20250610_0916439\20250615_2115060\20250615_2243023\20250616_0012372",
-    ]
+        r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\FB images\JomaasSF_Images",
+        ]
     
-    comments = ["BW", "BBWW", "WBW", "WWBBWW", "BWB", "BBWWBB", "WB", "WWBB"]
+    comments = ["JomaasSF"]
     
     # Example 1: Test with just 3 images
     create_video_from_images(

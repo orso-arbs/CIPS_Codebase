@@ -614,7 +614,7 @@ if __name__ == "__main__":
     plot10_distribution_histogram_comparison(
         input_dir=r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_Pipe_Default_dir\20250625_1528537\20250625_1528554\20250625_1626096\20250626_1700136\20250628_2007187",
         output_dir_comment="S49a103a129 Diameter Distribution Comparison",
-        image_numbers=[49,103,129],
+        image_numbers=[],#[49,103,129,135],
         y_axis_limit=25,  # Now explicitly sets maximum y value to 20
         dist1_column='d_cell_distribution_nonDim',
         dist2_column='d_cell_SRec_distribution_nonDim',
@@ -622,7 +622,7 @@ if __name__ == "__main__":
         dist2_label='3D in Tile',
         x_label=r'Cell Diameter / $\delta_T$',
         plot_title_template='',
-        output_filename_template='Diameter_2Dvs3D_histogram_{:04d}',
+        output_filename_template='Spost15_Diameter_2Dvs3D_histogram_{:04d}',
         save_svg=True,
         save_png=True,
         show_plots=False,

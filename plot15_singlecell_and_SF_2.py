@@ -423,7 +423,7 @@ if __name__ == "__main__":
     # --- Input and Output ---
     input_directory = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_Pipe_Default_dir\20250625_1528537\20250625_1528554\20250625_1626096\20250626_1700136\20250628_2007187"
     manual_output_directory = ""  # Optional: Or a specific path
-    output_comment = "single_cell_and_SF_plots"
+    output_comment = "single_cell_and_SF_plots - no line"
     
     # --- Image and Cell Selection ---
     images_to_process = [79]  # Empty list [] for all images
@@ -463,7 +463,7 @@ if __name__ == "__main__":
     frame_linestyle = '-'
     connection_color = 'black'
     connection_linewidth = 1
-    connection_linestyle = '--'
+    connection_linestyle = ''
     connection_zorder = 5
     
     # --- Label and Font Arguments ---
