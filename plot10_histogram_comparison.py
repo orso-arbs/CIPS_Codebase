@@ -72,16 +72,16 @@ def plot10_distribution_histogram_comparison(
     CST_cells_only_in_image=False,  # If True, only show cells that are in the CST in the image inset
     
     # New text and legend customization parameters
-    x_label_fontsize=20,       # Font size for x-axis label
-    y_label_fontsize=20,       # Font size for y-axis label 
+    x_label_fontsize=25,       # Font size for x-axis label
+    y_label_fontsize=25,       # Font size for y-axis label 
     title_fontsize=18,         # Font size for plot title
     legend_fontsize=20,        # Font size for legend text
-    legend_framealpha=1,     # Legend box transparency (0-1)
+    legend_framealpha=0.5,     # Legend box transparency (0-1)
     legend_position="upper left", # Position of the legend
     legend_bbox_to_anchor=(0, 1), # Fine-tuning of legend position
-    tick_label_fontsize=20,    # Font size for axis tick labels
+    tick_label_fontsize=25,    # Font size for axis tick labels
     info_box_fontsize=10,      # Font size for info box text
-    mean_line_label_template='Mean {}: {:.3f}', # Template for mean value labels
+    mean_line_label_template='$\overline{{d}}_c$ {} = {:.3f}$\delta_T$', # Template for mean value labels
     
 ):
     """
@@ -360,10 +360,10 @@ def plot10_distribution_histogram_comparison(
             
             # Plot histograms with normalized values and black edges
             hist1 = ax.hist(dist1_data, bins=bins, alpha=0.6, color=dist1_color, 
-                   label=dist1_label, weights=weights_1, edgecolor='black', linewidth=0.5)
+                   label=r"$d_c$ " + dist1_label, weights=weights_1, edgecolor='black', linewidth=0.5)
             hist2 = ax.hist(dist2_data, bins=bins, alpha=0.6, color=dist2_color, 
-                   label=dist2_label, weights=weights_2, edgecolor='black', linewidth=0.5)
-                   
+                   label=r"$d_c$ " + dist2_label, weights=weights_2, edgecolor='black', linewidth=0.5)
+
             # Calculate actual max frequency for this plot
             this_max_freq = max(np.max(hist1[0]), np.max(hist2[0]))
         else:
@@ -558,7 +558,7 @@ def plot10_distribution_histogram_comparison(
             try:
                 d_2d = np.mean(SRec_df.iloc[i]['d_cell_distribution_nonDim'])
                 d_3d = np.mean(SRec_df.iloc[i]['d_cell_SRec_distribution_nonDim'])
-                diameter_str = f"2D Diameter: {d_2d:.2f}\n3D Diameter: {d_3d:.2f}"
+                diameter_str = fr"2D Diameter = {d_2d:.2f}$\delta_T$\n3D Diameter = {d_3d:.2f}$\delta_T$"
                 cell_count = len(dist1_data)
                 box_text = f"Cell count: {cell_count}\n{diameter_str}"
                 ax.text(0.02, 0.88, box_text, 
@@ -613,14 +613,14 @@ if __name__ == "__main__":
     # Example for diameter distributions
     plot10_distribution_histogram_comparison(
         input_dir=r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_Pipe_Default_dir\20250625_1528537\20250625_1528554\20250625_1626096\20250626_1700136\20250628_2007187",
-        output_dir_comment="S49a103a129 Diameter Distribution Comparison",
-        image_numbers=[],#[49,103,129,135],
+        output_dir_comment="S49a103a129a135 Diameter Distribution Comparison",
+        image_numbers=[49,103,129,135],
         y_axis_limit=25,  # Now explicitly sets maximum y value to 20
         dist1_column='d_cell_distribution_nonDim',
         dist2_column='d_cell_SRec_distribution_nonDim',
-        dist1_label='2D in Tile',
-        dist2_label='3D in Tile',
-        x_label=r'Cell Diameter / $\delta_T$',
+        dist1_label='2D',
+        dist2_label='3D',
+        x_label=r'$d_c$ / $\delta_T$',
         plot_title_template='',
         output_filename_template='Spost15_Diameter_2Dvs3D_histogram_{:04d}',
         save_svg=True,

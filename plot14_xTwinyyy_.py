@@ -496,11 +496,11 @@ if __name__ == "__main__":
     input_dir = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_Pipe_Default_dir\20250625_1528537\20250625_1528554\20250625_1626096\20250626_1700136\20250628_2007187"
     
     # Define column groups for each twin axis
-    y_columns_list =[
-        "nonDim_per_px",
-        "R_SF_nonDim",
-        "R_SF_px",
-    ],
+    y_columns_list = [
+        ["nonDim_per_px"],  # First axis (black)
+        ["R_SF_nonDim"],    # Second axis (orange)
+        ["R_SF_px"],        # Third axis (coral)
+    ]
 
     
     # Define colors for each group

@@ -58,11 +58,11 @@ def plotter_3_CPvsA11_CST_Panel(input_dir, # Format_1 requires input_dir
         r"(f)", r"(g)", r"(h)", r"(i)", r"(j)"   # col 1
     ],
     subplot_textbox_positions=[  # (x, y) positions relative to axes for each text box
-        (0.05, 0.95), (0.05, 0.95),  # Row 0
-        (0.05, 0.95), (0.05, 0.95),  # Row 1
-        (0.05, 0.95), (0.05, 0.95),  # Row 2
-        (0.05, 0.95), (0.05, 0.95),  # Row 3
-        (0.05, 0.95), (0.05, 0.95)   # Row 4
+        (0.05, 0.98), (0.05, 0.98),  # Row 0
+        (0.05, 0.98), (0.05, 0.98),  # Row 1
+        (0.05, 0.98), (0.05, 0.98),  # Row 2
+        (0.05, 0.98), (0.05, 0.98),  # Row 3
+        (0.05, 0.98), (0.05, 0.98)   # Row 4
     ],
     subplot_textbox_fontsize=20,
     subplot_textbox_alpha=0.0,
@@ -321,13 +321,13 @@ def plotter_3_CPvsA11_CST_Panel(input_dir, # Format_1 requires input_dir
     # A11 first plot column - apply manual scaling factors
     # Apply 10^-4 factor to A11_SF_A
     ax_0_0.plot(A11_SF_A['time'], A11_SF_A['A'] * 1e-4,
-                label="A11 Spherical Flame Area $A_{SF}$", color='black', linestyle='dashed')
+                label="A11 Spherical Flame Area $A_{SEF}$", color='black', linestyle='dashed')
     ax_0_0.set_ylim(0, A11_SF_A['A'].max() * 1e-4 * 1.05)
     ax_0_0.tick_params(axis='y', labelcolor='black', labelsize=tick_label_fontsize)
     ax_0_0.spines["left"].set_color('black')
     
     # No need for scientific notation handling - use simple axis label with scaling noted
-    ax_0_0.set_ylabel(r"$A_{SF} \times 10^{-4}$", color='black', fontsize=axis_label_fontsize)
+    ax_0_0.set_ylabel(r"$A_{SEF} \times 10^{-4}$", color='black', fontsize=axis_label_fontsize)
 
     # Apply 10^-5 factor to A11_SF_iHRR
     ax_1_0.plot(A11_SF_iHRR['time'], A11_SF_iHRR['iHRR'] * 1e-5,
@@ -346,12 +346,12 @@ def plotter_3_CPvsA11_CST_Panel(input_dir, # Format_1 requires input_dir
 
     ax_3_0.plot(A11_SF_R_mean_dot['time'], A11_SF_R_mean_dot['R_mean_dot'] ,
                 label="A11 Spherical Flame Radius first \ntime derivative $\dot{R}_{\text{mean}}$", color='black', linestyle='dashed')
-    ax_3_0.set_ylabel("$\\dot{R}_{mean}*\tau/\delta_T$", color='black', fontsize=axis_label_fontsize)
+    ax_3_0.set_ylabel("$\\dot{R}_{mean}/S_L$", color='black', fontsize=axis_label_fontsize)
     ax_3_0.tick_params(axis='y', labelcolor='black', labelsize=tick_label_fontsize)
 
     ax_4_0.plot(A11_SF_N_c['time'], A11_SF_N_c['N_c'] ,
                 label="A11 Number of cells $N_c$", color='black', linestyle='dashed')
-    ax_4_0.set_ylabel("$N_{cells,A11}$", color='black', fontsize=axis_label_fontsize)
+    ax_4_0.set_ylabel("Manual $N_{cells}$", color='black', fontsize=axis_label_fontsize)
     ax_4_0.tick_params(axis='y', labelcolor='black', labelsize=tick_label_fontsize)
     
     # Set bottom left plot to have the same scale as the N_cells twin axes
@@ -506,22 +506,53 @@ def plotter_3_CPvsA11_CST_Panel(input_dir, # Format_1 requires input_dir
 
 
     # Explicitly set x-axis labels for the first and last row
-    ax_0_0.set_xlabel(r"$\tau$", fontsize=axis_label_fontsize)  # Top-left subplot
-    ax_0_1.set_xlabel(r"$\tau$", fontsize=axis_label_fontsize)  # Top-right subplot
-    ax_4_0.set_xlabel(r"$\tau$", fontsize=axis_label_fontsize)  # Bottom-left subplot
-    ax_4_1.set_xlabel(r"$\tau$", fontsize=axis_label_fontsize)  # Bottom-right subplot
+    ax_0_0.set_xlabel(r"$t/\tau$", fontsize=axis_label_fontsize)  # Top-left subplot
+    ax_0_1.set_xlabel(r"$t/\tau$", fontsize=axis_label_fontsize)  # Top-right subplot
+    ax_4_0.set_xlabel(r"$t/\tau$", fontsize=axis_label_fontsize)  # Bottom-left subplot
+    ax_4_1.set_xlabel(r"$t/\tau$", fontsize=axis_label_fontsize)  # Bottom-right subplot
 
     # Move top x-axis labels to the top row
     ax_0_0.xaxis.set_label_position("top")
     ax_0_1.xaxis.set_label_position("top")
 
+    #set individual plot legends
+    ax_0_0_label_A11 = mlines.Line2D([], [], color='black', label=r"$A_{SEF}$", linestyle='--')
+    ax_0_0_label_Cellpose_d = mlines.Line2D([], [], color='green', label=r"$\overline{d}_c$", linestyle='-')
+    ax_0_0_label_Cellpose_N = mlines.Line2D([], [], color='red', label=r"$N_{cells}$", linestyle='-')
+    ax_0_0_label_Cellpose_L = mlines.Line2D([], [], color='blue', label=r"$L$", linestyle='-')
+    ax_0_0.legend(handles=[ax_0_0_label_A11, ax_0_0_label_Cellpose_d, ax_0_0_label_Cellpose_N, ax_0_0_label_Cellpose_L], loc='upper left', fontsize=legend_fontsize, frameon=False)
+
+    ax_1_0_label_A11 = mlines.Line2D([], [], color='black', label=r"$iHRR$", linestyle='--')
+    ax_1_0.legend(handles=[ax_1_0_label_A11], loc='upper left', fontsize=legend_fontsize, frameon=False)
+
+    ax_2_0_label_A11 = mlines.Line2D([], [], color='black', label=r"$R_{mean}$", linestyle='--')
+    ax_2_0.legend(handles=[ax_2_0_label_A11], loc='upper left', fontsize=legend_fontsize, frameon=False)
+
+    ax_3_0_label_A11 = mlines.Line2D([], [], color='black', label=r"$\dot{R}_{mean}$", linestyle='--')
+    ax_3_0.legend(handles=[ax_3_0_label_A11], loc='upper left', fontsize=legend_fontsize, frameon=False)
+
+    ax_4_0_label_A11 = mlines.Line2D([], [], color='black', label=r"Manual $N_{cells}$", linestyle='--')
+    ax_4_0.legend(handles=[ax_4_0_label_A11], loc='upper left', fontsize=legend_fontsize, frameon=False)
+
+    ax_0_1_label_A11_1 = mlines.Line2D([], [], color='black', label=r"$K_{geom}$", linestyle='--')
+    ax_0_1_label_A11_2 = mlines.Line2D([], [], color='blue', label=r"$K_{mean}$", linestyle='--')
+    ax_0_1.legend(handles=[ax_0_1_label_A11_1, ax_0_1_label_A11_2], loc='upper left', fontsize=legend_fontsize, frameon=False)
+
+    ax_1_1_label_A11 = mlines.Line2D([], [], color='black', label=r"$a_t$", linestyle='--')
+    ax_1_1.legend(handles=[ax_1_1_label_A11], loc='upper left', fontsize=legend_fontsize, frameon=False)
+
+    ax_2_1_label_A11 = mlines.Line2D([], [], color='black', label=r"$s_a$", linestyle='--')
+    ax_2_1.legend(handles=[ax_2_1_label_A11], loc='upper left', fontsize=legend_fontsize, frameon=False)
+
+    ax_3_1_label_A11 = mlines.Line2D([], [], color='black', label=r"$s_d$", linestyle='--')
+    ax_3_1.legend(handles=[ax_3_1_label_A11], loc='upper left', fontsize=legend_fontsize, frameon=False)
+
+    ax_4_1_label_A11 = mlines.Line2D([], [], color='black', label=r"$D$", linestyle='--')
+    ax_4_1.legend(handles=[ax_4_1_label_A11], loc='upper left', fontsize=legend_fontsize, frameon=False)
 
     # Set y-axis labels for the right column with simplified labels
     ax_0_1.set_ylabel("$K$", color='black', fontsize=axis_label_fontsize)
     ax_0_1.tick_params(axis='y', labelcolor='black', labelsize=tick_label_fontsize)
-    black_label = mlines.Line2D([], [], color='black', label=r"$K_{geom}$", linestyle='dashed')
-    blue_label = mlines.Line2D([], [], color='blue', label=r"$K_{mean}$", linestyle='dashed')
-    ax_0_1.legend(handles=[black_label, blue_label], loc='upper center', fontsize=legend_fontsize, frameon=False)
 
     ax_1_1.set_ylabel("$a_t$", color='black', fontsize=axis_label_fontsize)
     ax_1_1.tick_params(axis='y', labelcolor='black', labelsize=tick_label_fontsize)
@@ -598,26 +629,25 @@ def plotter_3_CPvsA11_CST_Panel(input_dir, # Format_1 requires input_dir
     # Add text boxes with definitions at the bottom of the figure - fixed LaTeX formatting
     left_col_text = (
         r"$\\$ "
-        r"$\tau$: Time *$\delta_T/S_L$ $\\$ "
-        r"$A_{SF}$: Spherical flame area /$\delta_T^2$ $\\$ "
-        r"$iHRR$: Integral heat release rate (non dimentional) $\\$ "
-        r"$R_{mean}$: Average radius of the wrinkled flame front /$\delta_T$ $\\$ "
-        r"$\dot{R}_{mean}$: First time derivative of the average radius (non dimentional)$\\$ "
-        r"$N_{cells,A11}$: Number of cells as counted in Altantzis 2011 $\\$ "
-        r"$K_{geom}$: Geometric stretch rate (non dimentional) $\\$ "
-        r"$K_{mean}$: Mean stretch rate (non dimentional) $\\$ "
+        r"$A_{SEF}$: Spherical flame area $\\$ "
+        r"$iHRR$: Integral heat release rate (non dimensional) $\\$ "
+        r"$R_{mean}$: Average radius of the wrinkled flame front $\\$ "
+        r"$\dot{R}_{mean}$: First time derivative of the average radius (non dimensional)$\\$ "
+        r"Manual $N_{cells}$: Number of cells as counted in Altantzis 2011 $\\$ "
+        r"$K_{geom}$: Geometric stretch rate (non dimensional) $\\$ "
+        r"$K_{mean}$: Mean stretch rate (non dimensional) $\\$ "
     )
     
     right_col_text = (
         r"$\\$ "
-        r"$a_t$: Average total aerodynamic strain $\\$ "
-        r"$s_a$: Average normal component of the absolute propagation velocity (non dimentional) $\\$ "
-        r"$s_d$: Average density weighted displacement speed (non dimentional) $\\$ "
-        r"$D$: Dimensionalization factor $R/\delta_T/px$ $\\$ "
+        r"$a_t$: Average total aerodynamic strain (non dimensional) $\\$ "
+        r"$s_a$: Average normal component of the absolute propagation velocity (non dimensional) $\\$ "
+        r"$s_d$: Average density weighted displacement speed (non dimensional) $\\$ "
+        r"$D$: Dimensionalization factor $\\$ "
         r"$\\$"
         r"$N_{cells}$: Total amount of cells on the spherical flame $\\$ "
-        r"$\overline{d}_c$: Cell mean diameter $/\delta_T$ $\\$ "
-        r"$L$: Total cell contour length $/\delta_T$ $\\$ "
+        r"$\overline{d}_c$: Cell mean diameter $\\$ "
+        r"$L$: Total cell contour length $\\$ "
 
     )
     
@@ -630,10 +660,10 @@ def plotter_3_CPvsA11_CST_Panel(input_dir, # Format_1 requires input_dir
                 ha='center', va='top', fontsize=textbox_fontsize)
     
     # Also update font sizes for x-axis labels
-    ax_0_0.set_xlabel(r"$\tau$", fontsize=axis_label_fontsize)
-    ax_0_1.set_xlabel(r"$\tau$", fontsize=axis_label_fontsize)
-    ax_4_0.set_xlabel(r"$\tau$", fontsize=axis_label_fontsize)
-    ax_4_1.set_xlabel(r"$\tau$", fontsize=axis_label_fontsize)
+    ax_0_0.set_xlabel(r"$t/\tau$", fontsize=axis_label_fontsize)
+    ax_0_1.set_xlabel(r"$t/\tau$", fontsize=axis_label_fontsize)
+    ax_4_0.set_xlabel(r"$t/\tau$", fontsize=axis_label_fontsize)
+    ax_4_1.set_xlabel(r"$t/\tau$", fontsize=axis_label_fontsize)
     
     # Set tick label font size for all axes
     for ax in axes:

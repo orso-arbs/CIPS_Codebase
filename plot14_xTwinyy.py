@@ -460,6 +460,39 @@ def plotter_14_xTwinyy(
     return output_dir
 
 
+# if __name__ == "__main__":
+#     # Example usage with twin axes for different metrics
+#     input_dir = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_Pipe_Default_dir\20250625_1528537\20250625_1528554\20250625_1626096\20250626_1700136\20250628_2007187"
+    
+#     output_dir = plotter_14_xTwinyy(
+#         input_dir=input_dir,
+#         x_column="Time_VisIt",
+#         # Main y-axis parameters
+#         y1_columns=["nonDim_per_px"],
+#         y1_colors=["black"],
+#         y1_line_widths=[2],
+#         y1_label=r'$D$',
+#         # First twin y-axis parameters
+#         y2_columns=["R_SF_nonDim"],
+#         y2_colors=["blue"],
+#         y2_line_widths=[2],
+#         y2_label=r'$R_{SF}/\delta_T$',
+#         # Second twin y-axis parameters
+#         y3_columns=["R_SF_px"],
+#         y3_colors=["red"],
+#         y3_line_widths=[2],
+#         y3_label=r'$R_{SF}[px]$',
+#         # Other parameters
+#         output_dir_comment="twin_dimentionalisation",
+#         x_label=r"$\tau$",
+#         legend_loc='upper left',
+#         show_legend=False,
+#         line_style=['-', '-', '--'],  # Control line styles globally: solid for main, dashed for twin1, dash-dot for twin2
+#         twin_axis_spacing=[0, 60],
+#         show_plot=0
+#     )
+
+
 if __name__ == "__main__":
     # Example usage with twin axes for different metrics
     input_dir = r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_Pipe_Default_dir\20250625_1528537\20250625_1528554\20250625_1626096\20250626_1700136\20250628_2007187"
@@ -483,7 +516,7 @@ if __name__ == "__main__":
         y3_line_widths=[2],
         y3_label=r'$R_{SF}[px]$',
         # Other parameters
-        output_dir_comment="twin_dimentionalisation",
+        output_dir_comment="cell stages",
         x_label=r"$\tau$",
         legend_loc='upper left',
         show_legend=False,

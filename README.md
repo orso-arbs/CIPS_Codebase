@@ -6,8 +6,9 @@
 The Visit-Cellpose-Lineage Pipeline provides a quick way of analysing cellular structures in large data using VisIt, Cellpose and [TBD Lineage tree].
 
 Pipeline:
-- CP_main_1 - orchestrates the data pipeline.
+- CIPS_Pipe_2 - orchestrates the data pipeline.
 - VisIt_projector_1 - Uses VisIt on the Euler cluster to read a database, plot a pseudocolor on an isovalue and then saves a .png for each state in the database.
+- 
 
 
 Note: The code has been checked for functionality only in Windows 11 with Visit 3.4.2 and Cellpose 3.1.1.1
@@ -46,8 +47,7 @@ Note: The code has been checked for functionality only in Windows 11 with Visit 
 3. Connect to the ETH network
    1. Either use an ETH WIFI
    2. [Or connect via VPN](https://unlimited.ethz.ch/spaces/itkb/pages/21125994/VPN)
-4. Running the Pipeline in CIPS_Pipe_1
-   1. VisIt
-      1. Set vp_Database as the path to your .nek5000 or .visit Database file
-      2. 
-      3. 
+4. Setup the Pipeline in CIPS_Pipe_2
+   1. in CIPS_Pipe_2 set the input_dir as the directory where all the output data is stored
+   2. in Visit_Projector_1.py, set VisIt and cluster parameters
+5. Run CIPS_Pipe_2

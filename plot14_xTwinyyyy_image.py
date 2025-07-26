@@ -1066,7 +1066,7 @@ if __name__ == "__main__":
     
     output_dir = plotter_14_xTwinyyyy_image(
         input_dir=input_dir,
-        image_list=[],
+        image_list=[79],
         omit_image_list=[106],
         x_column="Time_VisIt",
         y_columns_list=y_columns_list,
@@ -1085,10 +1085,10 @@ if __name__ == "__main__":
         fit_line_styles=fit_line_styles,
         fit_line_widths=fit_line_widths,
         output_dir_comment="with_fits",
-        x_label=r'$\tau$',
-        x_label_fontsize=20,
-        tick_label_fontsize=20,
-        legend_fontsize=20,
+        x_label=r't/$\tau$',
+        x_label_fontsize=25,
+        tick_label_fontsize=25,
+        legend_fontsize=25,
         legend_loc='upper right',
         legend_title=r'\textbf{Legend}',
         show_legend=False,  # Show legend to display fit lines

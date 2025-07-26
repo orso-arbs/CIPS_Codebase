@@ -24,6 +24,7 @@ def Visit_projector_1(
     cluster_args_additional = f"--mem-per-cpu=6G --tmp=6G --output=/cluster/scratch/orsob/orsoMT_orsob/VisIt_logs_and_error_output/%j_visit.out --error=/cluster/scratch/orsob/orsoMT_orsob/VisIt_logs_and_error_output/%j_visit.err",
     VisIt_sitepackages_path = r"C:\Users\obs\LLNL\VisIt3.4.2\lib\site-packages",
     Database = r"euler.ethz.ch:/cluster/scratch/orsob/orsoMT_orsob/A11_states/A11_all_states.visit",
+
     # Plotting parameters
     State_range_manual = [], # Data
     Plots = ["Pseudocolor - Isosurface"], # Plots

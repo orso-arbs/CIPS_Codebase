@@ -59,10 +59,10 @@ def plotter_14_xyyy(
     y_label=None,
     legend_labels=None,  # List of legend labels
     legend_title=None,   # Optional title for the legend
-    x_label_fontsize=20,
-    y_label_fontsize=20,
-    tick_label_fontsize=20,
-    legend_fontsize=20,
+    x_label_fontsize=25,
+    y_label_fontsize=25,
+    tick_label_fontsize=25,
+    legend_fontsize=25,
     legend_loc='upper left',
     figsize=(10, 6),
     dpi=100,
@@ -616,39 +616,39 @@ if __name__ == "__main__":
     
     # # Example usage with multiple curves for cell count metrics (with A11 data)
     # # Load A11 data first
-    # A11_data = load_A11_data()
+    A11_data = load_A11_data()
         
     # # Example with A11 data using same x-axis as main data
-    # plotter_14_xyyy(
-    #     input_dir=r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_Pipe_Default_dir\20250625_1528537\20250625_1528554\20250625_1626096\20250626_1700136\20250628_2007187",
-    #     x_column="R_SF_nonDim",
-    #     y_columns=[
-    #         "N_cells",
-    #         "N_cells_CST",
-    #     ],
-    #     output_dir_comment="cell_counts_vs_R_SF_with_A11_same_x",
-    #     line_colors=['red', 'red'],
-    #     line_styles=[':', '-'],
-    #     marker_styles=['', ''],
-    #     marker_sizes=[6, 7],
-    #     legend_labels=[
-    #         r'Cellpose ',
-    #         r'Cellpose in Tile',
-    #     ],
-    #     legend_title="",
-    #     legend_loc='upper left',
-    #     x_label=r'$R_{SF}/\delta_T$',
-    #     y_label=r'$N_{cells}$',
+    plotter_14_xyyy(
+        input_dir=r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_Pipe_Default_dir\20250625_1528537\20250625_1528554\20250625_1626096\20250626_1700136\20250628_2007187",
+        x_column="R_SF_nonDim",
+        y_columns=[
+            "N_cells",
+            "N_cells_CST",
+        ],
+        output_dir_comment="cell_counts_vs_R_SF_with_A11_same_x",
+        line_colors=['red', 'red'],
+        line_styles=[':', '-'],
+        marker_styles=['', ''],
+        marker_sizes=[6, 7],
+        legend_labels=[
+            r'Cellpose (Image)',
+            r'Cellpose (Tile',
+        ],
+        legend_title="",
+        legend_loc='upper left',
+        x_label=r'$R_{SEF}/\delta_T$',
+        y_label=r'$N_{cells}$',
 
-    #     include_A11_data=True,
-    #     A11_data=A11_data,
-    #     A11_y_column='N_c',
-    #     A11_y_scale_factor=1/6.0,  # Scale the A11 data by a factor of 6
-    #     A11_use_same_x=True,  # Use same x-axis as main data
-    #     A11_line_style='--',
-    #     A11_line_color='black',
-    #     A11_label=r'Manual Count in Tile'
-    # )
+        include_A11_data=True,
+        A11_data=A11_data,
+        A11_y_column='N_c',
+        A11_y_scale_factor=1/6.0,  # Scale the A11 data by a factor of 6
+        A11_use_same_x=True,  # Use same x-axis as main data
+        A11_line_style='--',
+        A11_line_color='black',
+        A11_label=r'Manual (Tile)'
+    )
     
     # # Example usage with multiple curves for contour length metrics
     # plotter_14_xyyy(
@@ -734,27 +734,27 @@ if __name__ == "__main__":
     # )
 
     # Dimentionalisation factor
-    plotter_14_xyyy(
-        input_dir=r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_Pipe_Default_dir\20250625_1528537\20250625_1528554\20250625_1626096\20250626_1700136\20250628_2007187",
-        x_column="Time_VisIt",
-        y_columns=[
-            "nonDim_per_px",
-            "R_SF_nonDim",
-            "R_SF_px",
-        ],
-        output_dir_comment="CSTx6_metrics_vs_R_SF_nonDim",
-        line_colors=['black', 'orange', 'coral'],
-        line_styles=['-', '-', '--'],
-        marker_styles=['', '', ''],
-        marker_sizes=[6, 6, 6],
-        legend_labels=[
-            r'$D$',
-            r'$R_{SF}/\delta_T$',
-            r'$R_{SF}[px]$',
-        ],
-        legend_title="CSTx6 Metrics",
-        legend_loc='best',
-        x_label=r'$\tau$',
-        y_label=r'Various Metrics',
-        show_plot=1
-    )
+    # plotter_14_xyyy(
+    #     input_dir=r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_Pipe_Default_dir\20250625_1528537\20250625_1528554\20250625_1626096\20250626_1700136\20250628_2007187",
+    #     x_column="Time_VisIt",
+    #     y_columns=[
+    #         "nonDim_per_px",
+    #         "R_SF_nonDim",
+    #         "R_SF_px",
+    #     ],
+    #     output_dir_comment="CSTx6_metrics_vs_R_SF_nonDim",
+    #     line_colors=['black', 'orange', 'coral'],
+    #     line_styles=['-', '-', '--'],
+    #     marker_styles=['', '', ''],
+    #     marker_sizes=[6, 6, 6],
+    #     legend_labels=[
+    #         r'$D$',
+    #         r'$R_{SF}/\delta_T$',
+    #         r'$R_{SF}[px]$',
+    #     ],
+    #     legend_title="CSTx6 Metrics",
+    #     legend_loc='best',
+    #     x_label=r'$\tau$',
+    #     y_label=r'Various Metrics',
+    #     show_plot=1
+    # )
