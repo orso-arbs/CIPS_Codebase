@@ -853,9 +853,9 @@ if __name__ == "__main__":
         input_dir=r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_Pipe_Default_dir\20250625_1528537\20250625_1528554\20250625_1626096\20250626_1700136\20250628_2007187",
         x_column="Time_VisIt",
         y_columns=[
-            "N_cells_CST",
+            "N_cells_CSTx6",
         ],
-        output_dir_comment="CPaCPTcounts_vs_time",
+        output_dir_comment="CPaManualCounts_vs_time",
         line_colors=['red'],
         line_styles=['-'],
         marker_styles=[''],
@@ -872,7 +872,7 @@ if __name__ == "__main__":
         include_A11_data=True,
         A11_data=A11_data,
         A11_y_column='N_c',
-        A11_y_scale_factor=1/6.0,  # Scale the A11 data by a factor of 6
+        A11_y_scale_factor=1,  # Scale the A11 data by a factor of 6
         A11_use_same_x=True,  # Use same x-axis as main data
         A11_line_style='--',
         A11_line_color='black',

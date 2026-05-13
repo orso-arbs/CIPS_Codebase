@@ -91,7 +91,10 @@ def plotter_14_xyyy(
     fit_line_styles=['--'],
     fit_labels=[],
     show_fit_equation=True,
-    fit_equation_position='legend'  # or 'plot' to put equations on the plot
+    fit_equation_position='legend',  # or 'plot' to put equations on the plot
+    x_ticks=None,  # List of x-axis tick values, e.g. [0,1,2,3,4,5,6,7]
+    show_legend=True,  # Whether to show the legend
+    legend_frameon=False,  # Whether to show a frame around the legend
 ):
     """
     Creates an x-y plot with multiple curves, each with configurable parameters.
@@ -515,18 +518,23 @@ def plotter_14_xyyy(
     
     # Set tick parameters for inward facing ticks
     plt.tick_params(axis='both', direction='in', which='both', labelsize=tick_label_fontsize)
-    
+
+    # Set x-axis ticks if specified
+    if x_ticks is not None:
+        plt.xticks(x_ticks)
+
     # Add grid if requested
     if show_grid:
-        plt.grid(True, linestyle=grid_style, linewidth=grid_width, 
+        plt.grid(True, linestyle=grid_style, linewidth=grid_width,
                 alpha=grid_alpha, color=grid_color)
-    
+
     # Add legend
-    if legend_title:
-        plt.legend(loc=legend_loc, fontsize=legend_fontsize, frameon=False, title=legend_title, 
-                  title_fontsize=legend_fontsize+2)
-    else:
-        plt.legend(loc=legend_loc, fontsize=legend_fontsize, frameon=False)
+    if show_legend:
+        if legend_title:
+            plt.legend(loc=legend_loc, fontsize=legend_fontsize, frameon=legend_frameon, title=legend_title,
+                      title_fontsize=legend_fontsize+2)
+        else:
+            plt.legend(loc=legend_loc, fontsize=legend_fontsize, frameon=legend_frameon, framealpha=1.0)
     
     # Adjust layout
     plt.tight_layout()
@@ -618,38 +626,39 @@ if __name__ == "__main__":
     # # Load A11 data first
     A11_data = load_A11_data()
         
-    # # Example with A11 data using same x-axis as main data
-    plotter_14_xyyy(
-        input_dir=r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_Pipe_Default_dir\20250625_1528537\20250625_1528554\20250625_1626096\20250626_1700136\20250628_2007187",
-        x_column="R_SF_nonDim",
-        y_columns=[
-            "N_cells",
-            "N_cells_CST",
-        ],
-        output_dir_comment="cell_counts_vs_R_SF_with_A11_same_x",
-        line_colors=['red', 'red'],
-        line_styles=[':', '-'],
-        marker_styles=['', ''],
-        marker_sizes=[6, 7],
-        legend_labels=[
-            r'Cellpose (Image)',
-            r'Cellpose (Tile',
-        ],
-        legend_title="",
-        legend_loc='upper left',
-        x_label=r'$R_{SEF}/\delta_T$',
-        y_label=r'$N_{cells}$',
+    # # # Example with A11 data using same x-axis as main data
+    # plotter_14_xyyy(
+    #     input_dir=r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_Pipe_Default_dir\20250625_1528537\20250625_1528554\20250625_1626096\20250626_1700136\20250628_2007187",
+    #     x_column="R_SF_nonDim",
+    #     y_columns=[
+    #         "N_cells",
+    #         "N_cells_CST",
+    #     ],
+    #     output_dir_comment="cell_counts_vs_R_SF_with_A11_same_x",
+    #     line_colors=['red', 'red'],
+    #     line_styles=[':', '-'],
+    #     marker_styles=['', ''],
+    #     marker_sizes=[6, 7],
+    #     legend_labels=[
+    #         r'Cellpose (Image)',
+    #         r'Cellpose (Tile',
+    #     ],
+    #     legend_title="",
+    #     legend_loc='upper left',
+    #     x_label=r'$R_{SEF}/\delta_T$',
+    #     y_label=r'$N_{cells}$',
 
-        include_A11_data=True,
-        A11_data=A11_data,
-        A11_y_column='N_c',
-        A11_y_scale_factor=1/6.0,  # Scale the A11 data by a factor of 6
-        A11_use_same_x=True,  # Use same x-axis as main data
-        A11_line_style='--',
-        A11_line_color='black',
-        A11_label=r'Manual (Tile)'
-    )
+    #     include_A11_data=True,
+    #     A11_data=A11_data,
+    #     A11_y_column='N_c',
+    #     A11_y_scale_factor=1/6.0,  # Scale the A11 data by a factor of 6
+    #     A11_use_same_x=True,  # Use same x-axis as main data
+    #     A11_line_style='--',
+    #     A11_line_color='black',
+    #     A11_label=r'Manual (Tile)'
+    # )
     
+
     # # Example usage with multiple curves for contour length metrics
     # plotter_14_xyyy(
     #     input_dir=r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_Pipe_Default_dir\20250625_1528537\20250625_1528554\20250625_1626096\20250626_1700136\20250628_2007187",
@@ -758,3 +767,30 @@ if __name__ == "__main__":
     #     y_label=r'Various Metrics',
     #     show_plot=1
     # )
+
+    # Cell Count N_cells vs tau (replicating presentation plot)
+    plotter_14_xyyy(
+        input_dir=r"C:\Users\obs\OneDrive\ETH\ETH_MSc\Masters Thesis\CIPS_Pipe_Default_dir\20250625_1528537\20250625_1528554\20250625_1626096\20250626_1700136\20250628_2007187",
+        x_column="Time_VisIt",
+        y_columns=["N_cells_CSTx6"],
+        output_dir_comment="cell_count_vs_tau_with_manual",
+        line_colors=['red'],
+        line_styles=['-'],
+        marker_styles=[''],
+        marker_sizes=[6],
+        legend_labels=[r'Cellpose'],
+        legend_loc='upper left',
+        x_label=r'$t/\tau$',
+        y_label=r'$N_{Cells}$',
+        x_ticks=[0, 1, 2, 3, 4, 5, 6, 7],
+        show_legend=True,
+        legend_frameon=True,
+        include_A11_data=True,
+        A11_data=A11_data,
+        A11_y_column='N_c',
+        A11_x_column='time',
+        A11_use_same_x=False,
+        A11_line_style='--',
+        A11_line_color='black',
+        A11_label=r'Manual',
+    )

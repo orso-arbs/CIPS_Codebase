@@ -771,23 +771,59 @@ if __name__ == "__main__":
     # Load A11 data directly - don't modify it
     A11_data = load_A11_data()
     
-    # Following plot14_xyyy.py's approach: use A11_use_same_x=True for interpolation
+
+    #### Old for thesis
+    #
+    # # Following plot14_xyyy.py's approach: use A11_use_same_x=True for interpolation
+    # output_dir = plotter_14_xTwinyyyy_A11(
+    #     input_dir=input_dir,
+    #     x_column="R_SF_nonDim",
+    #     y_columns_list=y_columns_list,
+    #     y_colors_list=y_colors_list,
+    #     y_labels_list=y_labels_list,
+    #     y_scale_factors_list=y_scale_factors_list,
+    #     y_legend_texts_list=y_legend_texts_list,
+    #     output_dir_comment="A11_R_mean_dot_with_cell_metrics",
+    #     x_label=r'$R_{SF}/\delta_T$',
+    #     legend_loc=(0.2, 0.8),  # Position in normalized coordinates
+    #     show_legend=True,
+    #     axis_spacings=axis_spacings,
+    #     include_A11_data=True,
+    #     A11_data=A11_data,  # Use the original A11 data
+    #     A11_x_column='R_mean',  # Use R_mean as x-axis for A11 data
+    #     A11_use_same_x=True,  # Interpolate A11 data to match main x-axis values
+    #     A11_y_columns_list=A11_y_columns_list,
+    #     A11_line_colors_list=A11_line_colors_list,
+    #     A11_labels_list=A11_labels_list,
+    #     # Add vertical lines and text boxes
+    #     vlines_list=vlines,
+    #     vlines_colors=vlines_colors,
+    #     vlines_styles=vlines_styles,
+    #     vlines_widths=vlines_widths,
+    #     textboxes_list=textboxes,
+    #     textbox_fontsize=25,
+    #     textbox_colors=['black', 'black', 'black', 'black'],
+    #     show_plot=0
+    # )
+
+
+    # new for PROCI
     output_dir = plotter_14_xTwinyyyy_A11(
         input_dir=input_dir,
-        x_column="R_SF_nonDim",
+        x_column="Time_VisIt",
         y_columns_list=y_columns_list,
         y_colors_list=y_colors_list,
         y_labels_list=y_labels_list,
         y_scale_factors_list=y_scale_factors_list,
         y_legend_texts_list=y_legend_texts_list,
-        output_dir_comment="A11_R_mean_dot_with_cell_metrics",
-        x_label=r'$R_{SF}/\delta_T$',
+        output_dir_comment="A11_R_mean_dot_with_cell_metrics_vs_time_PROCI",
+        x_label=r'$t/\tau$',
         legend_loc=(0.2, 0.8),  # Position in normalized coordinates
         show_legend=True,
         axis_spacings=axis_spacings,
         include_A11_data=True,
         A11_data=A11_data,  # Use the original A11 data
-        A11_x_column='R_mean',  # Use R_mean as x-axis for A11 data
+        A11_x_column='Time_VisIt',  # Use Time_VisIt as x-axis for A11 data
         A11_use_same_x=True,  # Interpolate A11 data to match main x-axis values
         A11_y_columns_list=A11_y_columns_list,
         A11_line_colors_list=A11_line_colors_list,
@@ -802,5 +838,6 @@ if __name__ == "__main__":
         textbox_colors=['black', 'black', 'black', 'black'],
         show_plot=0
     )
+
     
     print(f"Finished creating plot with A11 data in: {output_dir}")
